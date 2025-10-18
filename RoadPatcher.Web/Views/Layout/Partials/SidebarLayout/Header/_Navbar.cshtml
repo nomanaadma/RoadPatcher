@@ -6,16 +6,21 @@
 <!--begin::Navbar-->
 <div class="app-navbar flex-shrink-0">
 	<!--begin::User menu-->
-	<div class="app-navbar-item ms-1 ms-md-4" id="kt_header_user_menu_toggle">
+	<div class="app-navbar-item ms-1 ms-md-4 mt-10" id="kt_header_user_menu_toggle">
 
-		@if (SignInManager.IsSignedIn(User))
-		{
-			<div class="d-inline-block profile_email">@UserManager.GetUserName(User)</div>
-		}
+		<div class="flex">
+			@if (SignInManager.IsSignedIn(User))
+			{
+				<div class="d-inline-block profile_email">@UserManager.GetUserName(User)</div>
+			}
+			<form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
+				<button id="logout" type="submit" class="nav-link btn btn-link text-dark border-0">Logout</button>
+			</form>
+		</div>
 
 		<!--begin::Menu wrapper-->
-		<div class="cursor-pointer symbol symbol-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-			<img src='~/img/300-1.jpg' alt="user"/>
+		<div class="cursor-pointer symbol" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+			<img src="~/img/300-1.jpg" alt="user"/>
 		</div>
 		<!--end::Menu wrapper-->
 	</div>

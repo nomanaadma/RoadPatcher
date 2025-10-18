@@ -21,12 +21,11 @@
 		<!--begin::Header wrapper-->
 		<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
 
-			<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+			<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3 mt-10">
 				<!--begin::Title-->
-				<h1 class="page-heading d-flex gap-2 fw-bold fs-1 flex-row justify-content-center my-0">
-					<i class="@ViewData["Icon"]"></i>
-					<span>@ViewData["Title"]</span>
-				</h1>
+				<a href="/">
+				<img alt="Logo" src="~/img/default-dark.png" class="h-90px app-sidebar-logo-default" />
+				</a>
 				@Html.Raw(@ViewData["Extra"])
 			</div>
 			
