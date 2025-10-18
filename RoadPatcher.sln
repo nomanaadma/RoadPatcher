@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoadPatcher.Web", "RoadPatcher.Web\RoadPatcher.Web.csproj", "{13CFE4E3-AC8F-4E3A-AB2C-5A928F02A499}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoadPatcher.Application", "RoadPatcher.Application\RoadPatcher.Application.csproj", "{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{13CFE4E3-AC8F-4E3A-AB2C-5A928F02A499}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13CFE4E3-AC8F-4E3A-AB2C-5A928F02A499}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13CFE4E3-AC8F-4E3A-AB2C-5A928F02A499}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
