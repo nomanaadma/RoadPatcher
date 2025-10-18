@@ -1,0 +1,17 @@
+<!--begin::Logo-->
+<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
+	<!--begin::Logo image-->
+	<a href="/">
+		<img alt="Logo" src="~/img/default-dark.png" class="h-30px app-sidebar-logo-default" />
+		<img alt="Logo" src="~/img/logo.png" class="h-30px app-sidebar-logo-minimize"/>
+	</a>
+	<!--end::Logo image-->
+	<!--begin::Sidebar toggle-->
+	<div id="kt_app_sidebar_toggle" data-kt-toggle="true" data-kt-toggle-target="body" data-kt-toggle-name="app-sidebar-minimize"
+	     @Html.Raw(KTTheme.PrintHtmlAttributes("sidebar-toggle"))
+	     class='app-sidebar-toggle btn btn-icon btn-shadow btn-sm btn-color-muted btn-active-color-primary body-bg h-30px w-30px position-absolute top-50 start-100 translate-middle rotate @KTTheme.PrintHtmlClasses("sidebar-toggle")'>
+		<i class="fa-solid fa-arrow-left-long rotate-180 ms-1"></i>
+	</div>
+	<!--end::Sidebar toggle-->
+</div>
+<!--end::Logo-->

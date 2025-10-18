@@ -1,0 +1,23 @@
+{
+    "Theme": {
+        "Name": "Demo1",
+        "LayoutDir": "~/Views/Layout",
+        "Direction": "ltr",
+        "ModeSwitchEnabled": true,
+        "ModeDefault": "light",
+        "AssetsDir": "assets/",
+        "Assets": {
+            "Favicon": "",
+            "Fonts": [
+                ""
+            ],
+            "Css": [
+                ""
+            ],
+            "Js": [
+                ""
+            ]
+        },
+        "Vendors": {}
+    }
+}

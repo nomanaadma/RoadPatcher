@@ -1,0 +1,25 @@
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!--begin::Navbar-->
+<div class="app-navbar flex-shrink-0">
+	<!--begin::User menu-->
+	<div class="app-navbar-item ms-1 ms-md-4" id="kt_header_user_menu_toggle">
+
+		@if (SignInManager.IsSignedIn(User))
+		{
+			<div class="d-inline-block profile_email">@UserManager.GetUserName(User)</div>
+		}
+
+		<!--begin::Menu wrapper-->
+		<div class="cursor-pointer symbol symbol-35px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+			<img src='~/img/300-1.jpg' alt="user"/>
+		</div>
+		<!--end::Menu wrapper-->
+	</div>
+	<!--end::User menu-->
+	<!--end::Header menu toggle-->
+</div>
+<!--end::Navbar-->
