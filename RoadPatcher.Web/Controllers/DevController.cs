@@ -8,6 +8,6 @@ public class DevController(ApplicationDbContext dbContext) : Controller
 	// GET
 	public async Task Index()
 	{
-				
+		await Task.CompletedTask;
 	}
 }
