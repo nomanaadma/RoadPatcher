@@ -7,7 +7,7 @@
 			
 			<div class="d-flex align-items-stretch ms-1">
 				<div class="d-flex align-items-center">
-					<div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px">
+					<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
 						<i class="las la-search fz-27 rotate-270"></i>	
 					</div>
 				</div>
@@ -15,7 +15,7 @@
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
-					<div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px">
+					<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
 						<i class="las la-plus-square fz-30"></i>
 					</div>
 				</div>
@@ -23,7 +23,7 @@
 			
 			@* <div class="d-flex align-items-stretch ms-1 ms-lg-3"> *@
 			@* 	<div class="d-flex align-items-center"> *@
-			@* 		<div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px"> *@
+			@* 		<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px"> *@
 			@* 			<i class="las la-bell fz-30"></i> *@
 			@* 		</div> *@
 			@* 	</div> *@
@@ -31,7 +31,7 @@
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
-					<a class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px" asp-controller="Settings" asp-action="Index">
+					<a data-bs-toggle="tooltip" title="Setting" data-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Settings" asp-action="Index">
 						<i class="las la-cog fz-30"></i>
 					</a>
 				</div>
@@ -40,14 +40,14 @@
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
 					<form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
-						<button type="submit" class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px">
+						<button data-bs-toggle="tooltip" title="Logout" data-placement="bottom" type="submit" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
 							<i class="las la-sign-out-alt fz-30"></i>
 						</button>
 					</form>
 				</div>
 			</div>
 			
-			<a href="javascript:void(0)" class="ms-3 pe-none symbol" aria-label="User Profile">
+			<a asp-controller="Settings" asp-action="Index" class="ms-3 symbol" aria-label="User Profile">
 				<img src="~/img/profile.png" alt="User Profile" class="rounded-circle border border-3" >
 			</a>
 			

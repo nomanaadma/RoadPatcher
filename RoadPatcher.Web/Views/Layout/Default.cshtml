@@ -7,12 +7,6 @@
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-toolbar-enabled", "true");
 	KTTheme.AddHtmlClass("body", "app-default");
 	
-	if(Context.Request.Cookies["sidebar_minimize_state"] != null && string.Equals(Convert.ToString((Context.Request.Cookies["sidebar_minimize_state"])), "on")) {
-		KTTheme.AddHtmlAttribute("body", "data-kt-app-sidebar-minimize", "on");
-		KTTheme.AddHtmlAttribute("sidebar-toggle", "data-kt-toggle-state", "active");
-		KTTheme.AddHtmlClass("sidebar-toggle", "active");
-	}
-	
 }
 
 <!--begin::Root-->

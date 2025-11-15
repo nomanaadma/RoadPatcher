@@ -81,3 +81,31 @@
     border-top: 1px solid var(--bs-card-border-color);
 }
 
+.navigation-tab {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 150px;
+    border-radius: 0 !important;
+    border-bottom: 5px solid transparent !important;
+    color: var(--bs-btn-active-color) !important;
+}
+
+.navigation-tab:hover {
+    border-color: #FFA800 !important;
+}
+
+.navigation-tab.active {
+    border-color: #0B0C10 !important;
+}
+
+.navigation-tab.active i {
+    color: #ff983b;
+}
+
+.site-logo {
+    width: 309px;
+}
