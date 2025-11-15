@@ -33,44 +33,14 @@
 }
 
 #kt_app_header_container {
-    background: #ebedf7;
+    background: #ffffff;
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid #F1F1F4;
 }
 
-.select2-container--bootstrap5 .select2-selection--single {
-    border: 1px solid #0069ba;
-    border-radius: 3px;
-    padding-left: 15px;
-}
-
-.select2-container {
-    width: 250px !important;
-}
-
-.select2-container,
-.selection,
-.select2-container--bootstrap5 .select2-selection {
-    height: 100%;
-}
-
-.select2-selection__arrow b {
-    border-color: #888 transparent transparent transparent;
-    border-style: solid;
-    border-width: 5px 4px 0 4px;
-    height: 0;
-    left: 50%;
-    margin-left: -4px;
-    margin-top: -2px;
-    position: absolute;
-    top: 50%;
-    width: 0;
-}
-
-.select2-selection__arrow {
-    height: 26px;
-    position: absolute;
-    top: 1px;
-    right: 1px;
-    width: 20px;
+.app-sidebar-logo-default {
+    position: relative;
+    top: -3px;
 }
 
 :root {
@@ -83,12 +53,31 @@
     background-size: cover;
 }
 
-.select2-container .select2-selection--single {
-    height: 30px;
-}
-
 #logout {
     padding: 0;
 }
 
+.fz-30 {
+    font-size: 30px !important;
+}
+
+.fz-27 {
+    font-size: 27px !important;
+}
+
+.las {
+    color: #71717b !important;
+}
+
+.rotate-270 {
+    transform: rotate(270deg);
+}
+
+.card .card-header {
+    align-items: center;
+}
+
+.card-header-secondary {
+    border-top: 1px solid var(--bs-card-border-color);
+}
 
