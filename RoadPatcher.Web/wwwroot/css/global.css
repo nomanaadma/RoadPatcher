@@ -152,3 +152,40 @@ p {
 .fz-20 {
     font-size: 25px !important;
 }
+
+.settings-page .list-group-item {
+    border: none;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.settings-page .list-group-item:last-child {
+    border-bottom: none;
+}
+
+.settings-page .list-group-item:hover {
+    background: var(--bs-gray-200);
+}
+
+.settings-page .list-group {
+    border: 8px solid #fff;
+}
+
+.back-anchor {
+    display: inline-block;
+    border-radius: 50%;
+    border: 2px solid #c3c3c3;
+    margin-bottom: 10px;
+}
+
+.back-anchor:hover {
+    background-color: var(--bs-gray-100);
+}
+
+.btn,
+.card {
+    border-radius: 0 !important;
+}
+

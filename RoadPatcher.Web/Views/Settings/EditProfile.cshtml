@@ -1,0 +1,121 @@
+﻿@{
+	ViewData["Title"] = "Change Password";
+}
+
+<div class="row g-5 justify-content-center">
+	<div class="col-lg-6 mb-10">
+
+		<a asp-action="Index" class="back-anchor">
+			<svg fill="#000000" width="40px" height="40px" viewBox="-11 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+				<title>angle-left</title>
+				<path d="M7.28 23.28c-0.2 0-0.44-0.080-0.6-0.24l-6.44-6.44c-0.32-0.32-0.32-0.84 0-1.2l6.44-6.44c0.32-0.32 0.84-0.32 1.2 0 0.32 0.32 0.32 0.84 0 1.2l-5.8 5.84 5.84 5.84c0.32 0.32 0.32 0.84 0 1.2-0.16 0.16-0.44 0.24-0.64 0.24z"></path>
+			</svg>
+		</a>
+		
+		<div class="card">
+			<div class="card-header">
+				<h1 class="m-0">Account Details</h1></div>
+
+			<div class="card-body">
+
+				<!--begin::Input group-->
+				<div class="row mb-10">
+
+					<!--begin::Col-->
+					<div class="text-center">
+						<!--begin::Image input-->
+						<div class="image-input image-input-outline" data-kt-image-input="true"
+						     style="background-image: url('@Url.Content("~/img/profile.png")')">
+
+							<!--begin::Preview existing avatar-->
+							<div class="image-input-wrapper w-125px h-125px"
+							     style="background-image: url('@Url.Content("~/img/profile.png")')"></div>
+							<!--end::Preview existing avatar-->
+
+							<!--begin::Label-->
+							<label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+							       data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change Profile">
+								<i class="las la-pen"></i>
+								<!--begin::Inputs-->
+								<input type="file" name="avatar" accept=".png, .jpg, .jpeg"/>
+								<input type="hidden" name="avatar_remove"/>
+								<!--end::Inputs-->
+							</label>
+							<!--end::Label-->
+
+						</div>
+						<!--end::Image input-->
+
+						<!--begin::Hint-->
+						<div class="form-text">Allowed file types: png, jpg, jpeg.</div>
+						<!--end::Hint-->
+					</div>
+					<!--end::Col-->
+				</div>
+				<!--end::Input group-->
+
+
+				<!--begin::Input group-->
+				<div class="row mb-5">
+					<!--begin::Col-->
+					<div class="col-md-6 fv-row">
+						<!--begin::Label-->
+						<label class="required fs-5 fw-semibold mb-2">First name</label>
+						<!--end::Label-->
+						<!--begin::Input-->
+						<input type="text" class="form-control form-control-solid" placeholder="" name="first-name"/>
+						<!--end::Input-->
+					</div>
+					<!--end::Col-->
+					<!--begin::Col-->
+					<div class="col-md-6 fv-row">
+						<!--end::Label-->
+						<label class="required fs-5 fw-semibold mb-2">Last name</label>
+						<!--end::Label-->
+						<!--end::Input-->
+						<input type="text" class="form-control form-control-solid" placeholder="" name="last-name"/>
+						<!--end::Input-->
+					</div>
+					<!--end::Col-->
+				</div>
+				<!--end::Input group-->
+
+				<!--begin::Input group-->
+				<div class="d-flex flex-column mb-5 fv-row">
+					<!--begin::Label-->
+					<label class="required fs-5 fw-semibold mb-2">Email</label>
+					<!--end::Label-->
+					<!--begin::Input-->
+					<input class="form-control form-control-solid" placeholder="" name="address1"/>
+					<!--end::Input-->
+				</div>
+				<!--end::Input group-->
+
+				<!--begin::Input group-->
+				<div class="d-flex flex-column mb-5 fv-row">
+					<!--begin::Label-->
+					<label class="required fs-5 fw-semibold mb-2">Full Address</label>
+					<!--end::Label-->
+					<!--begin::Input-->
+					<input class="form-control form-control-solid" placeholder="" name="address1"/>
+					<!--end::Input-->
+				</div>
+				<!--end::Input group-->
+			</div>
+
+			<div class="card-footer">
+				<button type="submit" class="btn btn-lg btn-primary">
+					<span class="indicator-label">
+						Submit
+					</span>
+					<span class="indicator-progress">
+						Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+					</span>
+				</button>
+				<a asp-action="Index" class="ms-2 btn btn-lg btn-secondary">
+					Cancel
+				</a>
+			</div>
+		</div>
+	</div>
+</div>

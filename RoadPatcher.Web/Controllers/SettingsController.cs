@@ -12,6 +12,16 @@ public class SettingsController(ILogger<SettingsController> logger) : Controller
 	{
 		return View();
 	}
+	
+	public IActionResult ChangePassword()
+	{
+		return View();
+	}
+	
+	public IActionResult EditProfile()
+	{
+		return View();
+	}
 
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public IActionResult Error()
