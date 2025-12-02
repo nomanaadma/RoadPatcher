@@ -6,7 +6,7 @@ using RoadPatcher.Models;
 namespace RoadPatcher.Controllers;
 
 [Authorize]
-public class HomeController(ILogger<HomeController> logger) : Controller
+public class HomeController : Controller
 {
 	public IActionResult Index()
 	{

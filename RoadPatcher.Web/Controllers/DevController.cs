@@ -3,7 +3,7 @@ using RoadPatcher.Application.Data;
 
 namespace RoadPatcher.Controllers;
 
-public class DevController(ApplicationDbContext dbContext) : Controller
+public class DevController() : Controller
 {
 	// GET
 	public async Task Index()
