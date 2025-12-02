@@ -2,14 +2,15 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
 
 namespace RoadPatcher.Controllers;
 
 [Authorize]
 public class SettingsController(
-	UserManager<IdentityUser> userManager,
-	SignInManager<IdentityUser> signInManager
+	UserManager<ApplicationUser> userManager,
+	SignInManager<ApplicationUser> signInManager
 	) : Controller
 {
 	public IActionResult Index()
