@@ -5,3 +5,15 @@ riderModule.iml
 /_ReSharper.Caches/
 tasks.todo
 resources
+TestResults/
+*.user
+*.vs/
+*.vscode/
+.idea/
+*.DotSettings.user
+*.sln.DotSettings.user
+*.iml
+*.log
+*.nupkg
+packages/
+.nuget/
