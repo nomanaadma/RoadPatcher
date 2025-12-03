@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using SysFile = System.IO.File;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -96,9 +97,9 @@ public partial class SettingsController(
 			return Challenge();
 		}
 		
-		var savedImagePath = await UploadProfileImage(model);
+		var savedImage = await UploadProfileImage(model);
 		
-		// await InsertOrUpdateProfile(model, user, savedImagePath);
+		await InsertOrUpdateProfile(model, user, savedImage);
 
 		TempData["Success"] = "Profile saved successfully!";
 		return RedirectToAction("EditProfile");
@@ -106,7 +107,7 @@ public partial class SettingsController(
 	}
 
 	private async Task InsertOrUpdateProfile(UserDataViewModel model, 
-		ApplicationUser user, string? savedImagePath)
+		ApplicationUser user, string? savedImage)
 	{
 		
 		var existing = await context.UserDatas
@@ -116,7 +117,7 @@ public partial class SettingsController(
 		if (existing == null)
 		{
 			// Insert new
-			var entity = new UserData
+			var userData = new UserData
 			{
 				UserId = user.Id,
 				FirstName = model.FirstName,
@@ -124,20 +125,28 @@ public partial class SettingsController(
 				Address = model.Address,
 				Latitude = model.Latitude,
 				Longitude = model.Longitude,
-				Image = savedImagePath,
-				User = user
+				Image = savedImage,
 			};
 	
-			context.UserDatas.Add(entity);
+			context.UserDatas.Add(userData);
 		}
 		else
 		{
+			
+			if (savedImage != null && existing.Image != null)
+			{
+				var oldFile = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "users", existing.Image);
+
+				if (SysFile.Exists(oldFile))
+					SysFile.Delete(oldFile);
+			}
+			
 			existing.FirstName = model.FirstName;
 			existing.LastName = model.LastName;
 			existing.Address = model.Address;
 			existing.Latitude = model.Latitude;
 			existing.Longitude = model.Longitude;
-			existing.Image = savedImagePath ?? existing.Image;
+			existing.Image = savedImage ?? existing.Image;
 		}
 	
 		await context.SaveChangesAsync();
@@ -170,11 +179,11 @@ public partial class SettingsController(
 			.ToLower();
 	
 		// Add timestamp
-		var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 		var finalFileName = $"{originalName}-{timestamp}{ext}";
 	
 		// Upload folder
-		var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "users");
+		var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "users");
 	
 		// Ensure exists
 		if (!Directory.Exists(uploadFolder))
@@ -183,14 +192,10 @@ public partial class SettingsController(
 		// Save file
 		var fullPath = Path.Combine(uploadFolder, finalFileName);
 
-		await using (var stream = new FileStream(fullPath, FileMode.Create))
-		{
-			await model.ImageUpload.CopyToAsync(stream);
-		}
-	
-		savedImagePath = "/uploads/users/" + finalFileName;
+		await using var stream = new FileStream(fullPath, FileMode.Create);
+		await model.ImageUpload.CopyToAsync(stream);
 
-		return savedImagePath;
+		return finalFileName;
 	}
 	
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]

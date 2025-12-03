@@ -11,7 +11,7 @@ public class UserData
 
 	public string? Image { get; set; } = "profile.png";
 	
-	public required ApplicationUser User { get; init; }
+	public ApplicationUser? User { get; init; }
 }
 
 

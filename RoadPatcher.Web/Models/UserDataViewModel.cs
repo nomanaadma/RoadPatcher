@@ -23,5 +23,5 @@ public class UserDataViewModel
 	
 	// Logic for Image Upload
 	[Display(Name = "Profile Image")] 
-	public IFormFile? ImageUpload { get; set; }
+	public IFormFile? ImageUpload { get; init; }
 }

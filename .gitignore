@@ -18,3 +18,4 @@ TestResults/
 packages/
 .nuget/
 to-learn.txt
+RoadPatcher.Web/wwwroot/uploads
