@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using SysFile = System.IO.File;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -70,9 +71,26 @@ public partial class SettingsController(
 	}
 	
 	[HttpGet]
-	public IActionResult EditProfile()
+	public async Task<IActionResult> EditProfile()
 	{
-		return View();
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		var existing = await context.UserDatas.FirstOrDefaultAsync(x => x.UserId == userId);
+
+		if (existing == null)
+			return View();
+
+		var model = new UserDataViewModel
+		{
+			FirstName = existing.FirstName,
+			LastName = existing.LastName,
+			Address = existing.Address,
+			Latitude = existing.Latitude,
+			Longitude = existing.Longitude,
+			ExistingImage = existing.Image,
+		};
+
+		return View(model);
 	}
 	
 	[HttpPost]

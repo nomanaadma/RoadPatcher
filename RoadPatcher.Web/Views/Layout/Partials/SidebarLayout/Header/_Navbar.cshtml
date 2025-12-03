@@ -1,3 +1,22 @@
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using RoadPatcher.Application.Data
+@using RoadPatcher.Application.Entities
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
+@{
+	var profileImage = Url.Content("~/img/profile.png");
+	
+	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+	var userData = await DbContext.UserDatas.FirstOrDefaultAsync(x => x.UserId == userId);
+	
+	if (userData?.Image is not null)
+	{
+		profileImage = Url.Content($"~/uploads/users/{userData.Image}");
+	}
+	
+}
 <!--begin::Navbar-->
 <div class="app-navbar flex-shrink-0">
 	<!--begin::User menu-->
@@ -37,8 +56,10 @@
 				</div>
 			</div>
 			
+			
+			
 			<a asp-controller="Settings" asp-action="EditProfile" class="ms-3 symbol" aria-label="User Profile">
-				<img src="~/img/profile.png" alt="User Profile" class="rounded-circle border border-3" >
+				<img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
 			</a>
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">

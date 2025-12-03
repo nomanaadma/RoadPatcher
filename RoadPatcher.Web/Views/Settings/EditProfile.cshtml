@@ -1,7 +1,14 @@
 ﻿@model RoadPatcher.Models.UserDataViewModel
 
 @{
-	ViewData["Title"] = "Change Password";
+    ViewData["Title"] = "Edit Profile";
+
+    var profileImage = Url.Content("~/img/profile.png");
+
+    if (Model?.ExistingImage is not null)
+    {
+        profileImage = Url.Content($"~/uploads/users/{Model.ExistingImage}");
+    }
 }
 
 <div class="row g-5 justify-content-center">
@@ -28,11 +35,11 @@
 						<div class="text-center">
 							<!--begin::Image input-->
 							<div class="image-input image-input-outline" data-kt-image-input="true"
-							     style="background-image: url('@Url.Content("~/img/profile.png")')">
+							     style="background-image: url('@profileImage')">
 
 								<!--begin::Preview existing avatar-->
-								<div class="image-input-wrapper w-125px h-125px"
-								     style="background-image: url('@Url.Content("~/img/profile.png")')"></div>
+									<div class="image-input-wrapper w-125px h-125px"
+									     style="background-image: url('@profileImage')"></div>
 								<!--end::Preview existing avatar-->
 
 								<!--begin::Label-->
@@ -135,8 +142,18 @@
 					</div>
 					<!--end::Input group-->
 
-					<input type="text" name="Latitude" placeholder="Latitude">
-					<input type="text" name="Longitude" placeholder="Longitude">
+					<div class="row mb-5">
+						<div class="col-md-6 fv-row">
+							<label asp-for="Latitude" class="fs-5 fw-semibold mb-2">Latitude</label>
+							<input asp-for="Latitude" type="text" id="latitude" class="form-control form-control-solid" />
+							<span asp-validation-for="Latitude"  class="text-danger"></span>
+						</div>
+						<div class="col-md-6 fv-row">
+							<label asp-for="Longitude" class="fs-5 fw-semibold mb-2">Longitude</label>
+							<input asp-for="Longitude" type="text" id="longitude" class="form-control form-control-solid" />
+							<span asp-validation-for="Longitude"  class="text-danger"></span>
+						</div>
+					</div>
 				
 				</div>
 
@@ -156,12 +173,53 @@
 </div>
 
 @section Scripts {
-	<partial name="_ValidationScriptsPartial" />
+	
 	<script>
 		toastr.options = {
 			"positionClass": "toastr-bottom-right",
 		};
 	</script>
+	
+	<script>
+		$(document).ready(function () {
+
+			const latitude = $('#latitude');
+			const longitude = $('#longitude');
+			
+			$('.fetch-location').on('click', function () {
+				if (navigator.geolocation) {
+					navigator.geolocation.getCurrentPosition(fillLatLng, showError);
+				} else {
+					toastr.error("Geolocation is not supported by this browser.");
+				}
+			});
+
+			function fillLatLng(position) {
+				latitude.val(position.coords.latitude);
+				longitude.val(position.coords.longitude);
+			}
+
+			function showError(error) {
+				switch (error.code) {
+					case error.PERMISSION_DENIED:
+						toastr.error("User denied the request for Geolocation.");
+						break;
+					case error.POSITION_UNAVAILABLE:
+						toastr.error("Location information is unavailable.");
+						break;
+					case error.TIMEOUT:
+						toastr.error("The request to get user location timed out.");
+						break;
+					case error.UNKNOWN_ERROR:
+						toastr.error("An unknown error occurred.");
+						break;
+				}
+			}
+			
+		});
+	</script>
+	<partial name="_ValidationScriptsPartial" />
+	
 	
 	@if (TempData["Success"] != null) {
 		<script>

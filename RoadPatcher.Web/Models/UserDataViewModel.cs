@@ -15,13 +15,14 @@ public class UserDataViewModel
 	[Required]
 	public required string Address { get; init; }
 	
-	[Range(-90, 90)]
 	public required double Latitude { get; init; }
 	
-	[Range(-180, 180)]
 	public required double Longitude { get; init; }
 	
 	// Logic for Image Upload
 	[Display(Name = "Profile Image")] 
 	public IFormFile? ImageUpload { get; init; }
+	
+	// Existing image filename stored on server (e.g. uploads/users/filename.jpg)
+	public string? ExistingImage { get; init; }
 }
