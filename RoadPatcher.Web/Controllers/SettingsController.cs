@@ -2,15 +2,19 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
 
 namespace RoadPatcher.Controllers;
 
 [Authorize]
-public class SettingsController(
+public partial class SettingsController(
 	UserManager<ApplicationUser> userManager,
-	SignInManager<ApplicationUser> signInManager
+	SignInManager<ApplicationUser> signInManager,
+	ApplicationDbContext context,
+	IWebHostEnvironment webHostEnvironment
 	) : Controller
 {
 	public IActionResult Index()
@@ -25,6 +29,7 @@ public class SettingsController(
 	}
 	
 	[HttpPost]
+	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
 	{
 		
@@ -63,10 +68,134 @@ public class SettingsController(
 		return RedirectToAction("ChangePassword");
 	}
 	
+	[HttpGet]
 	public IActionResult EditProfile()
 	{
 		return View();
 	}
+	
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> EditProfile(UserDataViewModel model)
+	{
+		if (!ModelState.IsValid)
+		{
+			TempData["FormErrors"] = string.Join("||", 
+				ModelState.Values
+					.SelectMany(v => v.Errors)
+					.Select(e => e.ErrorMessage));
+
+			return View(model);
+		}
+
+		var user = await userManager.GetUserAsync(User);
+
+		if (user == null)
+		{
+			await signInManager.SignOutAsync();
+			return Challenge();
+		}
+		
+		var savedImagePath = await UploadProfileImage(model);
+		
+		// await InsertOrUpdateProfile(model, user, savedImagePath);
+
+		TempData["Success"] = "Profile saved successfully!";
+		return RedirectToAction("EditProfile");
+		
+	}
+
+	private async Task InsertOrUpdateProfile(UserDataViewModel model, 
+		ApplicationUser user, string? savedImagePath)
+	{
+		
+		var existing = await context.UserDatas
+			.AsTracking()
+			.FirstOrDefaultAsync(x => x.UserId == user.Id);
+	
+		if (existing == null)
+		{
+			// Insert new
+			var entity = new UserData
+			{
+				UserId = user.Id,
+				FirstName = model.FirstName,
+				LastName = model.LastName,
+				Address = model.Address,
+				Latitude = model.Latitude,
+				Longitude = model.Longitude,
+				Image = savedImagePath,
+				User = user
+			};
+	
+			context.UserDatas.Add(entity);
+		}
+		else
+		{
+			existing.FirstName = model.FirstName;
+			existing.LastName = model.LastName;
+			existing.Address = model.Address;
+			existing.Latitude = model.Latitude;
+			existing.Longitude = model.Longitude;
+			existing.Image = savedImagePath ?? existing.Image;
+		}
+	
+		await context.SaveChangesAsync();
+	}
+
+	private async Task<string?> UploadProfileImage(UserDataViewModel model)
+	{
+		string? savedImagePath = null;
+
+		if (model.ImageUpload is not { Length: > 0 }) return savedImagePath;
+		
+		// Allowed extensions
+		string[] allowedExtensions = [".jpg", ".jpeg", ".png"];
+		var ext = Path.GetExtension(model.ImageUpload.FileName).ToLower();
+	
+		if (!allowedExtensions.Contains(ext))
+		{
+			ModelState.AddModelError("ImageUpload", "Only JPG, JPEG, and PNG files are allowed.");
+			return savedImagePath;
+		}
+	
+		// ORIGINAL FILENAME CLEANED
+		var originalName = Path.GetFileNameWithoutExtension(model.ImageUpload.FileName);
+	
+		// Replace special chars + spaces with "-"
+		originalName = Path.GetInvalidFileNameChars().Aggregate(originalName, (current, c) => current.Replace(c, '-'));
+
+		originalName = FileNameRegex().Replace(originalName, "-")
+            .Trim('-')
+			.ToLower();
+	
+		// Add timestamp
+		var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+		var finalFileName = $"{originalName}-{timestamp}{ext}";
+	
+		// Upload folder
+		var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "users");
+	
+		// Ensure exists
+		if (!Directory.Exists(uploadFolder))
+			Directory.CreateDirectory(uploadFolder);
+	
+		// Save file
+		var fullPath = Path.Combine(uploadFolder, finalFileName);
+
+		await using (var stream = new FileStream(fullPath, FileMode.Create))
+		{
+			await model.ImageUpload.CopyToAsync(stream);
+		}
+	
+		savedImagePath = "/uploads/users/" + finalFileName;
+
+		return savedImagePath;
+	}
+	
+	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
+	private static partial System.Text.RegularExpressions.Regex FileNameRegex();
+
 
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public IActionResult Error()

@@ -189,3 +189,17 @@ p {
     border-radius: 0 !important;
 }
 
+.fetch-location {
+    background-color: var(--bs-warning-light) !important;
+    border-color: #FFA800 !important;
+    cursor: pointer;
+    border-width: 1px;
+    border-radius: 0 !important;
+    margin-left: 2px;
+}
+
+.fetch-location:hover {
+    box-shadow: 2px 2px 0 #ffa800;
+}
+
+

@@ -1,4 +1,6 @@
-﻿@{
+﻿@model RoadPatcher.Models.UserDataViewModel
+
+@{
 	ViewData["Title"] = "Change Password";
 }
 
@@ -12,110 +14,171 @@
 			</svg>
 		</a>
 		
-		<div class="card">
-			<div class="card-header">
-				<h1 class="m-0">Account Details</h1></div>
+		<form asp-action="EditProfile" enctype="multipart/form-data" method="post" id="EditProfile">
+			<div class="card">
+				<div class="card-header">
+					<h1 class="m-0">Account Details</h1></div>
 
-			<div class="card-body">
+				<div class="card-body">
 
-				<!--begin::Input group-->
-				<div class="row mb-10">
+					<!--begin::Input group-->
+					<div class="row mb-10">
 
-					<!--begin::Col-->
-					<div class="text-center">
-						<!--begin::Image input-->
-						<div class="image-input image-input-outline" data-kt-image-input="true"
-						     style="background-image: url('@Url.Content("~/img/profile.png")')">
+						<!--begin::Col-->
+						<div class="text-center">
+							<!--begin::Image input-->
+							<div class="image-input image-input-outline" data-kt-image-input="true"
+							     style="background-image: url('@Url.Content("~/img/profile.png")')">
 
-							<!--begin::Preview existing avatar-->
-							<div class="image-input-wrapper w-125px h-125px"
-							     style="background-image: url('@Url.Content("~/img/profile.png")')"></div>
-							<!--end::Preview existing avatar-->
+								<!--begin::Preview existing avatar-->
+								<div class="image-input-wrapper w-125px h-125px"
+								     style="background-image: url('@Url.Content("~/img/profile.png")')"></div>
+								<!--end::Preview existing avatar-->
 
-							<!--begin::Label-->
-							<label class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-							       data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change Profile">
-								<i class="las la-pen"></i>
-								<!--begin::Inputs-->
-								<input type="file" name="avatar" accept=".png, .jpg, .jpeg"/>
-								<input type="hidden" name="avatar_remove"/>
-								<!--end::Inputs-->
-							</label>
-							<!--end::Label-->
+								<!--begin::Label-->
+								<label asp-for="ImageUpload" class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+								       data-kt-image-input-action="change" data-bs-toggle="tooltip" title="Change Profile">
+									<i class="las la-pen"></i>
+									<!--begin::Inputs-->
+									<input asp-for="ImageUpload" type="file" accept=".png, .jpg, .jpeg"/>
+									<input type="hidden" name="avatar_remove"/>
+									<!--end::Inputs-->
+								</label>
+								<!--end::Label-->
 
+							</div>
+							<!--end::Image input-->
+
+							<!--begin::Hint-->
+							<div class="form-text">Allowed file types: png, jpg, jpeg.</div>
+							<!--end::Hint-->
 						</div>
-						<!--end::Image input-->
-
-						<!--begin::Hint-->
-						<div class="form-text">Allowed file types: png, jpg, jpeg.</div>
-						<!--end::Hint-->
+						<!--end::Col-->
 					</div>
-					<!--end::Col-->
-				</div>
-				<!--end::Input group-->
+					<!--end::Input group-->
 				
-				<!--begin::Input group-->
-				<div class="d-flex flex-column mb-5 fv-row">
-					<!--begin::Label-->
-					<label class="fs-5 fw-semibold mb-2">Email</label>
-					<!--end::Label-->
-					<!--begin::Input-->
-					<input class="form-control form-control-solid"  placeholder="@User.Identity?.Name" disabled />
-					<!--end::Input-->
-				</div>
-				<!--end::Input group-->
-
-
-				<!--begin::Input group-->
-				<div class="row mb-5">
-					<!--begin::Col-->
-					<div class="col-md-6 fv-row">
+					<!--begin::Input group-->
+					<div class="d-flex flex-column mb-5 fv-row">
 						<!--begin::Label-->
-						<label class="required fs-5 fw-semibold mb-2">First name</label>
+						<label class="fs-5 fw-semibold mb-2">Email</label>
 						<!--end::Label-->
 						<!--begin::Input-->
-						<input type="text" class="form-control form-control-solid" placeholder="" name="first-name"/>
+						<input class="form-control form-control-solid"  placeholder="@User.Identity?.Name" disabled />
 						<!--end::Input-->
 					</div>
-					<!--end::Col-->
-					<!--begin::Col-->
-					<div class="col-md-6 fv-row">
-						<!--end::Label-->
-						<label class="required fs-5 fw-semibold mb-2">Last name</label>
-						<!--end::Label-->
-						<!--end::Input-->
-						<input type="text" class="form-control form-control-solid" placeholder="" name="last-name"/>
-						<!--end::Input-->
+					<!--end::Input group-->
+
+
+					<!--begin::Input group-->
+					<div class="row mb-5">
+						<!--begin::Col-->
+						<div class="col-md-6 fv-row">
+							<!--begin::Label-->
+							<label asp-for="FirstName" class="required fs-5 fw-semibold mb-2">First name</label>
+							<!--end::Label-->
+							<!--begin::Input-->
+							<input asp-for="FirstName" type="text" class="form-control form-control-solid"  />
+							<!--end::Input-->
+							<span asp-validation-for="FirstName" class="text-danger"></span>
+						</div>
+						<!--end::Col-->
+						<!--begin::Col-->
+						<div class="col-md-6 fv-row">
+							<!--end::Label-->
+							<label asp-for="LastName" class="required fs-5 fw-semibold mb-2">Last name</label>
+							<!--end::Label-->
+							<!--end::Input-->
+							<input asp-for="LastName" type="text" class="form-control form-control-solid"  />
+							<!--end::Input-->
+							<span asp-validation-for="LastName" class="text-danger"></span>
+						</div>
+						<!--end::Col-->
 					</div>
-					<!--end::Col-->
-				</div>
-				<!--end::Input group-->
+					<!--end::Input group-->
+				
+					<!--begin::Input group-->
+					<div class="d-flex flex-column mb-5 fv-row">
+					
+						<!--begin::Label-->
+						<label asp-for="Address" class="required fs-5 fw-semibold mb-2">Full Address</label>
+						<!--end::Label-->
 
-				<!--begin::Input group-->
-				<div class="d-flex flex-column mb-5 fv-row">
-					<!--begin::Label-->
-					<label class="required fs-5 fw-semibold mb-2">Full Address</label>
-					<!--end::Label-->
-					<!--begin::Input-->
-					<input class="form-control form-control-solid" placeholder="" name="address1"/>
-					<!--end::Input-->
-				</div>
-				<!--end::Input group-->
-			</div>
+						<div class="input-group">
 
-			<div class="card-footer">
-				<button type="submit" class="btn btn-lg btn-primary">
-					<span class="indicator-label">
-						Submit
-					</span>
-					<span class="indicator-progress">
-						Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-					</span>
-				</button>
-				<a asp-action="Index" class="ms-2 btn btn-lg btn-secondary">
-					Cancel
-				</a>
+
+							<!--begin::Input-->
+							<input asp-for="Address" class="form-control form-control-solid" placeholder="eg: plot r 709 block 17 federal b area karachi pakistan" />
+							<!--end::Input-->
+
+							<div class="input-group-prepend">
+								<span class="input-group-text fetch-location">
+									<svg class="me-3" fill="#000000" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+									     viewBox="0 0 192.906 192.906" xml:space="preserve">
+										<g>
+											<path d="M190.709,180.102l-47.08-47.076c11.702-14.072,18.752-32.142,18.752-51.831c0-44.77-36.421-81.193-81.188-81.193
+		C36.423,0.001,0,36.424,0,81.194c0,44.767,36.423,81.188,81.193,81.188c19.688,0,37.758-7.049,51.829-18.75l47.081,47.077
+		c1.464,1.464,3.384,2.196,5.303,2.196c1.919,0,3.839-0.732,5.304-2.197C193.639,187.779,193.639,183.031,190.709,180.102z
+		 M15,81.194c0-36.499,29.694-66.193,66.193-66.193c36.496,0,66.188,29.694,66.188,66.193c0,36.496-29.691,66.188-66.188,66.188
+		C44.694,147.382,15,117.69,15,81.194z"/>
+											<path d="M81.186,41.989c-15.79,0-28.637,12.845-28.637,28.634c0,23.968,22.381,46.622,23.334,47.575
+		c1.464,1.464,3.383,2.196,5.303,2.196c1.919,0,3.838-0.732,5.302-2.195c0.953-0.953,23.345-23.607,23.345-47.576
+		C109.832,54.835,96.981,41.989,81.186,41.989z M81.168,101.497c-6.045-7.682-13.619-19.864-13.619-30.873
+		c0-7.518,6.117-13.634,13.637-13.634c7.524,0,13.646,6.116,13.646,13.634C94.832,82.233,86.776,94.419,81.168,101.497z"/>
+										</g>
+									</svg>
+									Fetch Auto
+								</span>
+							</div>
+						</div>
+						<span asp-validation-for="Address" class="text-danger"></span>
+
+					</div>
+					<!--end::Input group-->
+
+					<input type="text" name="Latitude" placeholder="Latitude">
+					<input type="text" name="Longitude" placeholder="Longitude">
+				
+				</div>
+
+				<div class="card-footer">
+					<button type="submit" class="btn btn-lg btn-primary">
+						<span class="indicator-label">
+							Submit
+						</span>
+					</button>
+					<a asp-action="Index" class="ms-2 btn btn-lg btn-secondary">
+						Cancel
+					</a>
+				</div>
 			</div>
-		</div>
+		</form>
 	</div>
 </div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+	<script>
+		toastr.options = {
+			"positionClass": "toastr-bottom-right",
+		};
+	</script>
+	
+	@if (TempData["Success"] != null) {
+		<script>
+			toastr.success("@TempData["Success"]");
+		</script>
+	}
+	
+	@if (TempData["FormErrors"] != null)
+	{
+		var errors = TempData["FormErrors"]!.ToString()!.Split("||");
+
+		foreach (var err in errors)
+		{
+			<script>
+				toastr.error("@err");
+			</script>
+		}
+	}
+	
+}
