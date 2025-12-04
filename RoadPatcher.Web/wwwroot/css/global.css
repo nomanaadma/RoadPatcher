@@ -8,8 +8,8 @@ html, body {
 
 @media (min-width: 992px) {
     .app-container {
-        padding-left: 25px !important;
-        padding-right: 25px !important;
+        padding-left: 40px !important;
+        padding-right: 40px !important;
     }
     :root {
         --bs-app-header-height: 58px;
@@ -92,7 +92,7 @@ html, body {
     height: 100%;
     width: 120px;
     border-radius: 0 !important;
-    border-bottom: 5px solid transparent !important;
+    border-bottom: 4px solid transparent !important;
     color: var(--bs-btn-active-color) !important;
 }
 
@@ -141,12 +141,12 @@ p {
     height: 80vh;
 }
 
-.progress-bar {
-    background-color: #64d8b3;
+.btn-success, .btn-success:hover, .btn-success:active {
+    background-color: #137582 !important;
 }
 
-.btn-success, .btn-success:hover, .btn-success:active {
-    background-color: #34d1b6 !important;
+.progress-bar.bg-primary {  
+    background-color: #ff983b !important;    
 }
 
 .text-white {
@@ -227,3 +227,74 @@ p {
 .card .card-footer {
     padding: 1.5em 2.25rem;
 }
+
+.custom-tooltip {
+    text-align: center;
+    top: 14px;
+}
+
+.tooltip-box {
+    min-width: 250px;
+}
+
+.tooltip-arrow {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #164046;
+    margin: -1px auto 0;
+}
+
+
+.custom-tooltip .tooltip-box {
+    border: 1px solid #164046 !important;
+}
+
+.bg-light-orange {
+    background-color: #fff2f0;
+}
+
+.text-orange {
+    color: #ff7468;
+}
+
+.bg-ferozi {
+    background-color: #d0eff3;
+}
+
+.text-ferozi {
+    color: #164046;
+}
+
+.text-success-dark {
+    color: #067583;
+}
+
+.tooltip-box .border-end { 
+    border-color: #fff !important;
+}
+
+.progress-circle {
+    width: 18px;
+    height: 18px;
+    background: #ff983b;        /* green */
+    border-radius: 50%;
+    border: 3px solid white;    /* white border for clean look */
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    top: 3.5px;
+}
+
+.donation-progress .progress {
+    height: 7px;
+    --bs-progress-bg: var(--bs-gray-300);
+}
+
+.donation-progress {
+    height: 140px;
+}
+
+
+
+
+
