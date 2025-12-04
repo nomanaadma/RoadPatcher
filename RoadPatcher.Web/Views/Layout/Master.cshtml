@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html @Html.Raw(KTTheme.PrintHtmlAttributes("html")) lang="en">
+<html @Html.Raw(KTTheme.PrintHtmlAttributes("html")) lang="en" data-bs-theme="light">
 <!--begin::Head-->
 
 <head>
@@ -35,7 +35,6 @@
 
 <!--begin::Body-->
 <!body @Html.Raw(KTTheme.PrintHtmlAttributes("body")) class='@KTTheme.PrintHtmlClasses("body")'>
-    <partial name="~/Views/Home/_Init.cshtml"></partial>
     @RenderBody()
 </!body>
 <!--end::Body-->

@@ -22,12 +22,12 @@
 	<!--begin::User menu-->
 	<div class="app-navbar-item ms-1 ms-md-4" id="kt_header_user_menu_toggle">
 		
-		<div class="d-flex align-items-stretch flex-shrink-0 gap-4">
+		<div class="d-flex align-items-stretch flex-shrink-0 gap-0">
 			
 			<div class="d-flex align-items-stretch ms-1">
 				<div class="d-flex align-items-center">
 					<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
-						<i class="las la-search fz-27 rotate-270"></i>	
+						<i class="las la-search fz-24 rotate-270"></i>	
 					</div>
 				</div>
 			</div>
@@ -35,7 +35,7 @@
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
 					<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
-						<i class="las la-plus-square fz-30"></i>
+						<i class="las la-plus-square fz-24"></i>
 					</div>
 				</div>
 			</div>
@@ -43,7 +43,7 @@
 			@* <div class="d-flex align-items-stretch ms-1 ms-lg-3"> *@
 			@* 	<div class="d-flex align-items-center"> *@
 			@* 		<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px"> *@
-			@* 			<i class="las la-bell fz-30"></i> *@
+			@* 			<i class="las la-bell fz-24"></i> *@
 			@* 		</div> *@
 			@* 	</div> *@
 			@* </div> *@
@@ -51,14 +51,14 @@
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
 					<a data-bs-toggle="tooltip" title="Setting" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Settings" asp-action="Index">
-						<i class="las la-cog fz-30"></i>
+						<i class="las la-cog fz-24"></i>
 					</a>
 				</div>
 			</div>
 			
 			
 			
-			<a asp-controller="Settings" asp-action="EditProfile" class="ms-3 symbol" aria-label="User Profile">
+			<a asp-controller="Settings" asp-action="EditProfile" class="ms-3 symbol user-profile-nav" aria-label="User Profile">
 				<img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
 			</a>
 			
@@ -66,7 +66,7 @@
 				<div class="d-flex align-items-center">
 					<form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
 						<button data-bs-toggle="tooltip" title="Logout" data-bs-placement="bottom" type="submit" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
-							<i class="las la-sign-out-alt fz-30 rotate-180"></i>
+							<i class="las la-sign-out-alt fz-24 rotate-180"></i>
 						</button>
 					</form>
 				</div>

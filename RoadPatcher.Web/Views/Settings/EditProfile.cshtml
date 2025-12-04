@@ -12,10 +12,10 @@
 }
 
 <div class="row g-5 justify-content-center">
-	<div class="col-lg-6 mb-10">
+	<div class="col-lg-7 mb-10">
 
 		<a asp-action="Index" class="back-anchor">
-			<svg fill="#000000" width="40px" height="40px" viewBox="-11 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+			<svg fill="#000000" width="30px" height="30px" viewBox="-11 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
 				<title>angle-left</title>
 				<path d="M7.28 23.28c-0.2 0-0.44-0.080-0.6-0.24l-6.44-6.44c-0.32-0.32-0.32-0.84 0-1.2l6.44-6.44c0.32-0.32 0.84-0.32 1.2 0 0.32 0.32 0.32 0.84 0 1.2l-5.8 5.84 5.84 5.84c0.32 0.32 0.32 0.84 0 1.2-0.16 0.16-0.44 0.24-0.64 0.24z"></path>
 			</svg>
@@ -24,7 +24,7 @@
 		<form asp-action="EditProfile" enctype="multipart/form-data" method="post" id="EditProfile">
 			<div class="card">
 				<div class="card-header">
-					<h1 class="m-0">Account Details</h1></div>
+					<h1 class="fs-2 m-0">Account Details</h1></div>
 
 				<div class="card-body">
 
@@ -67,7 +67,7 @@
 					<!--begin::Input group-->
 					<div class="d-flex flex-column mb-5 fv-row">
 						<!--begin::Label-->
-						<label class="fs-5 fw-semibold mb-2">Email</label>
+						<label class="fs-6-5 fw-semibold mb-2">Email</label>
 						<!--end::Label-->
 						<!--begin::Input-->
 						<input class="form-control form-control-solid"  placeholder="@User.Identity?.Name" disabled />
@@ -81,7 +81,7 @@
 						<!--begin::Col-->
 						<div class="col-md-6 fv-row">
 							<!--begin::Label-->
-							<label asp-for="FirstName" class="required fs-5 fw-semibold mb-2">First name</label>
+							<label asp-for="FirstName" class="required fs-6-5 fw-semibold mb-2">First name</label>
 							<!--end::Label-->
 							<!--begin::Input-->
 							<input asp-for="FirstName" type="text" class="form-control form-control-solid"  />
@@ -92,7 +92,7 @@
 						<!--begin::Col-->
 						<div class="col-md-6 fv-row">
 							<!--end::Label-->
-							<label asp-for="LastName" class="required fs-5 fw-semibold mb-2">Last name</label>
+							<label asp-for="LastName" class="required fs-6-5 fw-semibold mb-2">Last name</label>
 							<!--end::Label-->
 							<!--end::Input-->
 							<input asp-for="LastName" type="text" class="form-control form-control-solid"  />
@@ -107,7 +107,7 @@
 					<div class="d-flex flex-column mb-5 fv-row">
 					
 						<!--begin::Label-->
-						<label asp-for="Address" class="required fs-5 fw-semibold mb-2">Full Address</label>
+						<label asp-for="Address" class="required fs-6-5 fw-semibold mb-2">Full Address</label>
 						<!--end::Label-->
 
 						<div class="input-group">
@@ -133,7 +133,7 @@
 		c0-7.518,6.117-13.634,13.637-13.634c7.524,0,13.646,6.116,13.646,13.634C94.832,82.233,86.776,94.419,81.168,101.497z"/>
 										</g>
 									</svg>
-									Fetch Auto
+									<span class="fs-6-5">Fetch Auto</span>
 								</span>
 							</div>
 						</div>
@@ -142,30 +142,23 @@
 					</div>
 					<!--end::Input group-->
 
-					<div class="row mb-5">
+					<div class="row">
 						<div class="col-md-6 fv-row">
-							<label asp-for="Latitude" class="fs-5 fw-semibold mb-2">Latitude</label>
+							<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2">Latitude</label>
 							<input asp-for="Latitude" type="text" id="latitude" class="form-control form-control-solid" />
 							<span asp-validation-for="Latitude"  class="text-danger"></span>
 						</div>
 						<div class="col-md-6 fv-row">
-							<label asp-for="Longitude" class="fs-5 fw-semibold mb-2">Longitude</label>
+							<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2">Longitude</label>
 							<input asp-for="Longitude" type="text" id="longitude" class="form-control form-control-solid" />
 							<span asp-validation-for="Longitude"  class="text-danger"></span>
 						</div>
 					</div>
-				
 				</div>
 
 				<div class="card-footer">
-					<button type="submit" class="btn btn-lg btn-primary">
-						<span class="indicator-label">
-							Submit
-						</span>
-					</button>
-					<a asp-action="Index" class="ms-2 btn btn-lg btn-secondary">
-						Cancel
-					</a>
+					<button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
+					<a asp-action="Index" class="ms-2 btn btn-sm btn-secondary">Cancel</a>
 				</div>
 			</div>
 		</form>

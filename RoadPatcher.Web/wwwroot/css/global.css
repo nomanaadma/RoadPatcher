@@ -1,3 +1,7 @@
+html, body {
+    font-size: 12px; 
+}
+
 .profile_email {
     margin-right: 10px;
 }
@@ -86,7 +90,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 150px;
+    width: 120px;
     border-radius: 0 !important;
     border-bottom: 5px solid transparent !important;
     color: var(--bs-btn-active-color) !important;
@@ -121,12 +125,12 @@ p {
 }
 
 
-.fz-30 {
-    font-size: 30px !important;
+.fz-24 {
+    font-size: 24px !important;
 }
 
 .fz-27 {
-    font-size: 27px !important;
+    font-size: 24px !important;
 }
 
 .time-location-i i {
@@ -202,4 +206,24 @@ p {
     box-shadow: 2px 2px 0 #ffa800;
 }
 
+.card .card-header {
+    min-height: 55px;
+}
 
+.fs-6-5,
+.form-control {
+    font-size: 12px;
+}
+
+.user-profile-nav img {
+    width: 45px;
+    height: 45px;
+}
+
+.btn-sm {
+    padding: 10px 20px !important
+}
+
+.card .card-footer {
+    padding: 1.5em 2.25rem;
+}
