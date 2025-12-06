@@ -1,76 +1,146 @@
-﻿@model RoadPatcher.Models.ChangePasswordViewModel
+﻿@model RoadPatcher.Models.PostViewModel
 @{
-	ViewData["Title"] = "Create Post";
+    ViewData["Title"] = "Create Post";
 }
 
+<link href="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.css" rel="stylesheet">
+
 <div class="row g-5 justify-content-center">
-	
-	<div class="col-lg-7 mb-10">
-		
-		<form asp-action="Create" method="post">
-			<div class="card">
-				<div class="card-header card-header-secondary">
-					<h1 class="fs-2 m-0">Create Post</h1></div>
-				
-				<div class="card-body">
-					
-					<!--begin::Input group-->
-					<div class="d-flex flex-column mb-5 fv-row">
-						<!--begin::Label-->
-						<label asp-for="OldPassword" class="fs-6-5 fw-semibold mb-2">Current Password</label>
-						<!--end::Label-->
+    <div class="col-lg-7 mb-10">
+        <form asp-action="Create" method="post">
+            <div class="card create-post">
+                <div class="card-header card-header-secondary">
+                    <h1 class="fs-2 m-0">Create Post</h1>
+                </div>
+                <div class="card-body">
+	                
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="Address" class="fs-6-5 fw-semibold mb-2"></label>
+		                <input asp-for="Address" class="form-control form-control-solid" />
+		                <span asp-validation-for="Address" class="text-danger"></span>
+	                </div>
 
-						<!--begin::Input-->
-						<input asp-for="OldPassword" autocomplete="current-password" class="form-control form-control-solid" />
-						<!--end::Input-->
-						
-						<span asp-validation-for="OldPassword" class="text-danger"></span>
-						
-					</div>
-					<!--end::Input group-->
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="GoogleAddress" class="fs-6-5 fw-semibold mb-2"></label>
+		                <input asp-for="GoogleAddress" class="form-control form-control-solid" />
+		                <span asp-validation-for="GoogleAddress" class="text-danger"></span>
+	                </div>
+                    
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2"></label>
+		                <input asp-for="Latitude" class="form-control form-control-solid" />
+	                </div>
 
-					<!--begin::Input group-->
-					<div class="d-flex flex-column mb-5 fv-row">
-						<!--begin::Label-->
-						<label asp-for="NewPassword" class="fs-6-5 fw-semibold mb-2">New Password</label>
-						<!--end::Label-->
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2"></label>
+		                <input asp-for="Longitude" class="form-control form-control-solid" />
+	                </div>
 
-						<!--begin::Input-->
-						<input asp-for="NewPassword" autocomplete="new-password" class="form-control form-control-solid" />
-						<!--end::Input-->
-						
-						<span asp-validation-for="NewPassword" class="text-danger"></span>
-						
-					</div>
-					<!--end::Input group-->
-					
-					<!--begin::Input group-->
-					<div class="d-flex flex-column fv-row">
-						<!--begin::Label-->
-						<label asp-for="ConfirmPassword" class="fs-6-5 fw-semibold mb-2">Confirm Password</label>
-						<!--end::Label-->
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="Description" class="fs-6-5 fw-semibold mb-2"></label>
+		                <textarea asp-for="Description" class="form-control form-control-solid"></textarea>
+		                <span asp-validation-for="Description" class="text-danger"></span>
+	                </div>
 
-						<!--begin::Input-->
-						<input asp-for="ConfirmPassword" autocomplete="new-password" class="form-control form-control-solid" />
-						<!--end::Input-->
-						
-						<span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-						
-					</div>
-					<!--end::Input group-->
+	                <div class="row">
+		                <div class="col">
+			                <label asp-for="ImageId" class="fs-6-5 fw-semibold mb-2">Image</label>
+			                <input type="text" class="hidden-physical" asp-for="ImageId" />
+			                <span asp-validation-for="ImageId" class="text-danger"></span>
+			                <div id="uppy-image"></div>
+		                </div>
+		                <div class="col">
+			                <label asp-for="VideoId" class="fs-6-5 fw-semibold mb-2">Video</label>
+			                <input type="text" class="hidden-physical" asp-for="VideoId" />
+			                <span asp-validation-for="VideoId" class="text-danger"></span>
+			                <div id="uppy-video"></div>
+		                </div>
+	                </div>
+	                
+	                <div class="row mt-8 mb-8 mediafiles-row">
+		                <label asp-for="MediaFiles" class="fs-6-5 fw-semibold mb-2">Other Images</label>
+		                <div id="uppy-images"></div>
+	                </div>
 
-				</div>
+	                <div class="d-flex flex-column mb-5 fv-row">
+		                <label asp-for="Cost" class="fs-6-5 fw-semibold mb-2"></label>
+		                <input asp-for="Cost" class="form-control form-control-solid"/>
+		                <span asp-validation-for="Cost" class="text-danger"></span>
+	                </div>
 
-				<div class="card-footer">
-					<button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
-					<a asp-action="Index" class="ms-2 btn btn-sm btn-secondary">Cancel</a>
-				</div>
-			</div>
-		</form>
-	</div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    <a asp-action="Index" asp-controller="Home" class="ms-2 btn btn-sm btn-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
+	
+	<script src="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.js"></script>
+	
+	<script>
+	    document.addEventListener('DOMContentLoaded', function () {
+
+		    uppyInstance('#uppy-image', 'Image', ['image/*'], 1, '#ImageId');
+		    uppyInstance('#uppy-video', 'Video', ['video/*'], 1, '#VideoId');
+		    uppyInstance('#uppy-images', 'Images', ['image/*'], 10, null);
+			
+			function uppyInstance(targetId, msg, allowedFileTypes, maxNumberOfFiles, el) {
+
+				const uppy = new Uppy.Uppy({
+					// Core restrictions for single image
+					restrictions: {
+						maxNumberOfFiles: maxNumberOfFiles,
+						allowedFileTypes: allowedFileTypes
+					},
+					autoProceed: true // Set to true if you want upload to start immediately upon selection
+				})
+				.use(Uppy.Dashboard, {
+					inline: true,
+					target: targetId,
+					proudlyDisplayPoweredByUppy: false,
+					note: `${msg} only, ${maxNumberOfFiles} file max`,
+					showRemoveButtonAfterComplete: true,
+					doneButtonHandler: null,
+				})
+				.use(Uppy.XHRUpload, {
+					endpoint: '/Posts/Upload', // The backend route we will create
+					fieldName: 'file',             // Must match the parameter name in the Controller
+					formData: true,
+					// Header for Anti-Forgery Token (Optional but recommended)
+					headers: {
+						'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")[0]?.value
+					}
+				});
+
+				uppy.on('upload-error', (file, error, response) => {
+					uppy.info(response?.body?.error || error.message, 'error', 1000);
+				});
+
+				// Event: Successful Upload
+				uppy.on('upload-success', (file, response) => {
+					
+					const id = response?.body?.id;
+					
+					if(el != null) {
+						$(el).val(id);
+					} else {
+						$(`<input name="MediaFiles[]" type="hidden" value="${id}" />`).appendTo('.mediafiles-row');
+					}
+					
+					console.log('Upload result:', response.body);
+				});
+
+			}
+		    
+	    });
+	</script>
+	
+	
 	<partial name="_ValidationScriptsPartial" />
 	<script>
 		toastr.options = {

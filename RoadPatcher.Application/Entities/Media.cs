@@ -4,7 +4,7 @@ public class Media
 {
 	public int Id { get; init; }
 
-	public int? PostId { get; init; }
+	public int? PostId { get; set; }
 	public Post? Post { get; init; }
 
 	public required string Name { get; init; }

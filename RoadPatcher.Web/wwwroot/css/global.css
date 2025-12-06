@@ -224,8 +224,10 @@ p {
     padding: 10px 20px !important
 }
 
-.card .card-footer {
-    padding: 1.5em 2.25rem;
+.card .card-header,
+.card .card-footer,
+.card .card-body {
+    padding: 1.5rem;
 }
 
 .custom-tooltip {
@@ -299,5 +301,27 @@ p {
     padding: 5px 10px;
 }
 
+[dir=ltr] .uppy-Dashboard--singleFile.uppy-size--height-md .uppy-Dashboard-Item-action--remove {
+    left: 8px;
+}
+
+.uppy-Dashboard {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.uppy-Dashboard-inner {
+    width: 100% !important;
+    height: 500px !important;
+    background-color: #f9f9f9 !important;
+}
+
+.uppy-Dashboard-AddFiles-list {
+    display: none !important;
+}
+
+.hidden-physical {
+    position: absolute;
+    left: -9999px;
+}
 
 

@@ -3,6 +3,9 @@
 public class UserData
 {
 	public required string UserId { get; init; }
+	
+	public ApplicationUser? User { get; init; }
+	
 	public required string FirstName { get; set; }
 	public required string LastName { get; set; }
 	public required string Address { get; set; }
@@ -11,7 +14,6 @@ public class UserData
 
 	public string? Image { get; set; }
 	
-	public ApplicationUser? User { get; init; }
 }
 
 

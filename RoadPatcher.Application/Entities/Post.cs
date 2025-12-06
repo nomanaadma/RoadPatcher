@@ -5,7 +5,7 @@ public class Post
 	public int Id { get; init; }
 
 	public required string UserId { get; init; }
-	public required ApplicationUser User { get; init; }
+	public ApplicationUser? User { get; init; }
 
 	public required string Address { get; init; }
 	public required string GoogleAddress { get; init; }
@@ -36,6 +36,6 @@ public class Post
 	
 	public bool AllowEdit { get; init; }
 	
-	public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-	public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
+	public DateTime CreatedAt { get; init; }
+	public DateTime UpdatedAt { get; init; }
 }
