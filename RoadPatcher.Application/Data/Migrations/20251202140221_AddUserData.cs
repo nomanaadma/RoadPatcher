@@ -11,7 +11,7 @@ namespace RoadPatcher.Application.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "UserDatas",
+                name: "UserData",
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "character varying(36)", maxLength: 36, nullable: false),
@@ -24,9 +24,9 @@ namespace RoadPatcher.Application.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserDatas", x => x.UserId);
+                    table.PrimaryKey("PK_UserData", x => x.UserId);
                     table.ForeignKey(
-                        name: "FK_UserDatas_AspNetUsers_UserId",
+                        name: "FK_UserData_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
@@ -37,7 +37,7 @@ namespace RoadPatcher.Application.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "UserDatas");
+                name: "UserData");
         }
     }
 }

@@ -237,7 +237,7 @@ p {
     min-width: 300px;
 }
 
-.tooltip-arrow {
+.custom-tooltip .tooltip-arrow {
     width: 0;
     height: 0;
     border-left: 8px solid transparent !important;

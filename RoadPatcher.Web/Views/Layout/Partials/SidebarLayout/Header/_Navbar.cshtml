@@ -9,7 +9,7 @@
 	var profileImage = Url.Content("~/img/profile.png");
 	
 	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-	var userData = await DbContext.UserDatas.FirstOrDefaultAsync(x => x.UserId == userId);
+	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
 	
 	if (userData?.Image is not null)
 	{
@@ -34,9 +34,9 @@
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-3">
 				<div class="d-flex align-items-center">
-					<div class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px">
+					<a data-bs-toggle="tooltip" title="Create Post" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Posts" asp-action="Create">
 						<i class="las la-plus-square fz-24"></i>
-					</div>
+					</a>
 				</div>
 			</div>
 			

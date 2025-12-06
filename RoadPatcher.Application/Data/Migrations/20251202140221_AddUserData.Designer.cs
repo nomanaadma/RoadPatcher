@@ -258,7 +258,7 @@ namespace RoadPatcher.Application.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("UserDatas");
+                    b.ToTable("UserData");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

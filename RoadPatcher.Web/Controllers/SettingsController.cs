@@ -75,7 +75,7 @@ public partial class SettingsController(
 	{
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-		var existing = await context.UserDatas.FirstOrDefaultAsync(x => x.UserId == userId);
+		var existing = await context.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
 
 		if (existing == null)
 			return View();
@@ -128,7 +128,7 @@ public partial class SettingsController(
 		ApplicationUser user, string? savedImage)
 	{
 		
-		var existing = await context.UserDatas
+		var existing = await context.UserData
 			.AsTracking()
 			.FirstOrDefaultAsync(x => x.UserId == user.Id);
 	
@@ -146,7 +146,7 @@ public partial class SettingsController(
 				Image = savedImage,
 			};
 	
-			context.UserDatas.Add(userData);
+			context.UserData.Add(userData);
 		}
 		else
 		{
