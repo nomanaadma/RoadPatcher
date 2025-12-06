@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
+using Sysfile = System.IO.File;
 
 namespace RoadPatcher.Controllers;
 
@@ -132,6 +133,28 @@ public partial class PostsController(
 
 		return Ok(new { name = finalFileName, id = media.Id });
 		
+	}
+
+	[HttpDelete]
+	public async Task<IActionResult> DeleteFile(int id)
+	{
+		var media = context.Media.AsTracking().FirstOrDefault(m => m.Id == id)!;
+		
+		var uploadFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "posts");
+		var fullPath = Path.Combine(uploadFolder, media.Name);
+		
+		context.Media.Remove(media);
+		await context.SaveChangesAsync();
+		
+		Sysfile.Delete(fullPath);
+		return Ok();
+
+	}
+	
+	public class FileDeleteRequest
+	{
+		public string FileName { get; set; } = string.Empty;
+		public int Id { get; set; }
 	}
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]

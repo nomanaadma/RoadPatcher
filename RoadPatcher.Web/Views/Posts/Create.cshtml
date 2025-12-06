@@ -135,6 +135,11 @@
 					console.log('Upload result:', response.body);
 				});
 
+				uppy.on('file-removed', (file) => {
+					console.log('File removed:', file);
+					axios.delete(`/Posts/DeleteFile/${file.response.body.id}`);
+				});
+
 			}
 		    
 	    });
