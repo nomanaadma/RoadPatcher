@@ -234,14 +234,14 @@ p {
 }
 
 .tooltip-box {
-    min-width: 250px;
+    min-width: 300px;
 }
 
 .tooltip-arrow {
     width: 0;
     height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
+    border-left: 8px solid transparent !important;
+    border-right: 8px solid transparent !important;
     border-bottom: 8px solid #164046;
     margin: -1px auto 0;
 }
@@ -291,10 +291,13 @@ p {
 }
 
 .donation-progress {
-    height: 140px;
+    height: 50px;
 }
 
-
+.tooltip-content {
+    border: 1px solid;
+    padding: 5px 10px;
+}
 
 
 
