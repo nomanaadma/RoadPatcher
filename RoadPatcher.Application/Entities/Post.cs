@@ -24,7 +24,7 @@ public class Post
 	public int Shares { get; init; }
 	public int Saves { get; init; }
 
-	public PostStatus Status { get; init; }
+	public PostStatus? Status { get; init; } = PostStatus.Pending;
 
 	public int ImageId { get; set; }
 	public Media Image { get; init; } = null!;

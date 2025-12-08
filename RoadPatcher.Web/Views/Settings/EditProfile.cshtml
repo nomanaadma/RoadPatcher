@@ -166,13 +166,6 @@
 </div>
 
 @section Scripts {
-	
-	<script>
-		toastr.options = {
-			"positionClass": "toastr-bottom-right",
-		};
-	</script>
-	
 	<script>
 		$(document).ready(function () {
 
@@ -212,24 +205,5 @@
 		});
 	</script>
 	<partial name="_ValidationScriptsPartial" />
-	
-	
-	@if (TempData["Success"] != null) {
-		<script>
-			toastr.success("@TempData["Success"]");
-		</script>
-	}
-	
-	@if (TempData["FormErrors"] != null)
-	{
-		var errors = TempData["FormErrors"]!.ToString()!.Split("||");
-
-		foreach (var err in errors)
-		{
-			<script>
-				toastr.error("@err");
-			</script>
-		}
-	}
 	
 }

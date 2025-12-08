@@ -51,5 +51,10 @@
 <script src="~/js/scripts.bundle.js"></script>
 <!--end::Global Javascript-->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+	toastr.options = {
+		"positionClass": "toastr-bottom-right",
+	};
+</script>
 @await RenderSectionAsync("Scripts", required: false)
 <script src="~/js/main.js"></script>

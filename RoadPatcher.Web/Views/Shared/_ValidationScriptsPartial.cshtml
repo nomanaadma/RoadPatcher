@@ -1,2 +1,19 @@
 ﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+@if (TempData["Success"] != null)
+{
+	<script>
+        toastr.success("@TempData["Success"]");
+    </script>
+}
+
+@if (TempData["FormErrors"] != null)
+{
+	var errors = TempData["FormErrors"]!.ToString()!.Split("||");
+	foreach (var err in errors)
+	{
+		<script>
+            toastr.error("@err");
+        </script>
+	}
+}
