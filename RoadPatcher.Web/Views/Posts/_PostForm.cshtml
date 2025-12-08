@@ -1,0 +1,89 @@
+﻿@model RoadPatcher.Models.PostViewModel
+@{
+	var isEdit = ViewData["IsEdit"] as bool? ?? false;
+}
+
+<link href="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.css" rel="stylesheet">
+
+<div class="row g-5 justify-content-center">
+	<div class="col-lg-7 mb-10">
+		<form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+		    
+			<div class="card create-post">
+				<div class="card-header card-header-secondary">
+					<h1 class="fs-2 m-0">Edit Post</h1>
+				</div>
+				<div class="card-body">
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="Address" class="fs-6-5 fw-semibold mb-2"></label>
+						<input asp-for="Address" class="form-control form-control-solid"/>
+						<span asp-validation-for="Address" class="text-danger"></span>
+					</div>
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="GoogleAddress" class="fs-6-5 fw-semibold mb-2"></label>
+						<input asp-for="GoogleAddress" class="form-control form-control-solid"/>
+						<span asp-validation-for="GoogleAddress" class="text-danger"></span>
+					</div>
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2"></label>
+						<input asp-for="Latitude" class="form-control form-control-solid"/>
+					</div>
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2"></label>
+						<input asp-for="Longitude" class="form-control form-control-solid"/>
+					</div>
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="Description" class="fs-6-5 fw-semibold mb-2"></label>
+						<textarea asp-for="Description" class="form-control form-control-solid"></textarea>
+						<span asp-validation-for="Description" class="text-danger"></span>
+					</div>
+
+					<div class="row">
+						<div class="col">
+							<label asp-for="ImageId" class="fs-6-5 fw-semibold mb-2">Image</label>
+							<input type="text" class="hidden-physical" asp-for="ImageId"/>
+							<span asp-validation-for="ImageId" class="text-danger"></span>
+							<div id="uppy-image"></div>
+						</div>
+						<div class="col">
+							<label asp-for="VideoId" class="fs-6-5 fw-semibold mb-2">Video</label>
+							<input type="text" class="hidden-physical" asp-for="VideoId"/>
+							<span asp-validation-for="VideoId" class="text-danger"></span>
+							<div id="uppy-video"></div>
+						</div>
+					</div>
+
+					<div class="row mt-8 mb-8 mediafiles-row">
+						<label asp-for="MediaFiles" class="fs-6-5 fw-semibold mb-2">Other Images</label>
+						<div id="uppy-images"></div>
+						@if (isEdit)
+						{
+							@foreach(var media in Model.MediaFiles)
+							{
+								<input name="MediaFilesIds[]" class="media-image" type="hidden" value="@media.Id" />
+							}
+						}
+					</div>
+
+					<div class="d-flex flex-column mb-5 fv-row">
+						<label asp-for="Cost" class="fs-6-5 fw-semibold mb-2"></label>
+						<input asp-for="Cost" class="form-control form-control-solid"/>
+						<span asp-validation-for="Cost" class="text-danger"></span>
+					</div>
+
+				</div>
+				<div class="card-footer">
+					<button type="submit" id="submitBtn" class="btn btn-sm btn-primary">@(isEdit ? "Update Post" : "Create Post")</button>
+					<button onclick="history.back()" type="button" class="ms-2 btn btn-sm btn-secondary">Discard</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+

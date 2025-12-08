@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
@@ -59,27 +58,13 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 		
 		
-		var allIds = new List<int>();
+		await AttachMedia(model, post.Id);
 
-		if (model.MediaFilesIds.Count > 0) 
-			allIds.AddRange(model.MediaFilesIds);
-
-		allIds.Add(model.ImageId);
-		
-		allIds.Add(model.VideoId);
-		
-		(await context.Media
-			.Where(m => allIds.Contains(m.Id))
-			.AsTracking()
-			.ToListAsync()).ForEach(m => m.PostId = post.Id);
-		
-		await context.SaveChangesAsync();
-		
 		TempData["Success"] = "Post Created successfully!";
 		return RedirectToAction("Edit", new { id = post.Id } );
 		
 	}
-	
+
 	[HttpGet]
 	public async Task<IActionResult> Edit(int id)
 	{
@@ -147,22 +132,6 @@ public partial class PostsController(
 			media.PostId = null;
 		}
 		
-		await context.SaveChangesAsync();
-		
-		var allIds = new List<int>();
-
-		if (model.MediaFilesIds.Count > 0)
-			allIds.AddRange(model.MediaFilesIds);
-
-		allIds.Add(model.ImageId);
-		
-		allIds.Add(model.VideoId);
-		
-		(await context.Media
-			.Where(m => allIds.Contains(m.Id))
-			.AsTracking()
-			.ToListAsync()).ForEach(m => m.PostId = post.Id);
-		
 		post.Address = model.Address;
 		post.GoogleAddress = model.GoogleAddress;
 		post.Description = model.Description;
@@ -172,9 +141,11 @@ public partial class PostsController(
 		post.ImageId = model.ImageId;
 		post.VideoId = model.VideoId;
 		post.UpdatedAt = DateTime.UtcNow;
-
+		
 		await context.SaveChangesAsync();
 
+		await AttachMedia(model, post.Id);
+		
 		TempData["Success"] = "Post updated successfully!";
 		return RedirectToAction("Edit", new { id = post.Id });
 	}
@@ -257,6 +228,26 @@ public partial class PostsController(
 		Sysfile.Delete(fullPath);
 		return Ok();
 
+	}
+	
+	
+	private async Task AttachMedia(PostViewModel model, int id)
+	{
+		var allIds = new List<int>();
+
+		if (model.MediaFilesIds.Count > 0) 
+			allIds.AddRange(model.MediaFilesIds);
+
+		allIds.Add(model.ImageId);
+		
+		allIds.Add(model.VideoId);
+		
+		(await context.Media
+			.Where(m => allIds.Contains(m.Id))
+			.AsTracking()
+			.ToListAsync()).ForEach(m => m.PostId = id);
+		
+		await context.SaveChangesAsync();
 	}
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]

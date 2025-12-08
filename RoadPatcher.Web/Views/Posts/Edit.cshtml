@@ -1,95 +1,17 @@
-﻿@using RoadPatcher.Application.Entities
-@model RoadPatcher.Models.PostViewModel
-@inject IWebHostEnvironment WebHostEnvironment
+﻿@model RoadPatcher.Models.PostViewModel
 @{
     ViewData["Title"] = "Edit Post";
     var uploadFolderUrl = Url.Content("~/uploads/posts/");
+    ViewData["IsEdit"] = true;
 }
 
-<link href="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.css" rel="stylesheet">
-
-<div class="row g-5 justify-content-center">
-    <div class="col-lg-7 mb-10">
-	    <form asp-action="Edit" method="post">
-		    
-		    <div class="card create-post">
-			    <div class="card-header card-header-secondary">
-				    <h1 class="fs-2 m-0">Edit Post</h1>
-			    </div>
-			    <div class="card-body">
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="Address" class="fs-6-5 fw-semibold mb-2"></label>
-					    <input asp-for="Address" class="form-control form-control-solid"/>
-					    <span asp-validation-for="Address" class="text-danger"></span>
-				    </div>
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="GoogleAddress" class="fs-6-5 fw-semibold mb-2"></label>
-					    <input asp-for="GoogleAddress" class="form-control form-control-solid"/>
-					    <span asp-validation-for="GoogleAddress" class="text-danger"></span>
-				    </div>
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2"></label>
-					    <input asp-for="Latitude" class="form-control form-control-solid"/>
-				    </div>
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2"></label>
-					    <input asp-for="Longitude" class="form-control form-control-solid"/>
-				    </div>
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="Description" class="fs-6-5 fw-semibold mb-2"></label>
-					    <textarea asp-for="Description" class="form-control form-control-solid"></textarea>
-					    <span asp-validation-for="Description" class="text-danger"></span>
-				    </div>
-
-				    <div class="row">
-					    <div class="col">
-						    <label asp-for="ImageId" class="fs-6-5 fw-semibold mb-2">Image</label>
-						    <input type="text" class="hidden-physical" asp-for="ImageId"/>
-						    <span asp-validation-for="ImageId" class="text-danger"></span>
-						    <div id="uppy-image"></div>
-					    </div>
-					    <div class="col">
-						    <label asp-for="VideoId" class="fs-6-5 fw-semibold mb-2">Video</label>
-						    <input type="text" class="hidden-physical" asp-for="VideoId"/>
-						    <span asp-validation-for="VideoId" class="text-danger"></span>
-						    <div id="uppy-video"></div>
-					    </div>
-				    </div>
-
-				    <div class="row mt-8 mb-8 mediafiles-row">
-					    <label asp-for="MediaFiles" class="fs-6-5 fw-semibold mb-2">Other Images</label>
-					    <div id="uppy-images"></div>
-					    @foreach(var media in Model.MediaFiles)
-					    {
-						    <input name="MediaFilesIds[]" class="media-image" type="hidden" value="@media.Id" />
-					    }
-				    </div>
-
-				    <div class="d-flex flex-column mb-5 fv-row">
-					    <label asp-for="Cost" class="fs-6-5 fw-semibold mb-2"></label>
-					    <input asp-for="Cost" class="form-control form-control-solid"/>
-					    <span asp-validation-for="Cost" class="text-danger"></span>
-				    </div>
-
-			    </div>
-			    <div class="card-footer">
-				    <button type="submit" id="submitBtn" class="btn btn-sm btn-primary">Update Post</button>
-				    <button onclick="history.back()" type="button" class="ms-2 btn btn-sm btn-secondary">Discard</button>
-			    </div>
-		    </div>
-	    </form>
-    </div>
-</div>
+<partial name="_PostForm" model="Model" />
 
 @section Scripts {
 	
 	<script src="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.js"></script>
-	
+	<script src="~/js/post-form.js"></script>
+	<partial name="_ValidationScriptsPartial" />
 	<script>
 
 		function preloadMedia(targetUppy, id, name) {
@@ -112,139 +34,21 @@
 
 				});
 		}
-
-		const submitButton = document.getElementById('submitBtn');
-		let uploadQueue = [];
-		function removeQueue(id) {
-			const index = uploadQueue.indexOf(id);
-			if (index > -1) uploadQueue.splice(index, 1);
-			if (uploadQueue.length === 0) submitButton.disabled = false;
-		}
 		
-	    document.addEventListener('DOMContentLoaded', function () {
-
-		    const uppyImage = uppyInstance('#uppy-image', 'Image', ['image/*'], 1, '#ImageId');
-		    preloadMedia(uppyImage, @Model.Image!.Id, "@Model.Image.Name");
+		document.addEventListener('DOMContentLoaded', function () {
 			
-		    
-			const uppyVideo = uppyInstance('#uppy-video', 'Video', ['video/*'], 1, '#VideoId');
-		    preloadMedia(uppyVideo, @Model.Video!.Id, "@Model.Video.Name");
-
-		    
-			const uppyImages = uppyInstance('#uppy-images', 'Images', ['image/*'], 10, null);
-			 @foreach(var media in Model.MediaFiles)
-			 {
-			 	<text>
-		            preloadMedia(uppyImages, @media.Id, "@media.Name");
-			 	</text> 
-			 }
+			preloadMedia(uppyImage, @Model.Image!.Id, "@Model.Image.Name");
 			
-			function uppyInstance(targetId, msg, allowedFileTypes, maxNumberOfFiles, el) {
+			preloadMedia(uppyVideo, @Model.Video!.Id, "@Model.Video.Name");
 
-				const uppy = new Uppy.Uppy({
-					// Core restrictions for single image
-					restrictions: {
-						maxNumberOfFiles: maxNumberOfFiles,
-						allowedFileTypes: allowedFileTypes
-					},
-					autoProceed: true // Set to true if you want upload to start immediately upon selection
-				})
-				.use(Uppy.Dashboard, {
-					inline: true,
-					target: targetId,
-					proudlyDisplayPoweredByUppy: false,
-					note: `${msg} only, ${maxNumberOfFiles} file max`,
-					showRemoveButtonAfterComplete: true,
-					doneButtonHandler: null,
-				})
-				.use(Uppy.XHRUpload, {
-					endpoint: '/Posts/Upload', // The backend route we will create
-					fieldName: 'file',             // Must match the parameter name in the Controller
-					formData: true,
-					// Header for Anti-Forgery Token (Optional but recommended)
-					headers: {
-						'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")[0]?.value
-					}
-				});
-
-				uppy.on('upload-started', (file, error, response) => {
-					if (!uploadQueue.includes(file.id)) {
-						uploadQueue.push(file.id);
-					}
-					submitButton.disabled = true;
-				});
-
-				uppy.on('upload-error', (file, error, response) => {
-					uppy.info(response?.body?.error || error.message, 'error', 1000);
-					removeQueue(file.id);
-				});
-
-				// Event: Successful Upload
-				uppy.on('upload-success', (file, response) => {
-
-					removeQueue(file.id);
-					
-					const id = response?.body?.id;
-					
-					if(id === undefined) return;
-					
-					if(el != null) {
-						$(el).val(id);
-					} else {
-						$(`<input name="MediaFilesIds[]" class="media-image" type="hidden"  value="${id}" />`)
-							.appendTo('.mediafiles-row');
-					}
-					
-				});
-
-				uppy.on('file-removed', (file) => {
-
-					let fileId = file.response.body.id;
-					
-					if(fileId) {
-						// If the file was uploade one, get the ID from response and delete it 
-						axios.delete(`/Posts/DeleteFile/${fileId}`);
-					} else {
-						// If the file was preloaded, get the ID from meta
-						fileId = file.meta.id;
-					}
-
-					$(`.media-image[value="${fileId}"]`).remove();
-					$(`[value="${fileId}"]`).val('');
-					
-				});
-				
-				return uppy;
-
+			@foreach(var media in Model.MediaFiles)
+			{
+			    <text>
+			        preloadMedia(uppyImages, @media.Id, "@media.Name");
+			    </text>
 			}
-		    
-	    });
+			
+		});
 	</script>
-	
-	
-	<partial name="_ValidationScriptsPartial" />
-	<script>
-		toastr.options = {
-			"positionClass": "toastr-bottom-right",
-		};
-	</script>
-	
-	@if (TempData["Success"] != null) {
-		<script>
-			toastr.success("@TempData["Success"]");
-		</script>
-	}
-	
-	@if (TempData["FormErrors"] != null)
-	{
-		var errors = TempData["FormErrors"]!.ToString()!.Split("||");
-
-		foreach (var err in errors)
-		{
-			<script>
-				toastr.error("@err");
-			</script>
-		}
-	}
 	
 }
