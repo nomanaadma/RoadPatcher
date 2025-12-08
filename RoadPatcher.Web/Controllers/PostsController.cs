@@ -60,9 +60,10 @@ public partial class PostsController(
 		
 		
 		var allIds = new List<int>();
-		
-		allIds.AddRange(model.MediaFiles);
-		
+
+		if (model.MediaFilesIds.Count > 0) 
+			allIds.AddRange(model.MediaFilesIds);
+
 		allIds.Add(model.ImageId);
 		
 		allIds.Add(model.VideoId);
@@ -75,15 +76,122 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 		
 		TempData["Success"] = "Post Created successfully!";
-		return RedirectToAction("Create", new { id = post.Id } );
+		return RedirectToAction("Edit", new { id = post.Id } );
 		
 	}
+	
+	[HttpGet]
+	public async Task<IActionResult> Edit(int id)
+	{
+		var post = await context.Posts
+			.Include(p => p.MediaFiles)
+			.Include(post => post.Image)
+			.Include(post => post.Video)
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+			return NotFound();
+
+		var model = new PostViewModel
+		{
+			Address = post.Address,
+			GoogleAddress = post.GoogleAddress,
+			Description = post.Description,
+			Latitude = post.Latitude,
+			Longitude = post.Longitude,
+			Cost = post.Cost,
+			Raised = post.Raised,
+			Remaining = post.Remaining,
+			ImageId = post.ImageId,
+			VideoId = post.VideoId,
+			Image = post.Image,
+			Video = post.Video,
+			MediaFiles = post.MediaFiles.Where(m => m.Id != post.ImageId && m.Id != post.VideoId)
+				.ToList() // remove image and video from all media files
+		};
+		
+		return View(model);
+	}
+	
+	
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> Edit(int id, PostViewModel model)
+	{
+		
+		if (!ModelState.IsValid)
+		{
+			TempData["FormErrors"] = string.Join("||", 
+				ModelState.Values
+					.SelectMany(v => v.Errors)
+					.Select(e => e.ErrorMessage));
+
+			return View(model);
+		}
+		
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+			return NotFound();
+		
+		// Update MediaFiles
+		var existingMedia = await context.Media
+			.AsTracking()
+			.Where(m => m.PostId == id)
+			.ToListAsync();
+
+		foreach (var media in existingMedia)
+		{
+			media.PostId = null;
+		}
+		
+		await context.SaveChangesAsync();
+		
+		var allIds = new List<int>();
+
+		if (model.MediaFilesIds.Count > 0)
+			allIds.AddRange(model.MediaFilesIds);
+
+		allIds.Add(model.ImageId);
+		
+		allIds.Add(model.VideoId);
+		
+		(await context.Media
+			.Where(m => allIds.Contains(m.Id))
+			.AsTracking()
+			.ToListAsync()).ForEach(m => m.PostId = post.Id);
+		
+		post.Address = model.Address;
+		post.GoogleAddress = model.GoogleAddress;
+		post.Description = model.Description;
+		post.Latitude = model.Latitude;
+		post.Longitude = model.Longitude;
+		post.Cost = model.Cost;
+		post.ImageId = model.ImageId;
+		post.VideoId = model.VideoId;
+		post.UpdatedAt = DateTime.UtcNow;
+
+		await context.SaveChangesAsync();
+
+		TempData["Success"] = "Post updated successfully!";
+		return RedirectToAction("Edit", new { id = post.Id });
+	}
+	
+	
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Upload(IFormFile file)
+	public async Task<IActionResult> Upload(IFormFile file, [FromForm] bool uploaded)
 	{
-
+	
+		// if the image is preload then don't upload it again
+		if (uploaded)
+		{
+			return Ok();
+		}
+		
 		// Basic Validation
 		if (file.Length == 0)
 			return BadRequest(new { error = "No file received." });
@@ -149,12 +257,6 @@ public partial class PostsController(
 		Sysfile.Delete(fullPath);
 		return Ok();
 
-	}
-	
-	public class FileDeleteRequest
-	{
-		public string FileName { get; set; } = string.Empty;
-		public int Id { get; set; }
 	}
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]

@@ -305,6 +305,11 @@ p {
     left: 8px;
 }
 
+[dir=ltr] .uppy-size--md .uppy-Dashboard-Item-action--remove
+{
+    left: -8px;
+}
+
 .uppy-Dashboard {
     width: 100% !important;
     max-width: 100% !important;

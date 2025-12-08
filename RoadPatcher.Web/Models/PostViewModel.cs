@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using RoadPatcher.Application.Entities;
 
 namespace RoadPatcher.Models;
 
@@ -33,10 +34,18 @@ public class PostViewModel
 
 	[Display(Name = "Image Id")]
 	public int ImageId { get; init; }
+	public Media? Image { get; init; }
+	
 
 	[Display(Name = "Video Id")]
 	public int VideoId { get; init; }
+	public Media? Video { get; init; }
+	
 
-	[Display(Name = "Media Files")]
-	public List<int> MediaFiles { get; init; } = [];
+	[Display(Name = "Media Files")] 
+	public List<Media> MediaFiles { get; init; } = [];
+	
+	public List<int> MediaFilesIds { get; init; } = [];
+	
+	
 }
