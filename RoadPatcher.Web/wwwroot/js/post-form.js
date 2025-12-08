@@ -61,6 +61,30 @@ document.addEventListener('DOMContentLoaded', function () {
         // Event: Successful Upload
         uppy.on('upload-success', (file, response) => {
 
+            if (el === '#VideoId') {
+
+                const dashboardEl = document.getElementById('uppy_'+file.id);
+
+                if (!dashboardEl) return;
+
+                const previewEl = dashboardEl.querySelector('.uppy-Dashboard-Item-previewInnerWrap');
+
+                setTimeout(function() {
+                    
+                    if (previewEl) previewEl.remove();
+
+                    const videoEl = document.createElement('video');
+                    videoEl.src = URL.createObjectURL(file.data); // preview video
+                    videoEl.controls = true;
+                    videoEl.preload = "none";
+
+                    // Append the video to the dashboard item
+                    dashboardEl.querySelector('.uppy-Dashboard-Item-preview').appendChild(videoEl);
+                    
+                }, 100);
+                
+            }
+
             removeQueue(file.id);
 
             const id = response?.body?.id;

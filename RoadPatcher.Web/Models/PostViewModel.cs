@@ -13,9 +13,8 @@ public class PostViewModel
 	[Display(Name = "Google Address")]
 	public required string GoogleAddress { get; init; }
 
-	[Required]
 	[Display(Name = "Description")]
-	public required string Description { get; init; }
+	public string? Description { get; init; }
 
 	[Display(Name = "Latitude")]
 	public double Latitude { get; init; }
@@ -43,9 +42,9 @@ public class PostViewModel
 	
 
 	[Display(Name = "Media Files")] 
-	public List<Media> MediaFiles { get; init; } = [];
+	public IEnumerable<Media> MediaFiles { get; init; } = [];
 	
-	public List<int> MediaFilesIds { get; init; } = [];
+	public IEnumerable<int> MediaFilesIds { get; } = [];
 	
 	
 }

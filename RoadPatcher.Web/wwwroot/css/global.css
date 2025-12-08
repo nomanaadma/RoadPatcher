@@ -329,4 +329,11 @@ p {
     left: -9999px;
 }
 
+.uppy-Dashboard-Item-preview video {
+    width: 100%;
+}
+
+.uppy-Dashboard-Item-action {
+    box-shadow: none !important;
+}
 

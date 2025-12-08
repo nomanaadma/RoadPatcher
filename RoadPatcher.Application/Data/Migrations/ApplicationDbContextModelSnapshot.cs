@@ -282,7 +282,6 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("text");
 

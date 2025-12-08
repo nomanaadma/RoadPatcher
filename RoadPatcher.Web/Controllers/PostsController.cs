@@ -235,7 +235,7 @@ public partial class PostsController(
 	{
 		var allIds = new List<int>();
 
-		if (model.MediaFilesIds.Count > 0) 
+		if (model.MediaFilesIds.Any()) 
 			allIds.AddRange(model.MediaFilesIds);
 
 		allIds.Add(model.ImageId);

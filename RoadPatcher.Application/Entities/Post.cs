@@ -12,7 +12,7 @@ public class Post
 	public double Latitude { get; set; }
 	public double Longitude { get; set; }
 
-	public required string Description { get; set; }
+	public string? Description { get; set; }
 
 	public decimal Cost { get; set; }
 	public decimal Raised { get; init; }
@@ -33,8 +33,8 @@ public class Post
 	public Media Video { get; init; } = null!;
 	
 	public List<Media> MediaFiles { get; init; } = [];
-	
-	public bool AllowEdit { get; init; }
+
+	public bool AllowEdit { get; init; } = true;
 	
 	public DateTime CreatedAt { get; init; }
 	public DateTime UpdatedAt { get; set; }
