@@ -105,6 +105,15 @@
 						<!--end::Col-->
 					</div>
 					<!--end::Input group-->
+
+					<hr>
+					
+					<div>
+						<h2>Address Guideline</h2>
+						<p class="text-gray-700 fs-6 mb-8 lh-22">
+							To get the most accurate location, you can choose any of the options below. The quickest method is <strong>Fetch Auto</strong>, which uses your device’s location to automatically fill both your <strong>Full Address</strong> and the <strong>Google Address</strong> below the map. If you prefer entering your details manually, type your address in the <strong>Full Address</strong> field and click <strong>Fetch by Filled Address Above</strong> — this will try to locate it on the map and update the Google Address and coordinates. You can also use <strong>Fetch by Device Location</strong> inside the map area; this works like Fetch Auto but does <i>not</i> change your Full Address. After the map loads your location, feel free to fine-tune it by <strong>dragging the marker</strong> or searching through the <strong>map’s search bar</strong>. If the Google Address looks more accurate than what you initially entered, simply click <strong>Copy to Full Address</strong> to update it.
+						</p>
+					</div>
 				
 					<!--begin::Input group-->
 					<div class="d-flex flex-column mb-5 fv-row">
@@ -167,12 +176,12 @@
 									<input class="form-control form-control-solid" asp-for="GoogleAddress" id="googleAddress" readonly />
 									<span asp-validation-for="GoogleAddress" class="text-danger"></span>
 								</div>
-								<div class="col-md-3 fv-row">
+								<div class="col-md-3 fv-row mt-2">
 									<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2">Latitude</label>
 									<input asp-for="Latitude" type="text" id="latitude" class="form-control form-control-solid" readonly />
 									<span asp-validation-for="Latitude" class="text-danger"></span>
 								</div>
-								<div class="col-md-3 fv-row">
+								<div class="col-md-3 fv-row mt-2">
 									<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2">Longitude</label>
 									<input asp-for="Longitude" type="text" id="longitude" class="form-control form-control-solid" readonly />
 									<span asp-validation-for="Longitude" class="text-danger"></span>
@@ -197,6 +206,7 @@
 @section Scripts {
 	<script>
         let map, marker, geocoder, fillAddressInput = false;
+		let showLoaderToast, toastClear, fillInputs;
         
         async function initMap(callback) {
             // 1. Import libraries using the modern method
@@ -206,11 +216,11 @@
             // Note: Geocoding library doesn't use importLibrary yet in many versions, 
             // but is available globally if loaded via script tag.
 
-            const initialPosition = { lat: 37.7749, lng: -122.4194 };
+            const initialPosition = { lat: 37.36305281824685, lng: 20.864313030696955 };
 
             // 2. Initialize Map
             map = new Map(document.getElementById("map"), {
-                zoom: 13,
+                zoom: 1,
                 center: initialPosition,
                 mapId: "d51644aa08ca7cea704f06a2 ", // Required for AdvancedMarkerElement and New API features
                 mapTypeControl: false,
@@ -267,32 +277,6 @@
 			map.setZoom(16);
 			marker.position = location;
 		}
-
-        function showLoaderToast(message = "Loading...") {
-
-	        document.getElementById("save-btn").disabled = true;
-			
-	        toastr.options = {
-		        timeOut: 0,
-		        extendedTimeOut: 0,
-		        closeButton: false,
-		        tapToDismiss: false,
-		        escapeHtml: false,
-		        positionClass: "toastr-bottom-right",
-	        };
-
-	        return toastr.info(`
-		        <div class="d-flex align-items-center">
-		            <div class="spinner-border spinner-border-sm me-2"></div>
-		            ${message}
-		        </div>
-		    `);
-        }
-		
-		function toastClear(toasted) {
-			document.getElementById("save-btn").disabled = false;
-			toastr.clear(toasted);
-		}
         
         function geocodePosition(pos, callback) {
 
@@ -315,36 +299,68 @@
             });
         }
 
-        function fillInputs(address, lat, lng) {
-            document.getElementById("googleAddress").value = address;
-            document.getElementById("latitude").value = lat;
-            document.getElementById("longitude").value = lng;
-        }
-
         window.initMap = initMap;
     </script>
 	
 	<script>
 		
 		$(document).ready(function () {
+
+			const saveBtn = $('#save-btn');
+			const googleAddress = $('#googleAddress');
+			const fullAddress = $('#Address');
+			const latitude = $('#latitude');
+			const longitude = $('#longitude');
+			
+			fillInputs = function(address, lat, lng) {
+				googleAddress.val(address);
+				latitude.val(lat);
+				longitude.val(lng);
+			}
+
+			showLoaderToast = function(message = "Loading...") {
+
+				saveBtn.prop("disabled", true);
+
+				toastr.options = {
+					timeOut: 0,
+					extendedTimeOut: 0,
+					closeButton: false,
+					tapToDismiss: false,
+					escapeHtml: false,
+					positionClass: "toastr-bottom-right",
+				};
+
+				return toastr.info(`
+		        <div class="d-flex align-items-center">
+		            <div class="spinner-border spinner-border-sm me-2"></div>
+		            ${message}
+		        </div>
+		    `);
+			}
+
+			toastClear = function(toasted) {
+				saveBtn.prop("disabled", false);
+				toastr.clear(toasted);
+			}
 			
 			$('.copy-to-fulladdress').on('click', function () {
 				
 				const ethis = $(this);
-				
-				const googleAddress = document.getElementById("googleAddress").value;
-				if(googleAddress.trim() === "") {
+
+				const googleAddressVal = googleAddress.val();
+				if(googleAddressVal.trim() === "") {
 					toastr.error("Google Address is empty. Please select a location on the map first.");
 					return;
 				}
-				document.getElementById("Address").value = googleAddress;
+				fullAddress.val(googleAddressVal);
 				toastr.success("Copied Google Address to Full Address input.");
 				
 			});
 			
 			$('.fetch-location-by-address').on('click', function () {
 				
-				const address = document.getElementById("Address").value;
+				const address = fullAddress.val();
 				if(address.trim() === "") {
 					toastr.error("Please fill the address input above first.");
 					return;
@@ -417,7 +433,7 @@
 						if(fillAddressInput) {
 							fillAddressInput = false;
 							geocodePosition(coords, (address) => {
-								document.getElementById("Address").value = address;
+								fullAddress.val(address);
 							});
 						} else {
 							geocodePosition(coords);
