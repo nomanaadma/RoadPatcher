@@ -30,6 +30,9 @@ public class UserDataConfiguration : IEntityTypeConfiguration<UserData>
 
 		builder.Property(e => e.Address)
 			.HasMaxLength(200);
+		
+		builder.Property(e => e.GoogleAddress)
+			.HasMaxLength(200);
 
 		builder.Property(e => e.Latitude);
 		builder.Property(e => e.Longitude);

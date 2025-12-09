@@ -85,6 +85,7 @@ public partial class SettingsController(
 			FirstName = existing.FirstName,
 			LastName = existing.LastName,
 			Address = existing.Address,
+			GoogleAddress = existing.GoogleAddress,
 			Latitude = existing.Latitude,
 			Longitude = existing.Longitude,
 			ExistingImage = existing.Image,
@@ -141,6 +142,7 @@ public partial class SettingsController(
 				FirstName = model.FirstName,
 				LastName = model.LastName,
 				Address = model.Address,
+				GoogleAddress = model.GoogleAddress,
 				Latitude = model.Latitude,
 				Longitude = model.Longitude,
 				Image = savedImage,
@@ -162,6 +164,7 @@ public partial class SettingsController(
 			existing.FirstName = model.FirstName;
 			existing.LastName = model.LastName;
 			existing.Address = model.Address;
+			existing.GoogleAddress = model.GoogleAddress;
 			existing.Latitude = model.Latitude;
 			existing.Longitude = model.Longitude;
 			existing.Image = savedImage ?? existing.Image;

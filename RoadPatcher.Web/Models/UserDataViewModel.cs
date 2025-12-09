@@ -15,6 +15,9 @@ public class UserDataViewModel
 	[Required]
 	public required string Address { get; init; }
 	
+	[Required]
+	public required string GoogleAddress { get; init; }
+	
 	public required double Latitude { get; init; }
 	
 	public required double Longitude { get; init; }

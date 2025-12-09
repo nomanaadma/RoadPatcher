@@ -194,16 +194,17 @@ p {
 }
 
 .fetch-location {
-    background-color: var(--bs-warning-light) !important;
-    border-color: #FFA800 !important;
+    background-color: oklch(0.95 0.11 99.4) !important;
     cursor: pointer;
-    border-width: 1px;
+    border: 0;
     border-radius: 0 !important;
     margin-left: 2px;
+    color: #000;
+    box-shadow: 0 3px 1px #fdd100;
 }
 
 .fetch-location:hover {
-    box-shadow: 2px 2px 0 #ffa800;
+    box-shadow: 3px 3px 0 #fdd100;
 }
 
 .card .card-header {
@@ -336,4 +337,32 @@ p {
 .uppy-Dashboard-Item-action {
     box-shadow: none !important;
 }
+
+#map {
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+
+gmp-place-autocomplete {
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    width: 280px;
+    color-scheme: light;
+}
+
+.gm-control-active.gm-fullscreen-control {
+    bottom: 24px;
+    top: inherit !important;
+    right: inherit !important;
+}
+
+.disabled-div {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
 

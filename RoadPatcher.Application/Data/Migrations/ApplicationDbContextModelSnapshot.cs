@@ -370,6 +370,11 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("GoogleAddress")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Image")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
