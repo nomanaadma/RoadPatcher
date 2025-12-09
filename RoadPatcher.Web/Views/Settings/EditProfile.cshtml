@@ -69,6 +69,9 @@
 						<!--begin::Label-->
 						<label class="fs-6-5 fw-semibold mb-2">Email</label>
 						<!--end::Label-->
+						<div class="text-gray-600 fs-7 mb-2">
+							<i class="las la-info-circle"></i> Email address cannot be changed. Contact support if you need to update it.
+						</div>
 						<!--begin::Input-->
 						<input class="form-control form-control-solid"  placeholder="@User.Identity?.Name" disabled />
 						<!--end::Input-->
@@ -107,20 +110,22 @@
 					<div class="d-flex flex-column mb-5 fv-row">
 					
 						<!--begin::Label-->
-						<label asp-for="Address" class="required fs-6-5 fw-semibold mb-2">Address</label>
+						<label asp-for="Address" class="required fs-6-5 fw-semibold mb-2">Full Address</label>
 						<!--end::Label-->
+						<div class="text-gray-600 fs-7 mb-2">
+							<i class="las la-info-circle"></i> We use your location to show you a customized feed of content nearby.
+						</div>
 						
 						
 
 						<div class="input-group">
-
 
 							<!--begin::Input-->
 							<input asp-for="Address" class="form-control form-control-solid" placeholder="eg: plot r 709 block 17 federal b area karachi pakistan" />
 							<!--end::Input-->
 
 							<div class="input-group-prepend">
-								<span class="input-group-text fetch-location">
+								<span class="input-group-text fetch-location fetch-location-1">
 									<svg class="me-3" fill="#000000" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
 									     viewBox="0 0 192.906 192.906" xml:space="preserve">
 										<g>
@@ -140,39 +145,34 @@
 							</div>
 						</div>
 						<span asp-validation-for="Address" class="text-danger"></span>
-						<div class="text-gray-600 fs-7 mt-1">
-							<i class="las la-info-circle"></i> We use your location to show you a customized feed of content nearby.
-						</div>
 					</div>
 					<!--end::Input group-->
-
-					<div class="row mt-4">
-						<div class="col">
-							<div id="map"></div>
+					
+					<div class="mt-4">
+						<label class="required fs-6-5 fw-semibold mb-2">Map Address</label>
+						<div class="text-gray-600 fs-7 mb-5">
+							<i class="las la-info-circle"></i> Use the map below to fine tune your location. You can drag the marker or click on the map to set your exact location. <button type="button" class="btn btn-sm btn-light-success small-rounded-btn fetch-location-by-address">Fetch by Filled Address Above</button> <button type="button" class="btn btn-sm btn-light-warning small-rounded-btn fetch-location-2">Fetch by Device Location</button>
 						</div>
-						<div class="col d-flex flex-column justify-content-center disabled-div">
+						<div id="map"></div>
+						<div class="d-flex flex-column justify-content-center sys-auto-fill disabled-inputs mt-5">
 
-							<h4 class="mb-4">Internal Location Data</h4>
-							
-							<!--begin::Input group-->
-							<div class="d-flex flex-column mb-5 fv-row">
-								<!--begin::Label-->
-								<label class="fs-6-5 fw-semibold mb-2" asp-for="GoogleAddress">Google Address</label>
-								<!--end::Label-->
-								<!--begin::Input-->
-								<input class="form-control form-control-solid" asp-for="GoogleAddress" id="googleAddress" readonly />
-								<!--end::Input-->
-								<span asp-validation-for="GoogleAddress" class="text-danger"></span>
-							</div>
-							<!--end::Input group-->
+							<h4>Internal Location Data</h4>
+							<span class="text-gray-700 fs-5 mt-1 mb-4">
+								<i class="las la-info-circle"></i> System Auto-Fill
+							</span>
 
 							<div class="row">
 								<div class="col-md-6 fv-row">
+									<label class="fs-6-5 fw-semibold mb-2" asp-for="GoogleAddress">Google Address <button type="button" class="btn btn-sm btn-light small-rounded-btn ms-2 fz-7 copy-to-fulladdress">Copy to Full Address <i class="las la-copy"></i></button> </label>
+									<input class="form-control form-control-solid" asp-for="GoogleAddress" id="googleAddress" readonly />
+									<span asp-validation-for="GoogleAddress" class="text-danger"></span>
+								</div>
+								<div class="col-md-3 fv-row">
 									<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2">Latitude</label>
 									<input asp-for="Latitude" type="text" id="latitude" class="form-control form-control-solid" readonly />
 									<span asp-validation-for="Latitude" class="text-danger"></span>
 								</div>
-								<div class="col-md-6 fv-row">
+								<div class="col-md-3 fv-row">
 									<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2">Longitude</label>
 									<input asp-for="Longitude" type="text" id="longitude" class="form-control form-control-solid" readonly />
 									<span asp-validation-for="Longitude" class="text-danger"></span>
@@ -180,12 +180,13 @@
 							</div>
 
 						</div>
-	
+
 					</div>
+					
 				</div>
 
 				<div class="card-footer">
-					<button type="submit" class="btn btn-sm btn-primary">Save Changes</button>
+					<button type="submit" class="btn btn-sm btn-primary" id="save-btn">Save Changes</button>
 					<a asp-action="Index" class="ms-2 btn btn-sm btn-secondary">Cancel</a>
 				</div>
 			</div>
@@ -195,8 +196,8 @@
 
 @section Scripts {
 	<script>
-        let map, marker, geocoder;
-
+        let map, marker, geocoder, fillAddressInput = false;
+        
         async function initMap(callback) {
             // 1. Import libraries using the modern method
             const { Map } = await google.maps.importLibrary("maps");
@@ -219,16 +220,13 @@
             // 3. Create the New Autocomplete Component
             const autocomplete = new PlaceAutocompleteElement();
             autocomplete.id = "place-autocomplete-input";
-	        autocomplete.placeholder = "Search a place...";
-	        autocomplete.setAttribute("input-placeholder", "Search a place...");
-            
-            // Push it inside the map controls
+
+	        // Push it inside the map controls
             map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocomplete);
 
             // 4. Create Marker (AdvancedMarkerElement is required for new maps features)
             marker = new AdvancedMarkerElement({
                 map: map,
-                position: initialPosition,
                 gmpDraggable: true // New property for draggable
             });
 
@@ -237,31 +235,15 @@
 
             // EVENT 1: User selects a place from New Autocomplete
 	        autocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
-            // autocomplete.addEventListener("gmp-placeselect", async ({ place }) => {
 		        
-
 		        const place = placePrediction.toPlace();
-		        // await place.fetchFields({
-			    //     fields: ['displayName', 'formattedAddress', 'location'],
-		        // });
-		        //
-		        // // If the place has a geometry, then present it on a map.
-		        // if (place.viewport) {
-			    //     innerMap.fitBounds(place.viewport);
-		        // } else {
-			    //     innerMap.setCenter(place.location);
-			    //     innerMap.setZoom(17);
-		        // }
-				
-				
+		        
                 await place.fetchFields({ fields: ["displayName", "formattedAddress", "location"] });
 
                 if (!place.location) return;
 
                 // Move map and marker
-                map.setCenter(place.location);
-                map.setZoom(17);
-                marker.position = place.location;
+		        setMapMarker(place.location)
 
                 // Update Fields
                 fillInputs(place.formattedAddress, place.location.lat(), place.location.lng());
@@ -273,39 +255,63 @@
 	            marker.position = clickedLocation; // Update marker position
 	            geocodePosition(clickedLocation);
             });
-        }
 
-        const autocomplete = document.getElementById("autocomplete");
-
-        autocomplete.addEventListener("gmp-placeselect", async () => {
-	        const place = autocomplete.getPlace();
-	        console.log("Selected place:", place);
-
-	        await place.fetchFields({
-		        fields: ["displayName", "formattedAddress", "location"]
+	        marker.addListener("dragend", () => {
+		        geocodePosition(marker.position);
 	        });
+			
+        }
+		
+		function setMapMarker(location) {
+			map.setCenter(location);
+			map.setZoom(16);
+			marker.position = location;
+		}
 
-	        if (!place.location) return;
+        function showLoaderToast(message = "Loading...") {
 
-	        map.setCenter(place.location);
-	        map.setZoom(17);
-	        marker.position = place.location;
+	        document.getElementById("save-btn").disabled = true;
+			
+	        toastr.options = {
+		        timeOut: 0,
+		        extendedTimeOut: 0,
+		        closeButton: false,
+		        tapToDismiss: false,
+		        escapeHtml: false,
+		        positionClass: "toastr-bottom-right",
+	        };
 
-	        fillInputs(
-		        place.formattedAddress,
-		        place.location.lat(),
-		        place.location.lng()
-	        );
-        });
+	        return toastr.info(`
+		        <div class="d-flex align-items-center">
+		            <div class="spinner-border spinner-border-sm me-2"></div>
+		            ${message}
+		        </div>
+		    `);
+        }
+		
+		function toastClear(toasted) {
+			document.getElementById("save-btn").disabled = false;
+			toastr.clear(toasted);
+		}
+        
+        function geocodePosition(pos, callback) {
 
-
-        function geocodePosition(pos) {
+	        const loaderToast = showLoaderToast();
+			
             geocoder.geocode({ location: pos }, (results, status) => {
                 if (status === "OK" && results[0]) {
-                    fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+                    
+					fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+
+	                if (callback) callback(results[0].formatted_address);
+					
                 } else {
+	                toastr.error("Geolocation failed: " + status);
                     console.error("Geocode failed: " + status);
                 }
+
+	            toastClear(loaderToast);
+				
             });
         }
 
@@ -319,20 +325,30 @@
     </script>
 	
 	<script>
+		
 		$(document).ready(function () {
-
-			const latitude = $('#latitude');
-			const longitude = $('#longitude');
 			
-			$('.fetch-location').on('click', function () {
-				if (navigator.geolocation) {
-					navigator.geolocation.getCurrentPosition(fillLatLng, showError);
-				} else {
-					toastr.error("Geolocation is not supported by this browser.");
+			$('.copy-to-fulladdress').on('click', function () {
+				
+				const ethis = $(this);
+				
+				const googleAddress = document.getElementById("googleAddress").value;
+				if(googleAddress.trim() === "") {
+					toastr.error("Google Address is empty. Please select a location on the map first.");
+					return;
 				}
+				document.getElementById("Address").value = googleAddress;
+				toastr.success("Copied Google Address to Full Address input.");
+				
 			});
-
-			function fillLatLng(position) {
+			
+			$('.fetch-location-by-address').on('click', function () {
+				
+				const address = document.getElementById("Address").value;
+				if(address.trim() === "") {
+					toastr.error("Please fill the address input above first.");
+					return;
+				}
 
 				Swal.fire({
 					title: 'Fetching...',
@@ -344,35 +360,83 @@
 						Swal.showLoading(); // Show the loading spinner
 					}
 				});
+
+				const loaderToast = showLoaderToast();
+
+				geocoder.geocode({ address: address }, (results, status) => {
+					if (status === "OK" && results[0]) {
+						
+						const pos = results[0].geometry.location;
+
+						fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+						
+						setMapMarker(pos);
+						
+					} else {
+						toastr.error("Geolocation failed: " + status);
+					}
+
+					swal.close();
+					toastClear(loaderToast);
+					
+				});
 				
-				const apiKey = "AIzaSyDjRaFkJuFq8lYhm3jJOWuNvqwdu990wJs";
-				const lat = position.coords.latitude;
-				const lng = position.coords.longitude;
-				
-				latitude.val(lat);
-				longitude.val(lng);
+			});
+			
+			$('.fetch-location-1').on('click', function () {
+				fillAddressInput = true;
+				fetchDeviceLocation();
+			});
 
-				const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&result_type=street_address&key=${apiKey}`;
-				
-				axios.get(url)
-					.then(function ({ data }) {
+			$('.fetch-location-2').on('click', function () {
+				fillAddressInput = false;
+				fetchDeviceLocation();
+			});
+			
+			function fetchDeviceLocation() {
+				if (navigator.geolocation) {
 
-						console.log( data )
-
-						if (data.status === "OK" && data.results.length > 0) {
-
-							let finalAddress = data.results[0].formatted_address;
-
-							console.log("Selected Address:", finalAddress);
+					Swal.fire({
+						title: 'Fetching...',
+						text: 'Please wait while we are fetching your location.',
+						allowOutsideClick: false, // Prevent closing by clicking outside
+						allowEscapeKey: false,   // Prevent closing with Escape key
+						showConfirmButton: false, // Hide the confirm button
+						didOpen: () => {
+							Swal.showLoading(); // Show the loading spinner
 						}
+					});
+
+					navigator.geolocation.getCurrentPosition((pos) => {
+
+						const coords = {
+							lat: pos.coords.latitude,
+							lng: pos.coords.longitude
+						};
 						
-						Swal.close(); // Close the loading dialog
+						if(fillAddressInput) {
+							fillAddressInput = false;
+							geocodePosition(coords, (address) => {
+								document.getElementById("Address").value = address;
+							});
+						} else {
+							geocodePosition(coords);
+						}
+
+						setMapMarker(coords);
 						
-					})
-				
+						Swal.close();
+
+					}, showError);
+				} else {
+					toastr.error("Geolocation is not supported by this browser.");
+				}
 			}
 
 			function showError(error) {
+
+				Swal.close();
+				
 				switch (error.code) {
 					case error.PERMISSION_DENIED:
 						toastr.error("User denied the request for Geolocation.");
