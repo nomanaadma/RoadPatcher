@@ -120,5 +120,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return uppy;
 
     }
+    
 
+});
+
+$(document).ready(function () {
+    $('.fetch-location-1, .fetch-location-2, .address-disclaimer').remove();
 });

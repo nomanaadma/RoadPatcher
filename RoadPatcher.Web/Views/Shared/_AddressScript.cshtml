@@ -1,0 +1,276 @@
+﻿<script>
+    let map, marker, geocoder, fillAddressInput = false;
+	let showLoaderToast, toastClear, fillInputs;
+    
+    async function initMap(callback) {
+        // 1. Import libraries using the modern method
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+        // Note: Geocoding library doesn't use importLibrary yet in many versions, 
+        // but is available globally if loaded via script tag.
+
+        let initialPosition = { lat: 37.36305281824685, lng: 20.864313030696955 };
+		if (position) {
+			initialPosition = position;
+		}
+
+        // 2. Initialize Map
+        map = new Map(document.getElementById("map"), {
+            zoom: zoom,
+            center: initialPosition,
+            mapId: "d51644aa08ca7cea704f06a2 ", // Required for AdvancedMarkerElement and New API features
+            mapTypeControl: false,
+            streetViewControl: false
+        });
+
+        // 3. Create the New Autocomplete Component
+        const autocomplete = new PlaceAutocompleteElement();
+        autocomplete.id = "place-autocomplete-input";
+
+        // Push it inside the map controls
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocomplete);
+	    
+        // 4. Create Marker (AdvancedMarkerElement is required for new maps features)
+        marker = new AdvancedMarkerElement({
+            map: map,
+	        position: position,
+            gmpDraggable: true // New property for draggable
+        });
+
+        // 5. Initialize Geocoder (Legacy service still used for reverse geocoding clicks)
+        geocoder = new google.maps.Geocoder();
+
+        // EVENT 1: User selects a place from New Autocomplete
+        autocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
+	        
+	        const place = placePrediction.toPlace();
+	        
+            await place.fetchFields({ fields: ["displayName", "formattedAddress", "location"] });
+
+            if (!place.location) return;
+
+            // Move map and marker
+	        setMapMarker(place.location)
+
+            // Update Fields
+            fillInputs(place.formattedAddress, place.location.lat(), place.location.lng());
+        });
+
+        // EVENT 2: Map Click
+        map.addListener("click", (e) => {
+            const clickedLocation = e.latLng;
+            marker.position = clickedLocation; // Update marker position
+            geocodePosition(clickedLocation);
+        });
+
+        marker.addListener("dragend", () => {
+	        geocodePosition(marker.position);
+        });
+		
+    }
+	
+	function setMapMarker(location) {
+		map.setCenter(location);
+		map.setZoom(16);
+		marker.position = location;
+	}
+    
+    function geocodePosition(pos, callback) {
+
+        const loaderToast = showLoaderToast();
+		
+        geocoder.geocode({ location: pos }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                
+				fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+
+                if (callback) callback(results[0].formatted_address);
+				
+            } else {
+                toastr.error("Geolocation failed: " + status);
+                console.error("Geocode failed: " + status);
+            }
+
+            toastClear(loaderToast);
+			
+        });
+    }
+
+    window.initMap = initMap;
+</script>
+
+<script>
+	
+	$(document).ready(function () {
+
+		const saveBtn = $('#save-btn');
+		const googleAddress = $('#googleAddress');
+		const fullAddress = $('#Address');
+		const latitude = $('#latitude');
+		const longitude = $('#longitude');
+		
+		fillInputs = function(address, lat, lng) {
+			googleAddress.val(address);
+			latitude.val(lat);
+			longitude.val(lng);
+		}
+
+		showLoaderToast = function(message = "Loading...") {
+
+			saveBtn.prop("disabled", true);
+
+			toastr.options = {
+				timeOut: 0,
+				extendedTimeOut: 0,
+				closeButton: false,
+				tapToDismiss: false,
+				escapeHtml: false,
+				positionClass: "toastr-bottom-right",
+			};
+
+			return toastr.info(`
+	        <div class="d-flex align-items-center">
+	            <div class="spinner-border spinner-border-sm me-2"></div>
+	            ${message}
+	        </div>
+	    `);
+		}
+
+		toastClear = function(toasted) {
+			saveBtn.prop("disabled", false);
+			toastr.clear(toasted);
+		}
+		
+		$('.copy-to-fulladdress').on('click', function () {
+			
+			const ethis = $(this);
+
+			const googleAddressVal = googleAddress.val();
+			if(googleAddressVal.trim() === "") {
+				toastr.error("Google Address is empty. Please select a location on the map first.");
+				return;
+			}
+			fullAddress.val(googleAddressVal);
+			toastr.success("Copied Google Address to Full Address input.");
+			
+		});
+		
+		$('.fetch-location-by-address').on('click', function () {
+			
+			const address = fullAddress.val();
+			if(address.trim() === "") {
+				toastr.error("Please fill the address input above first.");
+				return;
+			}
+
+			Swal.fire({
+				title: 'Fetching...',
+				text: 'Please wait while we are fetching your location.',
+				allowOutsideClick: false, // Prevent closing by clicking outside
+				allowEscapeKey: false,   // Prevent closing with Escape key
+				showConfirmButton: false, // Hide the confirm button
+				didOpen: () => {
+					Swal.showLoading(); // Show the loading spinner
+				}
+			});
+
+			const loaderToast = showLoaderToast();
+
+			geocoder.geocode({ address: address }, (results, status) => {
+				if (status === "OK" && results[0]) {
+					
+					const pos = results[0].geometry.location;
+
+					fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+					
+					setMapMarker(pos);
+					
+				} else {
+					toastr.error("Geolocation failed: " + status);
+				}
+
+				swal.close();
+				toastClear(loaderToast);
+				
+			});
+			
+		});
+		
+		$('.fetch-location-1').on('click', function () {
+			fillAddressInput = true;
+			fetchDeviceLocation();
+		});
+
+		$('.fetch-location-2').on('click', function () {
+			fillAddressInput = false;
+			fetchDeviceLocation();
+		});
+		
+		function fetchDeviceLocation() {
+			if (navigator.geolocation) {
+
+				Swal.fire({
+					title: 'Fetching...',
+					text: 'Please wait while we are fetching your location.',
+					allowOutsideClick: false, // Prevent closing by clicking outside
+					allowEscapeKey: false,   // Prevent closing with Escape key
+					showConfirmButton: false, // Hide the confirm button
+					didOpen: () => {
+						Swal.showLoading(); // Show the loading spinner
+					}
+				});
+
+				navigator.geolocation.getCurrentPosition((pos) => {
+
+					const coords = {
+						lat: pos.coords.latitude,
+						lng: pos.coords.longitude
+					};
+					
+					if(fillAddressInput) {
+						fillAddressInput = false;
+						geocodePosition(coords, (address) => {
+							fullAddress.val(address);
+						});
+					} else {
+						geocodePosition(coords);
+					}
+
+					setMapMarker(coords);
+					
+					Swal.close();
+
+				}, showError);
+			} else {
+				toastr.error("Geolocation is not supported by this browser.");
+			}
+		}
+
+		function showError(error) {
+
+			Swal.close();
+			
+			switch (error.code) {
+				case error.PERMISSION_DENIED:
+					toastr.error("User denied the request for Geolocation.");
+					break;
+				case error.POSITION_UNAVAILABLE:
+					toastr.error("Location information is unavailable.");
+					break;
+				case error.TIMEOUT:
+					toastr.error("The request to get user location timed out.");
+					break;
+				case error.UNKNOWN_ERROR:
+					toastr.error("An unknown error occurred.");
+					break;
+			}
+		}
+		
+	});
+</script>
+	
+<script
+	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjRaFkJuFq8lYhm3jJOWuNvqwdu990wJs&callback=initMap&loading=async&v=weekly"
+	defer
+></script>

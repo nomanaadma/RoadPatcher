@@ -9,6 +9,21 @@
 
 @section Scripts {
 	
+	<script>
+		let position = null;
+		let zoom = 1;
+		@if (!string.IsNullOrWhiteSpace(Model?.GoogleAddress))
+		{
+			<text>
+				position = {
+					lat: @Model.Latitude,
+					lng: @Model.Longitude
+				}
+				zoom = 16; 
+			</text>
+		}
+	</script>
+	<partial name="_AddressScript" />
 	<script src="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.js"></script>
 	<script src="~/js/post-form.js"></script>
 	<partial name="_ValidationScriptsPartial" />

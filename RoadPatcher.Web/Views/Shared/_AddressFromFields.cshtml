@@ -1,0 +1,76 @@
+﻿@model RoadPatcher.Models.AddressViewModel
+
+<!--begin::Input group-->
+<div class="d-flex flex-column mb-5 fv-row">
+
+	<!--begin::Label-->
+	<label asp-for="Address" class="required fs-6-5 fw-semibold mb-2">Full Address</label>
+	<!--end::Label-->
+	<div class="text-gray-600 fs-7 mb-2 address-disclaimer">
+		<i class="las la-info-circle"></i> We use your location to show you a customized feed of content nearby.
+	</div>
+	
+	<div class="input-group">
+
+		<!--begin::Input-->
+		<input asp-for="Address" class="form-control form-control-solid" placeholder="eg: plot r 709 block 17 federal b area karachi pakistan" />
+		<!--end::Input-->
+
+		<div class="input-group-prepend ">
+			<span class="input-group-text fetch-location fetch-location-1">
+				<svg class="me-3" fill="#000000" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+				     viewBox="0 0 192.906 192.906" xml:space="preserve">
+					<g>
+						<path d="M190.709,180.102l-47.08-47.076c11.702-14.072,18.752-32.142,18.752-51.831c0-44.77-36.421-81.193-81.188-81.193
+C36.423,0.001,0,36.424,0,81.194c0,44.767,36.423,81.188,81.193,81.188c19.688,0,37.758-7.049,51.829-18.75l47.081,47.077
+c1.464,1.464,3.384,2.196,5.303,2.196c1.919,0,3.839-0.732,5.304-2.197C193.639,187.779,193.639,183.031,190.709,180.102z
+M15,81.194c0-36.499,29.694-66.193,66.193-66.193c36.496,0,66.188,29.694,66.188,66.193c0,36.496-29.691,66.188-66.188,66.188
+C44.694,147.382,15,117.69,15,81.194z"/>
+						<path d="M81.186,41.989c-15.79,0-28.637,12.845-28.637,28.634c0,23.968,22.381,46.622,23.334,47.575
+c1.464,1.464,3.383,2.196,5.303,2.196c1.919,0,3.838-0.732,5.302-2.195c0.953-0.953,23.345-23.607,23.345-47.576
+C109.832,54.835,96.981,41.989,81.186,41.989z M81.168,101.497c-6.045-7.682-13.619-19.864-13.619-30.873
+c0-7.518,6.117-13.634,13.637-13.634c7.524,0,13.646,6.116,13.646,13.634C94.832,82.233,86.776,94.419,81.168,101.497z"/>
+					</g>
+				</svg>
+				<span class="fs-6-5">Fetch Auto</span>
+			</span>
+		</div>
+	</div>
+	<span asp-validation-for="Address" class="text-danger"></span>
+</div>
+<!--end::Input group-->
+
+<div class="mt-4">
+	<label class="required fs-6-5 fw-semibold mb-2">Map Address</label>
+	<div class="text-gray-600 fs-7 mb-5">
+		<i class="las la-info-circle"></i> Use the map below to fine tune your location. You can drag the marker or click on the map to set your exact location. <button type="button" class="btn btn-sm btn-light-success small-rounded-btn fetch-location-by-address">Fetch by Filled Address Above</button> <button type="button" class="btn btn-sm btn-light-warning small-rounded-btn fetch-location-2">Fetch by Device Location</button>
+	</div>
+	<div id="map"></div>
+	<div class="d-flex flex-column justify-content-center sys-auto-fill disabled-inputs mt-5">
+
+		<h4>Internal Location Data</h4>
+		<span class="text-gray-700 fs-5 mt-1 mb-4">
+			<i class="las la-info-circle"></i> System Auto-Fill
+		</span>
+
+		<div class="row">
+			<div class="col-md-6 fv-row">
+				<label class="fs-6-5 fw-semibold mb-2" asp-for="GoogleAddress">Google Address <button type="button" class="btn btn-sm btn-light small-rounded-btn ms-2 fz-7 copy-to-fulladdress">Copy to Full Address <i class="las la-copy"></i></button> </label>
+				<input class="form-control form-control-solid" asp-for="GoogleAddress" id="googleAddress" readonly />
+				<span asp-validation-for="GoogleAddress" class="text-danger"></span>
+			</div>
+			<div class="col-md-3 fv-row mt-2">
+				<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2">Latitude</label>
+				<input asp-for="Latitude" type="text" id="latitude" class="form-control form-control-solid" readonly />
+				<span asp-validation-for="Latitude" class="text-danger"></span>
+			</div>
+			<div class="col-md-3 fv-row mt-2">
+				<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2">Longitude</label>
+				<input asp-for="Longitude" type="text" id="longitude" class="form-control form-control-solid" readonly />
+				<span asp-validation-for="Longitude" class="text-danger"></span>
+			</div>
+		</div>
+
+	</div>
+
+</div>

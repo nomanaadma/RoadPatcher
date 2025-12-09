@@ -16,28 +16,6 @@
 				<div class="card-body">
 
 					<div class="d-flex flex-column mb-5 fv-row">
-						<label asp-for="Address" class="fs-6-5 fw-semibold mb-2"></label>
-						<input asp-for="Address" class="form-control form-control-solid"/>
-						<span asp-validation-for="Address" class="text-danger"></span>
-					</div>
-
-					<div class="d-flex flex-column mb-5 fv-row">
-						<label asp-for="GoogleAddress" class="fs-6-5 fw-semibold mb-2"></label>
-						<input asp-for="GoogleAddress" class="form-control form-control-solid"/>
-						<span asp-validation-for="GoogleAddress" class="text-danger"></span>
-					</div>
-
-					<div class="d-flex flex-column mb-5 fv-row">
-						<label asp-for="Latitude" class="fs-6-5 fw-semibold mb-2"></label>
-						<input asp-for="Latitude" class="form-control form-control-solid"/>
-					</div>
-
-					<div class="d-flex flex-column mb-5 fv-row">
-						<label asp-for="Longitude" class="fs-6-5 fw-semibold mb-2"></label>
-						<input asp-for="Longitude" class="form-control form-control-solid"/>
-					</div>
-
-					<div class="d-flex flex-column mb-5 fv-row">
 						<label asp-for="Description" class="fs-6-5 fw-semibold mb-2"></label>
 						<textarea asp-for="Description" class="form-control form-control-solid"></textarea>
 						<span asp-validation-for="Description" class="text-danger"></span>
@@ -75,6 +53,17 @@
 						<input asp-for="Cost" class="form-control form-control-solid"/>
 						<span asp-validation-for="Cost" class="text-danger"></span>
 					</div>
+					
+					<hr class="my-10">
+					
+					<div>
+						<h2>Address Guideline</h2>
+						<p class="text-gray-700 fs-7 mb-8 lh-22 mt-3">
+							To get the most accurate location, you can choose any of the options below. The quickest method is <strong>Fetch Auto</strong>, which uses your device’s location to automatically fill both your <strong>Full Address</strong> and the <strong>Google Address</strong> below the map. If you prefer entering your details manually, type your address in the <strong>Full Address</strong> field and click <strong>Fetch by Filled Address Above</strong> — this will try to locate it on the map and update the Google Address and coordinates. You can also use <strong>Fetch by Device Location</strong> inside the map area; this works like Fetch Auto but does <i>not</i> change your Full Address. After the map loads your location, feel free to fine-tune it by <strong>dragging the marker</strong> or searching through the <strong>map’s search bar</strong>. If the Google Address looks more accurate than what you initially entered, simply click <strong>Copy to Full Address</strong> to update it.
+						</p>
+					</div>
+				
+					<partial name="_AddressFromFields" model="Model" />
 
 				</div>
 				<div class="card-footer">
