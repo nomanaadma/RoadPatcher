@@ -1,20 +1,17 @@
-@using System.Security.Claims
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using RoadPatcher.Application.Data
 @using RoadPatcher.Application.Entities
+@using RoadPatcher.Helpers
 @inject UserManager<ApplicationUser> UserManager
 @inject ApplicationDbContext DbContext
 @{
-	var profileImage = Url.Content("~/img/profile.png");
 	
-	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
+	var user = await UserManager.GetUserAsync(User);
 	
-	if (userData?.Image is not null)
-	{
-		profileImage = Url.Content($"~/uploads/users/{userData.Image}");
-	}
+	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == user!.Id);
+
+	var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
 	
 }
 <!--begin::Navbar-->
@@ -56,9 +53,7 @@
 				</div>
 			</div>
 			
-			
-			
-			<a asp-controller="Settings" asp-action="EditProfile" class="ms-3 symbol user-profile-nav" aria-label="User Profile">
+			<a asp-controller="Settings" asp-action="EditProfile" data-bs-toggle="tooltip" title="@user!.Email" class="ms-3 symbol user-profile-nav" aria-label="User Profile">
 				<img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
 			</a>
 			

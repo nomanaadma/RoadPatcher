@@ -34,7 +34,7 @@
   --bs-secondary: #F1F1F4;
   --bs-success: #17C653;
   --bs-info: #7239EA;
-  --bs-warning: #F6C000;
+  --bs-warning: #ff983b;
   --bs-danger: #F8285A;
   --bs-dark: #1E2129;
   --bs-light-rgb: 249, 249, 249;
@@ -3316,8 +3316,8 @@ textarea.form-control-lg {
 
 .btn-warning {
   --bs-btn-color: #000000;
-  --bs-btn-bg: #F6C000;
-  --bs-btn-border-color: #F6C000;
+  --bs-btn-bg: #ff983b;
+  --bs-btn-border-color: #ff983b;
   --bs-btn-hover-color: #000000;
   --bs-btn-hover-bg: #f7c926;
   --bs-btn-hover-border-color: #f7c61a;
@@ -3327,8 +3327,8 @@ textarea.form-control-lg {
   --bs-btn-active-border-color: #f7c61a;
   --bs-btn-active-shadow: none;
   --bs-btn-disabled-color: #000000;
-  --bs-btn-disabled-bg: #F6C000;
-  --bs-btn-disabled-border-color: #F6C000;
+  --bs-btn-disabled-bg: #ff983b;
+  --bs-btn-disabled-border-color: #ff983b;
 }
 
 .btn-danger {
@@ -3451,19 +3451,19 @@ textarea.form-control-lg {
 }
 
 .btn-outline-warning {
-  --bs-btn-color: #F6C000;
-  --bs-btn-border-color: #F6C000;
+  --bs-btn-color: #ff983b;
+  --bs-btn-border-color: #ff983b;
   --bs-btn-hover-color: #000000;
-  --bs-btn-hover-bg: #F6C000;
-  --bs-btn-hover-border-color: #F6C000;
+  --bs-btn-hover-bg: #ff983b;
+  --bs-btn-hover-border-color: #ff983b;
   --bs-btn-focus-shadow-rgb: 246, 192, 0;
   --bs-btn-active-color: #000000;
-  --bs-btn-active-bg: #F6C000;
-  --bs-btn-active-border-color: #F6C000;
+  --bs-btn-active-bg: #ff983b;
+  --bs-btn-active-border-color: #ff983b;
   --bs-btn-active-shadow: none;
-  --bs-btn-disabled-color: #F6C000;
+  --bs-btn-disabled-color: #ff983b;
   --bs-btn-disabled-bg: transparent;
-  --bs-btn-disabled-border-color: #F6C000;
+  --bs-btn-disabled-border-color: #ff983b;
   --bs-gradient: none;
 }
 
@@ -28529,7 +28529,7 @@ textarea.form-control-lg {
   --bs-secondary: #F1F1F4;
   --bs-success: #17C653;
   --bs-info: #7239EA;
-  --bs-warning: #F6C000;
+  --bs-warning: #ff983b;
   --bs-danger: #F8285A;
   --bs-dark: #1E2129;
   --bs-primary-active: #38373c;
@@ -28578,7 +28578,7 @@ textarea.form-control-lg {
   --bs-text-light: #F9F9F9;
   --bs-text-success: #17C653;
   --bs-text-info: #7239EA;
-  --bs-text-warning: #F6C000;
+  --bs-text-warning: #ff983b;
   --bs-text-danger: #F8285A;
   --bs-text-dark: #1E2129;
   --bs-text-muted: #99A1B7;
@@ -29428,7 +29428,7 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   border-color: #7239EA !important;
 }
 .separator.separator-content.border-warning::before, .separator.separator-content.border-warning::after {
-  border-color: #F6C000 !important;
+  border-color: #ff983b !important;
 }
 .separator.separator-content.border-danger::before, .separator.separator-content.border-danger::after {
   border-color: #F8285A !important;

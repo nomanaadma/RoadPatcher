@@ -25,6 +25,7 @@
 	</script>
 	<partial name="_AddressScript" />
 	<script src="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 	<script src="~/js/post-form.js"></script>
 	<partial name="_ValidationScriptsPartial" />
 	<script>
@@ -52,7 +53,7 @@
 		
 		document.addEventListener('DOMContentLoaded', function () {
 			
-			preloadMedia(uppyImage, @Model.Image!.Id, "@Model.Image.Name");
+			preloadMedia(uppyImage, @Model!.Image!.Id, "@Model.Image.Name");
 			
 			preloadMedia(uppyVideo, @Model.Video!.Id, "@Model.Video.Name");
 

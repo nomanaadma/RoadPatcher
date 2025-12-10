@@ -120,10 +120,22 @@ document.addEventListener('DOMContentLoaded', function () {
         return uppy;
 
     }
-    
 
 });
 
 $(document).ready(function () {
     $('.fetch-location-1, .fetch-location-2, .address-disclaimer').remove();
+
+    const quill = new Quill('#editor', {
+        theme: 'snow'
+    });
+    
+    const description = $('#Description'); 
+
+    quill.root.innerHTML = description.val();
+    
+    quill.on('text-change', () => {
+        description.val(quill.root.innerHTML);
+    });
+    
 });

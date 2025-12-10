@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
+using X.PagedList.EF;
+using X.PagedList.Extensions;
 using Sysfile = System.IO.File;
 
 namespace RoadPatcher.Controllers;
@@ -16,6 +18,40 @@ public partial class PostsController(
 	IWebHostEnvironment webHostEnvironment
 	) : Controller
 {
+	
+	public IActionResult Index()
+	{
+		return RedirectToAction("Pending");
+	}
+	
+	public async Task<IActionResult> Pending(int page = 1)
+	{
+		const int pageSize = 10;
+
+		var posts = await context.Posts
+			.Include(p => p.User)                 // Include User
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles)
+			.Include(post => post.Image)
+			.Include(post => post.Video)
+			.Where(p => p.Status == PostStatus.Pending)
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+			
+		return View(posts);
+	}
+
+	public async Task<IActionResult> InProcess(int page = 1)
+	{
+		return NoContent();
+	}
+
+	public async Task<IActionResult> Completed(int page = 1)
+	{
+		return NoContent();
+	}
+
+
 	[HttpGet]
 	public IActionResult Create()
 	{
