@@ -268,11 +268,6 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
-                    b.Property<int>("Comments")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
                     b.Property<decimal>("Cost")
                         .HasColumnType("numeric");
 
@@ -284,6 +279,11 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("text");
+
+                    b.Property<int>("Discussions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("GoogleAddress")
                         .IsRequired()
@@ -376,8 +376,8 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("Image")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("LastName")
                         .IsRequired()

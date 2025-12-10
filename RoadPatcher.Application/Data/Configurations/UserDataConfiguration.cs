@@ -38,7 +38,7 @@ public class UserDataConfiguration : IEntityTypeConfiguration<UserData>
 		builder.Property(e => e.Longitude);
 			
 		builder.Property(e => e.Image)
-			.HasMaxLength(50);
+			.HasMaxLength(200);
 	}
 }
 

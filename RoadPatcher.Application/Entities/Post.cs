@@ -20,7 +20,8 @@ public class Post
 
 	public int PeopleDonated { get; init; }
 	public int Likes { get; init; }
-	public int Comments { get; init; }
+	
+	public int Discussions { get; init; }
 	public int Shares { get; init; }
 	public int Saves { get; init; }
 
