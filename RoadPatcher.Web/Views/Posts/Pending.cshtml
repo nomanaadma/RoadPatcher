@@ -37,16 +37,22 @@
 	
 				<div class="d-flex">
 	
-					<div class="col post-media d-flex flex-column justify-content-center bg-black">
+					<div class="col post-media d-flex flex-column justify-content-center position-relative bg-black">
+						
+						<button class="zoomBtn btn btn-light position-absolute">
+							<i class="las la-search-plus fz-20"></i>
+						</button>
 
 						<div class="swiper postSlider">
 							<div class="swiper-wrapper">
-							
-								@foreach(var media in mediaFiles)
+
+								@foreach (var media in mediaFiles)
 								{
-								
-									<div class="swiper-slide d-flex justify-content-center align-items-center bg-black" style="height:500px;">
-									
+									<a href="@uploadFolderUrl@media.Name" data-fslightbox="@post.Id" class="d-none">@media.Name</a>
+									<div class="swiper-slide d-flex justify-content-center align-items-center bg-black"
+									     data-id="@post.Id"
+									     style="height:500px;">
+
 										@if (media.Id == post.VideoId) // if it's main video
 										{
 											<video controls class="w-100" style="max-height: 500px;" preload="metadata">
@@ -223,11 +229,11 @@
 	<br>
 	<br>
 	
-	
 </div>
 
 @section Scripts {
 	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+	<script src="~/js/fslightbox.js"></script>
 	<script>
 		$(document).ready(function() {
 			new Swiper(".postSlider", {
@@ -254,6 +260,17 @@
 					}
 				}
 			});
+
+			$('.zoomBtn').on('click', function() {
+
+				const swiper = $(this).next()[0].swiper;
+				const currentSlide = $(swiper.slides[swiper.activeIndex]); 
+				const currentSliderFullScreenAnchor = currentSlide.prev('a');
+				currentSliderFullScreenAnchor.trigger('click');
+				
+			});
+
+			
 		});
 
 	</script>
