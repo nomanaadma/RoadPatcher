@@ -5,7 +5,6 @@
 @{
     ViewData["Title"] = "Pending";
 	var uploadFolderUrl = Url.Content("~/uploads/posts/");
-    
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <div class="row">
@@ -13,7 +12,7 @@
 		
 		@foreach (var post in Model)
 		{
-			var userData = post.User?.UserData;
+			var userData = post.User!.UserData;
 			var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
 			
 			var mainImage = post.MediaFiles
@@ -32,6 +31,12 @@
 				mainVideo,
 				..otherMedia
 			];
+			
+			var userFullName = userData!.FirstName + ' ' + userData.LastName;
+			
+			var raisedPercentage = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
+			var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
+			var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 
 			<div class="card mx-auto road-post">
 	
@@ -82,9 +87,9 @@
 					<div class="col post-details">
 	
 						<div class="card-header border-0 d-flex align-items-center bg-white p-4">
-							<img src="@profileImage" class="rounded-circle me-2" style="width: 40px; height: 40px;" alt="Noman Shoukat Avatar">
+							<img src="@profileImage" class="rounded-circle me-2" style="width: 40px; height: 40px;" alt="@userFullName Avatar">
 							<div class="flex-grow-1 time-location-i">
-								<h6 class="mb-0">@userData!.FirstName @userData!.LastName</h6>
+								<h6 class="mb-0">@userFullName</h6>
 								<span><i class="las la-clock position-relative"></i> @post.CreatedAt.ToPrettyFormat() </span>
 							</div>
 						</div>
@@ -119,12 +124,12 @@
 
 										<div class="col-6 border-end">
 											<small class="fw-bold">Goal</small>
-											<h2 class="fw-bolder mb-0 fz-20">Rs. 8,500</h2>
+											<h2 class="fw-bolder mb-0 fz-20">Rs. @post.Cost.ToPkr()</h2>
 										</div>
 
 										<div class="col-6">
 											<small class="text-orange fw-bold">Remaining</small>
-											<h2 class="fw-bolder mb-0 fz-20">Rs. 3,500</h2>
+											<h2 class="fw-bolder mb-0 fz-20">Rs. @remainingAmount.ToPkr()</h2>
 										</div>
 									</div>
 
@@ -133,17 +138,19 @@
 									<div class="donation-progress position-relative my-5">
 										<!-- Progress -->
 										<div class="progress">
-											<div class="progress-bar bg-warning" style="width: 65%;"></div>
+											<div class="progress-bar bg-@progressClass" style="width: @raisedPercentage%;"></div>
 										</div>
 
-										<div class="progress-circle position-absolute translate-middle"
-										     style="left: 65%;"></div>
+										<div class="progress-circle position-absolute translate-middle bg-@progressClass"
+										     style="left: @raisedPercentage%;"></div>
 
 										<!-- Always Visible Tooltip -->
 										<div class="custom-tooltip position-absolute translate-middle-x"
-										     style="left: 65%;">
-											<div class="tooltip-arrow border-warning"></div>
-											<div class="tooltip-content bg-light-warning border-warning rounded fs-5 fw-bold">65%</div>
+										     style="left: @raisedPercentage%;">
+											<div class="tooltip-arrow border-@progressClass"></div>
+											<div class="tooltip-content bg-light-@progressClass border-@progressClass rounded fs-6 fw-bold">
+												@* <img src="~/img/worker.png" alt="">  *@
+												@raisedPercentage%</div>
 										</div>
 									</div>
 
@@ -152,16 +159,16 @@
 
 											<div class="row bg-ferozi m-0 rounded">
 												<div class="col-6 border-end py-3">
-													<span class="fw-bold fs-2 text-ferozi">65%</span> <br>
+													<span class="fw-bold fs-2">@raisedPercentage%</span> <br>
 													<span class="fs-4 ">Achieved</span>
 												</div>
 												<div class="col-6 py-3">
-													<span class="fw-bold fs-2 ">Rs. 5,500 </span> <br>
+													<span class="fw-bold fs-2 ">Rs. @post.Raised.ToPkr() </span> <br>
 													<span class="fs-4 ">Raised</span>
 												</div>
 											</div>
 
-											<div class="mt-1"> Donated by <span class="fw-bold text-success-dark fs-3">8198</span> people</div>
+											<div class="mt-1"> Donated by <span class="fw-bold text-success-dark text-@progressClass fs-3">@post.PeopleDonated</span> people</div>
 
 										</div>
 									</div>

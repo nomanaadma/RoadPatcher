@@ -262,10 +262,6 @@ p {
     background-color: #d0eff3;
 }
 
-.text-ferozi {
-    color: #164046;
-}
-
 .text-success-dark {
     color: #067583;
 }
@@ -277,7 +273,6 @@ p {
 .progress-circle {
     width: 18px;
     height: 18px;
-    background: #ff983b;        /* green */
     border-radius: 50%;
     border: 3px solid white;    /* white border for clean look */
     box-shadow: 0 0 6px rgba(0,0,0,0.2);
@@ -295,7 +290,8 @@ p {
 
 .tooltip-content {
     border: 1px solid;
-    padding: 5px 10px;
+    padding: 3px 10px;
+    border-radius: 20px !important;
 }
 
 [dir=ltr] .uppy-Dashboard--singleFile.uppy-size--height-md .uppy-Dashboard-Item-action--remove {
@@ -436,6 +432,11 @@ gmp-place-autocomplete {
 .zoomBtn i {
     padding: 0;
 }
+
+.donation-progress .bg-primary {
+    background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity)) !important;
+}
+
 
 
 
