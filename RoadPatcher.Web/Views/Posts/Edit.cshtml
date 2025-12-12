@@ -53,15 +53,28 @@
 		
 		document.addEventListener('DOMContentLoaded', function () {
 			
-			preloadMedia(uppyImage, @Model!.Image!.Id, "@Model.Image.Name");
 			
-			preloadMedia(uppyVideo, @Model.Video!.Id, "@Model.Video.Name");
-
-			@foreach(var media in Model.MediaFiles)
+			@foreach(var media in Model!.MediaFiles)
 			{
-			    <text>
-			        preloadMedia(uppyImages, @media.Id, "@media.Name");
-			    </text>
+				@if (media.Id == Model.ImageId)
+				{
+					<text>
+						preloadMedia(uppyImage, @media.Id, "@media.Name");
+					</text>
+				} 
+				else if (media.Id == Model.VideoId)
+				{
+					<text>
+						preloadMedia(uppyVideo, @media.Id, "@media.Name");
+					</text>
+				}
+				else
+				{
+					<text>
+				        preloadMedia(uppyImages, @media.Id, "@media.Name");
+				    </text>	
+				}
+			    
 			}
 			
 		});

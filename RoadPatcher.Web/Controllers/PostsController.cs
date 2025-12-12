@@ -104,8 +104,6 @@ public partial class PostsController(
 	{
 		var post = await context.Posts
 			.Include(p => p.MediaFiles)
-			.Include(post => post.Image)
-			.Include(post => post.Video)
 			.FirstOrDefaultAsync(p => p.Id == id);
 
 		if (post == null)
@@ -123,10 +121,7 @@ public partial class PostsController(
 			Remaining = post.Remaining,
 			ImageId = post.ImageId,
 			VideoId = post.VideoId,
-			Image = post.Image,
-			Video = post.Video,
-			MediaFiles = post.MediaFiles.Where(m => m.Id != post.ImageId && m.Id != post.VideoId)
-				.ToList() // remove image and video from all media files
+			MediaFiles = post.MediaFiles
 		};
 		
 		return View(model);
@@ -267,14 +262,13 @@ public partial class PostsController(
 	
 	private async Task AttachMedia(PostViewModel model, int id)
 	{
-		var allIds = new List<int>();
-
-		if (model.MediaFilesIds.Any()) 
-			allIds.AddRange(model.MediaFilesIds);
-
-		allIds.Add(model.ImageId);
 		
-		allIds.Add(model.VideoId);
+		List<int> allIds =
+		[
+			model.ImageId,
+			model.VideoId,
+			..model.MediaFilesIds,   // spread operator: adds items from collection
+		];
 		
 		(await context.Media
 			.Where(m => allIds.Contains(m.Id))
