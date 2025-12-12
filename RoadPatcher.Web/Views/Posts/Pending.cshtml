@@ -1,10 +1,13 @@
-﻿@using RoadPatcher.Helpers
+﻿@using RoadPatcher.Application.Entities
+@using RoadPatcher.Helpers
 @using X.PagedList.Mvc.Core
 @model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
 @{
     ViewData["Title"] = "Pending";
+	var uploadFolderUrl = Url.Content("~/uploads/posts/");
+    
 }
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <div class="row">
 	<div class="col-12 px-3">
 		
@@ -13,13 +16,62 @@
 			var userData = post.User?.UserData;
 			var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
 			
+			var mainImage = post.MediaFiles
+				.FirstOrDefault(m => m.Id == post.ImageId)!;
+			
+			var mainVideo = post.MediaFiles
+				.FirstOrDefault(m => m.Id == post.VideoId)!;
+			
+			var otherMedia = post.MediaFiles
+				.Where(m => m.Id != post.ImageId && m.Id != post.VideoId)
+				.ToList();
+			
+			List<Media> mediaFiles =
+			[
+				mainImage,
+				mainVideo,
+				..otherMedia
+			];
+
 			<div class="card mx-auto road-post">
 	
 				<div class="d-flex">
 	
 					<div class="col post-media d-flex flex-column justify-content-center bg-black">
-						<img src="~/img/borken-road.jpg" class="w-100" alt="broken road">
+
+						<div class="swiper postSlider">
+							<div class="swiper-wrapper">
+							
+								@foreach(var media in mediaFiles)
+								{
+								
+									<div class="swiper-slide d-flex justify-content-center align-items-center bg-black" style="height:500px;">
+									
+										@if (media.Id == post.VideoId) // if it's main video
+										{
+											<video controls class="w-100" style="max-height: 500px;" preload="metadata">
+												<source src="@uploadFolderUrl@media.Name" type="video/mp4">
+												Your browser does not support the video tag.
+											</video>
+										}
+										else // if images
+										{
+											<img src="@uploadFolderUrl@media.Name" class="img-fluid" style="max-height: 500px; object-fit:contain;" alt="@media.Name">
+										}
+									</div>
+								}
+
+							</div>
+
+							<!-- Arrows -->
+							<div class="swiper-button-next"></div>
+							<div class="swiper-button-prev"></div>
+							<div class="swiper-pagination"></div>
+
+						</div>
+
 					</div>
+
 	
 					<div class="col post-details">
 	
@@ -173,3 +225,53 @@
 	
 	
 </div>
+
+@section Scripts {
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			new Swiper(".postSlider", {
+				// Optional: Loop the slides
+				loop: false,
+
+				// Adjust height based on content
+				autoHeight: true,
+
+				// Navigation arrows
+				navigation: {
+					nextEl: ".swiper-button-next",
+					prevEl: ".swiper-button-prev",
+				},
+
+				pagination: {
+					el: ".swiper-pagination",
+				},
+
+				// Prevent video from playing when sliding away (Optional UX improvement)
+				on: {
+					slideChange: function () {
+						document.querySelectorAll('video').forEach(vid => vid.pause());
+					}
+				}
+			});
+		});
+
+	</script>
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

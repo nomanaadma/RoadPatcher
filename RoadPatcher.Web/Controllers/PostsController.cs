@@ -32,8 +32,6 @@ public partial class PostsController(
 			.Include(p => p.User)                 // Include User
 			.ThenInclude(u => u!.UserData)
 			.Include(p => p.MediaFiles)
-			.Include(post => post.Image)
-			.Include(post => post.Video)
 			.Where(p => p.Status == PostStatus.Pending)
 			.OrderByDescending(p => p.CreatedAt)
 			.ToPagedListAsync(page, pageSize);

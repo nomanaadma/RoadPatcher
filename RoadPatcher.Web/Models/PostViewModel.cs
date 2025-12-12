@@ -23,8 +23,8 @@ public class PostViewModel : AddressViewModel
 	public Media? Video { get; init; }
 	
 
-	public IEnumerable<Media> MediaFiles { get; init; } = [];
+	public List<Media> MediaFiles { get; init; } = [];
 	
-	public IEnumerable<int> MediaFilesIds { get; } = [];
+	public List<int> MediaFilesIds { get; init; } = [];
 	
 }
