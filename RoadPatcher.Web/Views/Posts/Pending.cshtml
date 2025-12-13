@@ -38,8 +38,6 @@
 			var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
 			var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 			var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
-			var tooltipProgressPercentage = PostHelper.GetTooltipProgressPercentage(raisedPercentage);
-			
 
 			<div class="card mx-auto road-post">
 	
@@ -145,9 +143,9 @@
 										</div>
 
 										<div class="progress-circle position-absolute translate-middle bg-@progressClass"
-										     style="left: @tooltipProgressPercentage%;"></div>
+										     style="left: @raisedPercentage%;"></div>
 										
-										<div class="detached-arrow tooltip-arrow position-absolute border-@progressClass" style="left: @tooltipProgressPercentage%;"></div>
+										<div class="detached-arrow tooltip-arrow position-absolute border-@progressClass" style="left: @raisedPercentage%;"></div>
 
 										<!-- Always Visible Tooltip -->
 										<div class="custom-tooltip position-absolute translate-middle-x tooltip-loading"

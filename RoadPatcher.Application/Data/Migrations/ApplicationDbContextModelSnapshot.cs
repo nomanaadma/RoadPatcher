@@ -312,9 +312,6 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Property<decimal>("Raised")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal>("Remaining")
-                        .HasColumnType("numeric");
-
                     b.Property<int>("Saves")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")

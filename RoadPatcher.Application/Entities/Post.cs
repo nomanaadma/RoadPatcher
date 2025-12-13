@@ -16,8 +16,6 @@ public class Post
 
 	public decimal Cost { get; set; }
 	public decimal Raised { get; init; }
-	public decimal Remaining { get; init; }
-
 	public int PeopleDonated { get; init; }
 	public int Likes { get; init; }
 	

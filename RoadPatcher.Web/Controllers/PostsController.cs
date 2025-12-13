@@ -82,7 +82,6 @@ public partial class PostsController(
 			Description = model.Description,
 			Cost = model.Cost,
 			Raised = model.Raised,
-			Remaining = model.Remaining,
 			ImageId = model.ImageId,
 			VideoId = model.VideoId
 		};
@@ -118,7 +117,6 @@ public partial class PostsController(
 			Longitude = post.Longitude,
 			Cost = post.Cost,
 			Raised = post.Raised,
-			Remaining = post.Remaining,
 			ImageId = post.ImageId,
 			VideoId = post.VideoId,
 			MediaFiles = post.MediaFiles

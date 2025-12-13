@@ -296,6 +296,8 @@ p {
 
 .donation-progress {
     height: 50px;
+    margin: 0 auto;
+    width: 90%;
 }
 
 .tooltip-content {
