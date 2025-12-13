@@ -41,12 +41,32 @@ public partial class PostsController(
 
 	public async Task<IActionResult> InProcess(int page = 1)
 	{
-		return NoContent();
+		const int pageSize = 10;
+
+		var posts = await context.Posts
+			.Include(p => p.User)                 // Include User
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles)
+			.Where(p => p.Status == PostStatus.InProcess)
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+			
+		return View(posts);
 	}
 
 	public async Task<IActionResult> Completed(int page = 1)
 	{
-		return NoContent();
+		const int pageSize = 10;
+
+		var posts = await context.Posts
+			.Include(p => p.User)                 // Include User
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles)
+			.Where(p => p.Status == PostStatus.Completed)
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+			
+		return View(posts);
 	}
 
 
@@ -330,7 +350,7 @@ public partial class PostsController(
 	
 	[HttpPost]
 	[Authorize]
-public async Task<IActionResult> ToggleFavourite(int postId)
+	public async Task<IActionResult> ToggleFavourite(int postId)
 	{
 		
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

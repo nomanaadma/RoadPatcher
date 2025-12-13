@@ -1,0 +1,47 @@
+﻿@using X.PagedList.Mvc.Core
+@model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
+@{
+	ViewData["Title"] = "Completed";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+<div class="row">
+	<div class="col-12 px-3">
+		
+		@foreach (var post in Model)
+		{
+			<partial name="_Post" model="post"/>
+		}
+		
+	</div>
+	
+	@Html.PagedListPager(
+		Model,
+		page => Url.Action("Completed", new { page }),
+		new PagedListRenderOptions
+		{
+			MaximumPageNumbersToDisplay = 5,
+			LinkToPreviousPageFormat = "<i class=\"las la-angle-left\"></i>",
+			LinkToNextPageFormat = "<i class=\"las la-angle-right\"></i>",
+			LiElementClasses = ["page-item"],
+			PageClasses = ["page-link"],
+			UlElementClasses = ["pagination", "justify-content-center"]
+		}
+	)
+
+	<br>
+	<br>
+	<br>
+	
+</div>
+
+@section Scripts {
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+	<script src="~/js/fslightbox.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js"
+		defer
+		init
+	></script>
+	<script src="~/js/post.js"></script>
+}

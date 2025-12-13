@@ -1,4 +1,8 @@
-﻿<!--begin::Navbar-->
+﻿@{
+	var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<!--begin::Navbar-->
 <div class="app-navbar flex-shrink-0">
 	<!--begin::User menu-->
 	<div class="app-navbar-item" id="kt_header_user_menu_toggle">
@@ -7,7 +11,7 @@
 			
 			<div class="d-flex align-items-stretch">
 				<div class="d-flex align-items-center">
-					<a class="navigation-tab active btn" asp-action="Pending" asp-controller="Posts">
+					<a class="navigation-tab @(currentAction == "Pending" ? "active" : "btn-active-light-warning") btn" asp-action="Pending" asp-controller="Posts">
 						<i class="las la-road fz-24"></i>
 						<span>Pending</span>
 					</a>
@@ -16,7 +20,7 @@
 			
 			<div class="d-flex align-items-stretch">
 				<div class="d-flex align-items-center">
-					<a class="navigation-tab btn btn-active-light-warning" asp-action="InProcess" asp-controller="Posts">
+					<a class="navigation-tab @(currentAction == "InProcess" ? "active" : "btn-active-light-warning") btn" asp-action="InProcess" asp-controller="Posts">
 						<i class="las la-truck-loading fz-24"></i>
 						<span>In-Process</span>
 					</a>
@@ -25,7 +29,7 @@
 			
 			<div class="d-flex align-items-stretch">
 				<div class="d-flex align-items-center">
-					<a class="navigation-tab btn btn-active-light-warning" asp-action="Completed" asp-controller="Posts">
+					<a class="navigation-tab @(currentAction == "Completed" ? "active" : "btn-active-light-warning") btn" asp-action="Completed" asp-controller="Posts">
 						<i class="las la-check-circle fz-24"></i>
 						<span>Completed</span>
 					</a>
