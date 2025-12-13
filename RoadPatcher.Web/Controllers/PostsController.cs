@@ -275,6 +275,59 @@ public partial class PostsController(
 		
 		await context.SaveChangesAsync();
 	}
+	
+	
+	[HttpPost]
+	[Authorize]
+	public async Task<IActionResult> ToggleLike(int postId)
+	{
+		
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == postId);
+
+		var existingLike = await context.Likes
+			.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+
+		bool liked;
+
+		if (existingLike == null)
+		{
+			context.Likes.Add(new Like
+			{
+				PostId = postId,
+				UserId = userId!
+			});
+			liked = true;
+			
+			post!.Likes += 1;
+			
+			
+		}
+		else
+		{
+			context.Likes.Remove(existingLike);
+			liked = false;
+			
+			post!.Likes = Math.Max(0, post.Likes - 1);
+			
+		}
+
+		await context.SaveChangesAsync();
+
+		var totalLikes = await context.Likes.CountAsync(l => l.PostId == postId);
+		
+
+		return Json(new
+		{
+			liked,
+			totalLikes
+		});
+	}
+
+	
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
 	private static partial System.Text.RegularExpressions.Regex FileNameRegex();

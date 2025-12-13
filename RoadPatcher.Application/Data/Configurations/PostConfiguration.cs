@@ -55,7 +55,7 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 		builder.Property(p => p.Likes).HasDefaultValue(0);
 		builder.Property(p => p.Discussions).HasDefaultValue(0);
 		builder.Property(p => p.Shares).HasDefaultValue(0);
-		builder.Property(p => p.Saves).HasDefaultValue(0);
+		builder.Property(p => p.Favourites).HasDefaultValue(0);
 		
 		builder.Property(p => p.AllowEdit)
 			.HasDefaultValue(true);

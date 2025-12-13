@@ -120,11 +120,6 @@ p {
     font-size: 18px;
 }
 
-.road-post .card-footer i {
-    font-size: 25px !important;
-}
-
-
 .fz-24 {
     font-size: 24px !important;
 }
@@ -652,4 +647,43 @@ gmp-place-autocomplete {
 
 .tooltip-box .text-secondary {
     color: grey !important;
+}
+
+.post-footer a.btn {
+    border-style: solid !important;
+    border-width: 3px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    padding-left: 10px !important;
+}
+
+.border-light-success {
+    border-color: var(--bs-success-light) !important;
+}
+
+.border-light-primary {
+    border-color: var(--bs-primary-light) !important;
+}
+
+.border-light-warning {
+    border-color: var(--bs-warning-light) !important;
+}
+
+.border-light-danger {
+    border-color: var(--bs-danger-light) !important;
+}
+
+.post-footer .btn .badge {
+    position: relative;
+    top: 0; 
+    border-radius: 0;
+}
+
+.shadow-hover {
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.shadow-hover:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; /* This matches Bootstrap's .shadow class */
 }

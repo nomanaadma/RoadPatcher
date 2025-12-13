@@ -11,15 +11,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	public DbSet<UserData> UserData => Set<UserData>();
 	public DbSet<Post> Posts => Set<Post>();
 	public DbSet<Media> Media => Set<Media>();
+	public DbSet<Like> Likes => Set<Like>();
+	
 
 	protected override void OnModelCreating(ModelBuilder builder)
 	{
 
 		base.OnModelCreating(builder);
 
-		builder.ApplyConfiguration(new UserDataConfiguration());
-		builder.ApplyConfiguration(new PostConfiguration());
-		builder.ApplyConfiguration(new MediaConfiguration());
+		builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
 	}
 	

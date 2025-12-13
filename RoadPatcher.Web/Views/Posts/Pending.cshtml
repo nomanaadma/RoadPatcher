@@ -1,10 +1,15 @@
-﻿@using RoadPatcher.Application.Entities
+﻿@using System.Security.Claims
+@using RoadPatcher.Application.Data
+@using RoadPatcher.Application.Entities
 @using RoadPatcher.Helpers
 @using X.PagedList.Mvc.Core
 @model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
+@inject ApplicationDbContext DbContext
 @{
     ViewData["Title"] = "Pending";
 	var uploadFolderUrl = Url.Content("~/uploads/posts/");
+	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+	
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <div class="row">
@@ -38,6 +43,8 @@
 			var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
 			var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 			var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
+
+			var isLiked = DbContext.Likes.Any(l => l.PostId == post.Id && l.UserId == userId);
 
 			<div class="card mx-auto road-post">
 	
@@ -100,7 +107,7 @@
 							<div class="text-center mb-4 fs-5">@Html.Raw(post.Description)</div>
 						}
 	
-						<div class="container p-6 pt-2">
+						<div class="container p-6 pt-2 pb-2">
 							
 							<div class="d-flex justify-content-center mb-4">
 								
@@ -258,22 +265,28 @@
 
 						</div>
 	
-						<div class="card-footer border-0 bg-white pt-2 pb-0">
+						<div class="card-footer border-0 bg-white pt-2 pb-0 post-footer">
 	
-							<div class="d-flex justify-content-around text-muted py-1">
+							<div class="d-flex justify-content-around text-muted py-1 pb-4">
 	
-								<a href="#" class="btn btn-link text-decoration-none d-flex ">
-									<i class="las la-thumbs-up"></i> Like <span class="badge badge-light-success ms-2">10</span>
+								<a href="javascript:void(0)" 
+								   data-post-id="@post.Id" 
+								   class="btn btn-link text-decoration-none d-flex border-light-success shadow-hover text-hover-success like-btn @(isLiked ? "bg-light-success" : "") ">
+									<i class="las la-thumbs-up like-icon p-0"></i> 
+									<span class="ps-1 like-text"> @(isLiked ? "Liked" : "Like")</span>
+									<span class="badge badge-light-success ms-2 like-count">@post.Likes</span>
 								</a>
-								<a href="#" class="btn btn-link text-decoration-none d-flex ">
-									<i class="las la-comments"></i> Discussion <span class="badge badge-light-primary ms-2">10</span>
+								
+								<a href="#" class="btn btn-link text-decoration-none d-flex border-light-primary shadow-hover text-hover-primary">
+									<i class="las la-comments"></i> Discussion <span class="badge badge-light-primary ms-2">@post.Discussions</span>
 								</a>
-								<a href="#" class="btn btn-link text-decoration-none d-flex ">
-									<i class="las la-share"></i> Share <span class="badge badge-light-info ms-2">10</span>
+								
+								<a href="#" class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning">
+									<i class="las la-share"></i> Share <span class="badge badge-light-warning ms-2">@post.Shares</span>
 								</a>
 	
-								<a href="#" class="btn btn-link text-decoration-none d-flex ">
-									<i class="las la-bookmark"></i> Save <span class="badge badge-light-danger ms-2">10</span>
+								<a href="#" class="btn btn-link text-decoration-none d-flex border-light-danger shadow-hover text-hover-danger">
+									<i class="las la-bookmark"></i> Favourite <span class="badge badge-light-danger ms-2">@post.Favourites</span>
 								</a>
 	
 							</div>
@@ -315,56 +328,7 @@
 @section Scripts {
 	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 	<script src="~/js/fslightbox.js"></script>
-	<script>
-		$(document).ready(function() {
-			new Swiper(".postSlider", {
-				// Optional: Loop the slides
-				loop: false,
-
-				// Adjust height based on content
-				autoHeight: true,
-
-				// Navigation arrows
-				navigation: {
-					nextEl: ".swiper-button-next",
-					prevEl: ".swiper-button-prev",
-				},
-
-				pagination: {
-					el: ".swiper-pagination",
-				},
-
-				// Prevent video from playing when sliding away (Optional UX improvement)
-				on: {
-					slideChange: function () {
-						document.querySelectorAll('video').forEach(vid => vid.pause());
-					}
-				}
-			});
-
-			$('.zoomBtn').on('click', function() {
-
-				const swiper = $(this).next()[0].swiper;
-				const currentSlide = $(swiper.slides[swiper.activeIndex]); 
-				const currentSliderFullScreenAnchor = currentSlide.prev('a');
-				currentSliderFullScreenAnchor.trigger('click');
-				
-			});
-
-			$('.tooltip-loading').each(function () {
-
-				const $tooltip = $(this);
-				const $inner = $tooltip.find('.tooltip-content-inner');
-
-				$inner.css('width', '306px');
-				$tooltip.removeClass('tooltip-loading');
-
-			});
-
-			
-		});
-
-	</script>
+	<script src="~/js/post.js"></script>
 }
 
 

@@ -17,11 +17,11 @@ public class Post
 	public decimal Cost { get; set; }
 	public decimal Raised { get; init; }
 	public int PeopleDonated { get; init; }
-	public int Likes { get; init; }
+	public int Likes { get; set; }
 	
 	public int Discussions { get; init; }
 	public int Shares { get; init; }
-	public int Saves { get; init; }
+	public int Favourites { get; init; }
 
 	public PostStatus? Status { get; init; } = PostStatus.Pending;
 
