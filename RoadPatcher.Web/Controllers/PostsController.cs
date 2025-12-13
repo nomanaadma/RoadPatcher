@@ -328,6 +328,21 @@ public partial class PostsController(
 	}
 
 	
+	[HttpPost]
+	[Authorize]
+	public async Task<IActionResult> IncrementShare(int postId)
+	{
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == postId);
+
+		post!.Shares += 1;
+
+		await context.SaveChangesAsync();
+
+		return Json(new { totalShares = post.Shares });
+	}
+	
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
 	private static partial System.Text.RegularExpressions.Regex FileNameRegex();

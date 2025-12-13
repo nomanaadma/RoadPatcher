@@ -89,5 +89,65 @@
         });
     });
 
+    
+    $('.share-btn').on('click', function() {
+
+        // Cache the button elements for later use
+        const $btn = $(this);
+        const postId = $btn.data('post-id'); // Gets data-post-id
+        const $countBadge = $btn.find('.share-count');
+
+        // Construct the dynamic URL
+        const dynamicUrl = window.location.origin + '/' + postId;
+
+        Swal.fire({
+            title: 'Share this post',
+            html: `
+                <div class="shareon" data-url="${dynamicUrl}">
+                    <a class="facebook"></a>
+                    <a class="linkedin"></a>
+                    <a class="twitter"></a>
+                    <a class="pinterest"></a>
+                    <a class="whatsapp"></a>
+                    <a class="copy-url"></a>
+                    <a class="email"></a>
+                    <a class="print"></a>
+                    <a class="web-share"></a>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            width: '600px',
+            didOpen: function (popup) {
+                // 'popup' is the raw DOM element, wrap it in jQuery
+                const $popup = $(popup);
+                const $shareonContainer = $popup.find('.shareon');
+
+                $shareonContainer.attr('data-url', dynamicUrl);
+
+                Shareon.init();
+
+                // 4. Track clicks on the social icons
+                $shareonContainer.find('a').on('click', function () {
+
+                    // Send Axios request
+                    axios.post('/Posts/IncrementShare', null, {
+                        params: { postId: postId }
+                    })
+                        .then(function (response) {
+                            $countBadge.text(response.data.totalShares);
+                        })
+                        .catch(function (error) {
+                            console.error("Error tracking share:", error);
+                        });
+                });
+            }
+        });
+        
+    });
+            
+
 
 });

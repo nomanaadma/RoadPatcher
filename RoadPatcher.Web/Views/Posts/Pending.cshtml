@@ -12,6 +12,7 @@
 	
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
 <div class="row">
 	<div class="col-12 px-3">
 		
@@ -281,8 +282,11 @@
 									<i class="las la-comments"></i> Discussion <span class="badge badge-light-primary ms-2">@post.Discussions</span>
 								</a>
 								
-								<a href="#" class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning">
-									<i class="las la-share"></i> Share <span class="badge badge-light-warning ms-2">@post.Shares</span>
+								<a href="javascript:void(0)" 
+								   data-post-id="@post.Id" 
+								   class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning share-btn">
+									<i class="las la-share"></i> Share 
+									<span class="badge badge-light-warning ms-2 share-count">@post.Shares</span>
 								</a>
 	
 								<a href="#" class="btn btn-link text-decoration-none d-flex border-light-danger shadow-hover text-hover-danger">
@@ -323,11 +327,22 @@
 	<br>
 	<br>
 	
+	<div class="shareon" data-url="https://custom.url/for-this-page">
+		<a class="facebook" data-title="Custom Facebook title"></a>
+		<a class="twitter" data-title="Custom Twitter title"></a>
+		<a class="web-share"></a>
+	</div>
+	
 </div>
 
 @section Scripts {
 	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 	<script src="~/js/fslightbox.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js"
+		defer
+		init
+	></script>
 	<script src="~/js/post.js"></script>
 }
 
