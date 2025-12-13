@@ -326,6 +326,57 @@ public partial class PostsController(
 			totalLikes
 		});
 	}
+	
+	
+	[HttpPost]
+	[Authorize]
+public async Task<IActionResult> ToggleFavourite(int postId)
+	{
+		
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == postId);
+
+		var existingFavourite = await context.Favourites
+			.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
+
+		bool favourited;
+
+		if (existingFavourite == null)
+		{
+			context.Favourites.Add(new Favourite
+			{
+				PostId = postId,
+				UserId = userId!
+			});
+			favourited = true;
+			
+			post!.Favourites += 1;
+			
+			
+		}
+		else
+		{
+			context.Favourites.Remove(existingFavourite);
+			favourited = false;
+			
+			post!.Favourites = Math.Max(0, post.Favourites - 1);
+			
+		}
+
+		await context.SaveChangesAsync();
+
+		var totalFavourites = await context.Favourites.CountAsync(l => l.PostId == postId);
+		
+
+		return Json(new
+		{
+			favourited,
+			totalFavourites
+		});
+	}
 
 	
 	[HttpPost]

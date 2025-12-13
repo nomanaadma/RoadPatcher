@@ -12,6 +12,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	public DbSet<Post> Posts => Set<Post>();
 	public DbSet<Media> Media => Set<Media>();
 	public DbSet<Like> Likes => Set<Like>();
+
+	public DbSet<Favourite> Favourites => Set<Favourite>();
 	
 
 	protected override void OnModelCreating(ModelBuilder builder)

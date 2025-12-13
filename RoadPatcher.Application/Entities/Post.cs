@@ -21,7 +21,7 @@ public class Post
 	
 	public int Discussions { get; init; }
 	public int Shares { get; set; }
-	public int Favourites { get; init; }
+	public int Favourites { get; set; }
 
 	public PostStatus? Status { get; init; } = PostStatus.Pending;
 

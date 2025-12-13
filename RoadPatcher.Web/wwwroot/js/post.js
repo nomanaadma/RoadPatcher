@@ -89,6 +89,51 @@
         });
     });
 
+
+    $(".favourite-btn").on("click", function () {
+
+        const $btn = $(this);
+        const postId = $btn.data("post-id");
+
+        const $icon = $btn.find(".favourite-icon");
+        const originalIconClass = $icon.attr("class"); // store original class
+
+        $btn.addClass("disabled");
+        $icon.attr("class", "las la-spinner la-spin p-0"); // la-spin animates spinner
+
+        const $favouriteText = $btn.find(".favourite-text");
+        const $favouriteCount = $btn.find(".favourite-count");
+
+        axios.post('/Posts/ToggleFavourite', null, {
+            params: {
+                postId: postId
+            }
+        })
+        .then(function (response) {
+
+            const favourited = response.data.favourited;
+            const totalFavourites = response.data.totalFavourites;
+
+            if (favourited) {
+                $btn.addClass("bg-light-danger");
+                $favouriteText.text("Favourited");
+            } else {
+                $btn.removeClass("bg-light-danger");
+                $favouriteText.text("Favourite");
+            }
+
+            $favouriteCount.text(totalFavourites);
+        })
+        .catch(function (error) {
+            console.error("Favourite toggle failed", error);
+        })
+        .finally(function () {
+            // Restore original icon and enable button
+            $icon.attr("class", originalIconClass);
+            $btn.removeClass("disabled");
+        });
+    });
+
     
     $('.share-btn').on('click', function() {
 
