@@ -37,6 +37,9 @@
 			var raisedPercentage = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
 			var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
 			var progressClass = PostHelper.GetProgressClass(raisedPercentage);
+			var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
+			var tooltipProgressPercentage = PostHelper.GetTooltipProgressPercentage(raisedPercentage);
+			
 
 			<div class="card mx-auto road-post">
 	
@@ -142,40 +145,113 @@
 										</div>
 
 										<div class="progress-circle position-absolute translate-middle bg-@progressClass"
-										     style="left: @raisedPercentage%;"></div>
+										     style="left: @tooltipProgressPercentage%;"></div>
+										
+										<div class="detached-arrow tooltip-arrow position-absolute border-@progressClass" style="left: @tooltipProgressPercentage%;"></div>
 
 										<!-- Always Visible Tooltip -->
-										<div class="custom-tooltip position-absolute translate-middle-x"
-										     style="left: @raisedPercentage%;">
-											<div class="tooltip-arrow border-@progressClass"></div>
+										<div class="custom-tooltip position-absolute translate-middle-x tooltip-loading"
+										     style="left: @tooltipBoxPercentage%;">
 											<div class="tooltip-content bg-light-@progressClass border-@progressClass rounded fs-6 fw-bold">
-												@* <img src="~/img/worker.png" alt="">  *@
-												@raisedPercentage%</div>
-										</div>
-									</div>
+												
+												<div class="d-flex justify-content-center">
+													<div class="wrapper-grid">
+														<div class="cube">
+															<div class="face face-front">L</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
 
-									<div class="d-flex justify-content-center">
-										<div class="text-center tooltip-box p-2 shadow rounded bg-white border">
+														<div class="cube">
+															<div class="face face-front">O</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
 
-											<div class="row bg-ferozi m-0 rounded">
-												<div class="col-6 border-end py-3">
-													<span class="fw-bold fs-2">@raisedPercentage%</span> <br>
-													<span class="fs-4 ">Achieved</span>
+														<div class="cube">
+															<div class="face face-front">A</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
+
+														<div class="cube">
+															<div class="face face-front">D</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
+
+														<div class="cube">
+															<div class="face face-front">I</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
+
+														<div class="cube">
+															<div class="face face-front">N</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
+
+														<div class="cube">
+															<div class="face face-front">G</div>
+															<div class="face face-back"></div>
+															<div class="face face-right"></div>
+															<div class="face face-left"></div>
+															<div class="face face-top"></div>
+															<div class="face face-bottom"></div>
+														</div>
+													</div>
 												</div>
-												<div class="col-6 py-3">
-													<span class="fw-bold fs-2 ">Rs. @post.Raised.ToPkr() </span> <br>
-													<span class="fs-4 ">Raised</span>
+
+												<div class="d-flex tooltip-content-inner">
+													<div>
+														<img src="~/img/worker.png" style="width: 150px" alt="worker">
+													</div>
+													<div class="text-center tooltip-box py-2 position-relative">
+
+														<div class="row m-0">
+															<div class="col-6 border-end py-2 px-0 achieved-box">
+																<span class="fw-bold fs-4">@raisedPercentage%</span> <br>
+																<span class="fs-4 ">Achieved</span>
+															</div>
+															<div class="col-6 p-2">
+																<span class="fw-bold fs-4">Rs. @post.Raised.ToPkr() </span> <br>
+																<span class="fs-4 ">Raised</span>
+															</div>
+															<div class="col-12 p-0">
+																<div class="mt-1"> Donated by <span class="fw-bold text-@progressClass fs-4">@post.PeopleDonated</span> people</div>
+															</div>
+														</div>
+
+													</div>
+
 												</div>
+												
 											</div>
-
-											<div class="mt-1"> Donated by <span class="fw-bold text-success-dark text-@progressClass fs-3">@post.PeopleDonated</span> people</div>
-
 										</div>
 									</div>
 
-									<div class="mt-4 text-center">
-										<button class="btn btn-dark btn-lg">
-											<i class="las la-hand-holding-usd text-white"></i> Make a donation
+									<div class="donation-btn text-center">
+										<button class="btn btn-lg text-uppercase fw-bolder">
+											<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
 										</button>
 									</div>
 
@@ -275,6 +351,16 @@
 				const currentSliderFullScreenAnchor = currentSlide.prev('a');
 				currentSliderFullScreenAnchor.trigger('click');
 				
+			});
+
+			$('.tooltip-loading').each(function () {
+
+				const $tooltip = $(this);
+				const $inner = $tooltip.find('.tooltip-content-inner');
+
+				$inner.css('width', '306px');
+				$tooltip.removeClass('tooltip-loading');
+
 			});
 
 			

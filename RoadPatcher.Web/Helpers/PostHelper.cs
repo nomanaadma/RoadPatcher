@@ -4,6 +4,7 @@ public static class PostHelper
 {
 	public static decimal GetRaisedPercentage(decimal cost, decimal raised)
 	{
+		return 100;
 		return Math.Round((raised / cost) * 100, 2);
 	}
 	
@@ -25,5 +26,14 @@ public static class PostHelper
 			_ => "success"
 		};
 	}
+	
+	public static decimal GetTooltipBoxPercentage(decimal raisedPercentage)
+	{
+		return Math.Max(31, Math.Min(raisedPercentage, 69));
+	}
 
+	public static decimal GetTooltipProgressPercentage(decimal raisedPercentage)
+	{
+		return Math.Max(5, Math.Min(raisedPercentage, 95));
+	}
 }
