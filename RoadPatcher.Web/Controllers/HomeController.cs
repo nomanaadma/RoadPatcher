@@ -12,6 +12,12 @@ public class HomeController : Controller
 	{
 		return RedirectToAction("Index", "Posts");
 	}
+	
+	[HttpGet("{id:int}")]
+	public IActionResult RedirectToPost(int id)
+	{
+		return RedirectToActionPermanent("SinglePost", "Posts", new { id });
+	}
 
 	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 	public IActionResult Error()

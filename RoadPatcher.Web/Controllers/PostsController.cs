@@ -54,14 +54,36 @@ public partial class PostsController(
 		
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
 			
-		return await context.Posts
-			.Include(p => p.User)
-			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles)
+		return await BasePostQuery()
 			.Where(p => p.Status == status)
 			.OrderByDescending(p => p.CreatedAt)
 			.ToPagedListAsync(page, pageSize);
 	}
+	
+	[HttpGet("Posts/{id:int}")]
+	public async Task<IActionResult> SinglePost(int id)
+	{
+		var post = await BasePostQuery()
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+		{
+			return NotFound();
+		}
+
+		ViewData["Title"] = $"Post {post.Id} Details";
+
+		return View(post);
+	}
+	
+	private IQueryable<Post> BasePostQuery()
+	{
+		return context.Posts
+			.Include(p => p.User)
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles);
+	}
+
 
 	[HttpGet]
 	public IActionResult Create()

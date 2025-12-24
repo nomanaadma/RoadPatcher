@@ -1,0 +1,24 @@
+﻿@model RoadPatcher.Application.Entities.Post
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+
+<div class="row">
+	<div class="col-12 px-3">
+        
+		@* Directly render the partial with the single Model *@
+		<partial name="_Post" model="Model"/>
+        
+	</div>
+</div>
+
+@section Scripts {
+	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+	<script src="~/js/fslightbox.js"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js"
+		defer
+		init
+	></script>
+	<script src="~/js/post.js"></script>
+}
