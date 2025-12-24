@@ -1,4 +1,8 @@
-﻿<script>
+﻿@inject IConfiguration Configuration;
+@{
+	var googleMapsApiKey = Configuration["GoogleMaps:ApiKey"];
+}
+<script>
     let map, marker, geocoder, fillAddressInput = false;
 	let showLoaderToast, toastClear, fillInputs;
 	let lastValidPosition = null; // track last confirmed Pakistan location
@@ -30,7 +34,7 @@
             zoom: zoom,
             center: initialPosition,
             mapId: "d51644aa08ca7cea704f06a2 ", // Required for AdvancedMarkerElement and New API features
-            mapTypeControl: false,
+            mapTypeControl: true,
             streetViewControl: false
         });
 
@@ -322,6 +326,6 @@
 </script>
 	
 <script
-	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjRaFkJuFq8lYhm3jJOWuNvqwdu990wJs&callback=initMap&loading=async&v=weekly"
+	src="https://maps.googleapis.com/maps/api/js?key=@googleMapsApiKey&callback=initMap&loading=async&v=weekly"
 	defer
 ></script>

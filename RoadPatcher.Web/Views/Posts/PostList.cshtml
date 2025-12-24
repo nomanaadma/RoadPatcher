@@ -1,7 +1,7 @@
 ﻿@using X.PagedList.Mvc.Core
 @model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
 @{
-	ViewData["Title"] = "Completed";
+	var actionName = ViewData["ActionName"]?.ToString();
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
@@ -17,7 +17,7 @@
 	
 	@Html.PagedListPager(
 		Model,
-		page => Url.Action("Completed", new { page }),
+		page => Url.Action(actionName, new { page }),
 		new PagedListRenderOptions
 		{
 			MaximumPageNumbersToDisplay = 5,
@@ -28,7 +28,7 @@
 			UlElementClasses = ["pagination", "justify-content-center"]
 		}
 	)
-
+	
 	<br>
 	<br>
 	<br>

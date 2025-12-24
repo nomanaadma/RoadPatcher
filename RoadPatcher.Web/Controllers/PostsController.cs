@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
+using X.PagedList;
 using X.PagedList.EF;
 using X.PagedList.Extensions;
 using Sysfile = System.IO.File;
@@ -15,7 +16,8 @@ namespace RoadPatcher.Controllers;
 [Authorize]
 public partial class PostsController(
 	ApplicationDbContext context,
-	IWebHostEnvironment webHostEnvironment
+	IWebHostEnvironment webHostEnvironment,
+	IConfiguration configuration
 	) : Controller
 {
 	
@@ -26,49 +28,40 @@ public partial class PostsController(
 	
 	public async Task<IActionResult> Pending(int page = 1)
 	{
-		const int pageSize = 10;
-
-		var posts = await context.Posts
-			.Include(p => p.User)                 // Include User
-			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles)
-			.Where(p => p.Status == PostStatus.Pending)
-			.OrderByDescending(p => p.CreatedAt)
-			.ToPagedListAsync(page, pageSize);
-			
-		return View(posts);
+		var posts = await GetPostsByStatus(PostStatus.Pending, page);
+		return View("PostList", posts);
 	}
 
 	public async Task<IActionResult> InProcess(int page = 1)
 	{
-		const int pageSize = 10;
-
-		var posts = await context.Posts
-			.Include(p => p.User)                 // Include User
-			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles)
-			.Where(p => p.Status == PostStatus.InProcess)
-			.OrderByDescending(p => p.CreatedAt)
-			.ToPagedListAsync(page, pageSize);
-			
-		return View(posts);
+		var posts = await GetPostsByStatus(PostStatus.InProcess, page);
+		return View("PostList", posts);
 	}
 
 	public async Task<IActionResult> Completed(int page = 1)
 	{
-		const int pageSize = 10;
-
-		var posts = await context.Posts
-			.Include(p => p.User)                 // Include User
-			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles)
-			.Where(p => p.Status == PostStatus.Completed)
-			.OrderByDescending(p => p.CreatedAt)
-			.ToPagedListAsync(page, pageSize);
-			
-		return View(posts);
+		var posts = await GetPostsByStatus(PostStatus.Completed, page);
+		return View("PostList", posts);
 	}
 
+	private async Task<IPagedList<Post>> GetPostsByStatus(
+		PostStatus status,
+		int page)
+	{
+		
+		ViewData["Title"] = status.ToString();
+		ViewBag.CurrentStatus = status;
+		
+		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+			
+		return await context.Posts
+			.Include(p => p.User)
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles)
+			.Where(p => p.Status == status)
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+	}
 
 	[HttpGet]
 	public IActionResult Create()
