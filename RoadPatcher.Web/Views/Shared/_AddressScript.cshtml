@@ -4,14 +4,13 @@
 	let lastValidPosition = null; // track last confirmed Pakistan location
 
     toastr.options = {
-	    timeOut: 0,
-	    extendedTimeOut: 0,
+	    timeOut: 1000,
+	    extendedTimeOut: 1000,
 	    closeButton: true,
-	    tapToDismiss: false,
-	    escapeHtml: false,
+	    tapToDismiss: true,
 	    positionClass: "toastr-bottom-right",
+	    preventDuplicates: true,
     };
-	
     
     async function initMap() {
         // 1. Import libraries using the modern method
@@ -158,14 +157,23 @@
 		const fullAddress = $('#Address');
 		const latitude = $('#latitude');
 		const longitude = $('#longitude');
+		const internal_address = $('.sys-auto-fill');
 		
 		fillInputs = function(address, lat, lng) {
 			googleAddress.val(address);
 			latitude.val(lat);
 			longitude.val(lng);
+
+			// remove validation errors below inputs
+			internal_address.find('.text-danger').each(function(index, el) {
+				$(el).attr('class', 'text-danger field-validation-valid').text('');
+			});
+			
 		}
 
 		showLoaderToast = function(message = "Loading...") {
+
+			$('#toastr-container').remove();
 
 			saveBtn.prop("disabled", true);
 
@@ -191,6 +199,10 @@
 				return;
 			}
 			fullAddress.val(googleAddressVal);
+			
+			// remove validation error below input
+			fullAddress.parent().next('span').attr('class', 'text-danger field-validation-valid').text('');
+			
 			toastr.success("Copied Google Address to Full Address input.");
 			
 		});

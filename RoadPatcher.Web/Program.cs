@@ -55,6 +55,12 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Add authentication middleware so we can check authenticated users in our custom middleware
+app.UseAuthentication();
+
+// Ensure users complete their profile before accessing other routes
+app.UseProfileCompletionMiddleware();
+
 app.UseAuthorization();
 
 app.UseThemeMiddleware();

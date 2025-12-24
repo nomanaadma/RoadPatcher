@@ -121,7 +121,7 @@ public partial class SettingsController(
 		await InsertOrUpdateProfile(model, user, savedImage);
 
 		TempData["Success"] = "Profile saved successfully!";
-		return RedirectToAction("EditProfile");
+		return RedirectToAction("Pending", "Posts");
 		
 	}
 
