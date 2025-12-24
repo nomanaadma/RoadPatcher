@@ -711,6 +711,16 @@ gmp-place-autocomplete {
     text-decoration: underline;
 }
 
+.rounded-20 {
+    border-radius: 20px !important;
+}
 
+.post-link-btn {
+    color: #fff !important;
+    vertical-align: middle;
+    display: flex;
+}
 
-
+.post-link-btn:hover span {
+    text-decoration: underline;
+}

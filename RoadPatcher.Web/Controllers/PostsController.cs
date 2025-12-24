@@ -71,7 +71,7 @@ public partial class PostsController(
 			return NotFound();
 		}
 
-		ViewData["Title"] = $"Post {post.Id} Details";
+		ViewData["Title"] = $"Post #{post.Id} Details";
 
 		return View(post);
 	}
