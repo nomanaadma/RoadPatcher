@@ -35311,7 +35311,7 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
 .btn-check:checked + .btn.btn-active-light-warning, .btn-check:active + .btn.btn-active-light-warning, .btn.btn-active-light-warning:focus:not(.btn-active), .btn.btn-active-light-warning:hover:not(.btn-active), .btn.btn-active-light-warning:active:not(.btn-active), .btn.btn-active-light-warning.active, .btn.btn-active-light-warning.show, .show > .btn.btn-active-light-warning {
   color: var(--bs-warning);
   border-color: var(--bs-warning-light);
-  background-color: var(--bs-warning-light) !important;
+    background-color: #fff8dd !important;
 }
 .btn-check:checked + .btn.btn-active-light-warning i,
 .btn-check:checked + .btn.btn-active-light-warning .svg-icon, .btn-check:active + .btn.btn-active-light-warning i,

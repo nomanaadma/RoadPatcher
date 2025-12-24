@@ -15,6 +15,7 @@
 
         pagination: {
             el: ".swiper-pagination",
+            type: "progressbar",
         },
 
         // Prevent video from playing when sliding away (Optional UX improvement)

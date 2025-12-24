@@ -3,8 +3,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
 <style>
-	.post-link-btn {
+	.post-link-btn, .post-link-btn * {
 		pointer-events: none;
+		background-color: #dcdcdc !important;
+		color: #7c7c7c !important;
 	}
 </style>
 
@@ -12,7 +14,7 @@
 	<div class="col-12 px-3">
         
 		<partial name="_Post" model="Model"/>
-        
+        <div class="my-2">&nbsp;</div>
 	</div>
 </div>
 

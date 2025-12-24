@@ -44,7 +44,7 @@
 	<div class="d-flex">
 		<div class="col post-media d-flex flex-column justify-content-center position-relative bg-black">
 			
-			<button class="zoomBtn btn btn-light position-absolute">
+			<button class="zoomBtn btn position-absolute">
 				<i class="las la-search-plus fz-20"></i>
 			</button>
 
@@ -67,7 +67,8 @@
 							}
 							else // if images
 							{
-								<img src="@uploadFolderUrl@media.Name" class="img-fluid" style="max-height: 500px; object-fit:contain;" alt="@media.Name">
+								<img src="@uploadFolderUrl@media.Name" class="img-fluid" style="max-height: 500px; object-fit:contain;" alt="@media.Name" loading="lazy">
+								<div class="swiper-lazy-preloader"></div>
 							}
 						</div>
 					}
@@ -75,8 +76,32 @@
 				</div>
 
 				<!-- Arrows -->
-				<div class="swiper-button-next"></div>
-				<div class="swiper-button-prev"></div>
+				<div class="swiper-button-next">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 4 15 15" fill="none">
+						<path d="M8.91016 19.9201L15.4302 13.4001C16.2002 12.6301 16.2002 11.3701 15.4302 10.6001L8.91016 4.08008" stroke="#eee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+						<path d="M8.91016 19.9201L15.4302 13.4001C16.2002 12.6301 16.2002 11.3701 15.4302 10.6001L8.91016 4.08008" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+					</svg>
+				</div>
+				<div class="swiper-button-prev">
+					<?xml version="1.0" encoding="utf-8"?>
+					<svg viewBox="5 4 15 15" fill="none"
+					     xmlns="http://www.w3.org/2000/svg">
+						<path
+							d="M8.91016 19.9201L15.4302 13.4001C16.2002 12.6301 16.2002 11.3701 15.4302 10.6001L8.91016 4.08008"
+							stroke="#eee"
+							stroke-width="4"
+							stroke-linecap="round"
+							stroke-linejoin="round" transform="scale(-1,1) translate(-24,0)"/>
+						<path
+							d="M8.91016 19.9201L15.4302 13.4001C16.2002 12.6301 16.2002 11.3701 15.4302 10.6001L8.91016 4.08008"
+							stroke="#000"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round" transform="scale(-1,1) translate(-24,0)"/>
+
+					</svg>
+
+				</div>
 				<div class="swiper-pagination"></div>
 
 			</div>
@@ -102,24 +127,35 @@
 
 			<div class="container p-6 pt-2 pb-2">
 				
-				<div class="d-flex justify-content-center mb-4">
+				<div class="d-flex justify-content-center mb-4 location-table shadow-sm">
 					
-					<table class="shadow-sm location-table">
+					<table>
 						<tr>
-							<td colspan="2" style="border-top: 0;"><i class="las la-map-marker position-relative"></i> @Model.Address</td>
+							<td colspan="2" style="border-top: 0;">
+								<div class="d-flex align-items-center">
+									<i class="las la-map-marker position-relative me-2"></i> <span>@Model.Address</span>
+								</div>
+							</td>
 						</tr>
 						<tr>
-							<td colspan="2"><i class="las la-map-marked-alt position-relative"></i> @Model.GoogleAddress <button type="button" data-lat="@Model.Latitude" data-lng="@Model.Longitude"  class="btn btn-sm btn-light-info small-rounded-btn view_on_map">View on Map</button></td>
+							<td colspan="2">
+								<div class="d-flex align-items-center">
+									<i class="las la-map-marked-alt position-relative me-2"></i>
+									<span>
+										@Model.GoogleAddress <button type="button" data-lat="@Model.Latitude" data-lng="@Model.Longitude" class="btn btn-sm btn-light-info small-rounded-btn view_on_map">View on Map</button>
+									</span>
+								</div>
+							</td>
 						</tr>
 						<tr>
-							<td class="border-0"><span><i class="las la-map-pin position-relative"></i> Latitude: @Model.Latitude</span></td>
-							<td class="border-0"><span><i class="las la-map-pin position-relative"></i> Longitude: @Model.Longitude</span></td>
+							<td class="border-0"><span><i class="las la-map-pin position-relative me-1"></i> Latitude: @Model.Latitude</span></td>
+							<td class="border-0"><span><i class="las la-map-pin position-relative me-1"></i> Longitude: @Model.Longitude</span></td>
 						</tr>
 					</table>
 				</div>
 
-				<div class="card shadow-sm border-0 rounded-3">
-					<div class="card-body p-4">
+				<div class="card border-0 rounded-3">
+					<div class="card-body p-4 pt-2">
 
 						<div class="row text-center">
 
@@ -298,5 +334,3 @@
 	</div>
 
 </div>
-
-<hr class="my-10" />

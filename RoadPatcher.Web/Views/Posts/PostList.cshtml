@@ -11,27 +11,37 @@
 		@foreach (var post in Model)
 		{
 			<partial name="_Post" model="post"/>
+			<hr class="my-10" />
 		}
 		
 	</div>
 	
-	@Html.PagedListPager(
-		Model,
-		page => Url.Action(actionName, new { page }),
-		new PagedListRenderOptions
-		{
-			MaximumPageNumbersToDisplay = 5,
-			LinkToPreviousPageFormat = "<i class=\"las la-angle-left\"></i>",
-			LinkToNextPageFormat = "<i class=\"las la-angle-right\"></i>",
-			LiElementClasses = ["page-item"],
-			PageClasses = ["page-link"],
-			UlElementClasses = ["pagination", "justify-content-center"]
-		}
-	)
-	
-	<br>
-	<br>
-	<br>
+	@if (Model.Count == 0)
+	{
+		<div class="d-flex justify-content-center mt-10">
+			<div class="alert alert-danger no_post_alert" role="alert">
+				No Posts Found.
+			</div>
+		</div>
+	}
+	else
+	{
+		@Html.PagedListPager(
+			Model,
+			page => Url.Action(actionName, new { page }),
+			new PagedListRenderOptions
+			{
+				DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+				DisplayLinkToNextPage = PagedListDisplayMode.Always,
+				MaximumPageNumbersToDisplay = 5,
+				LinkToPreviousPageFormat = "<i class=\"las la-angle-left\"></i>",
+				LinkToNextPageFormat = "<i class=\"las la-angle-right\"></i>",
+				LiElementClasses = ["page-item"],
+				PageClasses = ["page-link"],
+				UlElementClasses = ["pagination", "justify-content-center", "mb-10"]
+			}
+		)
+	}
 	
 </div>
 
