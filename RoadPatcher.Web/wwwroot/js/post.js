@@ -192,7 +192,66 @@
         });
         
     });
+
+
+    $('.view_on_map').on('click', function () {
+
+        const lat = $(this).data('lat');
+        const lng = $(this).data('lng');
+
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+
+        Swal.fire({
+            title: 'Location on Map',
+            width: '900px',
+            customClass: {
+                popup: 'no-padding-swal'
+            },
+            heightAuto: false,
+            html: `
+        <div style="position:relative;height:410px;">
             
+            <!-- Loader -->
+            <div id="map-loader"
+                 style="
+                    position:absolute;
+                    inset:0;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    background:#fff;
+                    z-index:10;
+                 ">
+                <div class="swal2-loader" style="display: block;"></div>
+            </div>
+
+            <!-- Map -->
+            <iframe
+                id="map-iframe"
+                src="${mapUrl}"
+                width="100%"
+                height="100%"
+                style="border:0;"
+                loading="lazy"
+                allowfullscreen>
+            </iframe>
+
+        </div>
+        `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            didOpen: () => {
+                const iframe = document.getElementById('map-iframe');
+                const loader = document.getElementById('map-loader');
+
+                iframe.onload = () => {
+                    loader.style.display = 'none';
+                };
+            }
+        });
+
+    });
+
 
 
 });

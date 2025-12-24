@@ -687,3 +687,28 @@ gmp-place-autocomplete {
 .shadow-hover:hover {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; /* This matches Bootstrap's .shadow class */
 }
+
+.swal2-container .swal2-html-container {
+    max-height: 70vh;
+}
+
+.no-padding-swal .swal2-title,
+.no-padding-swal .swal2-html-container {
+    padding: 0;
+}
+
+.no-padding-swal button:where(.swal2-close) {
+    width: initial;
+    top: -12px;
+    position: relative;
+}
+
+.no-padding-swal .swal2-html-container {
+    overflow: hidden;
+}
+
+
+
+
+
+

@@ -108,7 +108,7 @@
 							<td colspan="2" style="border-top: 0;"><i class="las la-map-marker position-relative"></i> @Model.Address</td>
 						</tr>
 						<tr>
-							<td colspan="2"><i class="las la-map-marked-alt position-relative"></i> @Model.GoogleAddress <button type="button" class="btn btn-sm btn-light-info small-rounded-btn view_on_map">View on Map</button></td>
+							<td colspan="2"><i class="las la-map-marked-alt position-relative"></i> @Model.GoogleAddress <button type="button" data-lat="@Model.Latitude" data-lng="@Model.Longitude"  class="btn btn-sm btn-light-info small-rounded-btn view_on_map">View on Map</button></td>
 						</tr>
 						<tr>
 							<td class="border-0"><span><i class="las la-map-pin position-relative"></i> Latitude: @Model.Latitude</span></td>
