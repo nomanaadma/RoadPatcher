@@ -1,8 +1,19 @@
 ﻿<script>
     let map, marker, geocoder, fillAddressInput = false;
 	let showLoaderToast, toastClear, fillInputs;
+	let lastValidPosition = null; // track last confirmed Pakistan location
+
+    toastr.options = {
+	    timeOut: 0,
+	    extendedTimeOut: 0,
+	    closeButton: true,
+	    tapToDismiss: false,
+	    escapeHtml: false,
+	    positionClass: "toastr-bottom-right",
+    };
+	
     
-    async function initMap(callback) {
+    async function initMap() {
         // 1. Import libraries using the modern method
         const { Map } = await google.maps.importLibrary("maps");
         const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
@@ -10,11 +21,11 @@
         // Note: Geocoding library doesn't use importLibrary yet in many versions, 
         // but is available globally if loaded via script tag.
 
-        let initialPosition = { lat: 37.36305281824685, lng: 20.864313030696955 };
+        let initialPosition = { lat: 30.4188959, lng: 69.9951495 };
 		if (position) {
-			initialPosition = position;
+			initialPosition = lastValidPosition = position;
 		}
-
+	    
         // 2. Initialize Map
         map = new Map(document.getElementById("map"), {
             zoom: zoom,
@@ -28,9 +39,13 @@
         const autocomplete = new PlaceAutocompleteElement();
         autocomplete.id = "place-autocomplete-input";
 
+		// restrict to Pakistan
+	    @* autocomplete.componentRestrictions = { country: ['PK'] }; *@
+	    autocomplete.includedRegionCodes = ['pk'];
+
         // Push it inside the map controls
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocomplete);
-	    
+        	
         // 4. Create Marker (AdvancedMarkerElement is required for new maps features)
         marker = new AdvancedMarkerElement({
             map: map,
@@ -60,12 +75,14 @@
         // EVENT 2: Map Click
         map.addListener("click", (e) => {
             const clickedLocation = e.latLng;
+            // Tentatively set marker to clicked location; geocodePosition will revert if outside Pakistan
             marker.position = clickedLocation; // Update marker position
-            geocodePosition(clickedLocation);
+            geocodePosition(clickedLocation, null, true);
         });
 
         marker.addListener("dragend", () => {
-	        geocodePosition(marker.position);
+	        // When dragging ends, validate location is inside Pakistan; revert if not
+	        geocodePosition(marker.position, null, true);
         });
 		
     }
@@ -76,17 +93,49 @@
 		marker.position = location;
 	}
     
-    function geocodePosition(pos, callback) {
+    function isInPakistan(geocodeResult) {
+        if (!geocodeResult || !geocodeResult.address_components) return false;
+        for (const comp of geocodeResult.address_components) {
+            if (comp.types && comp.types.indexOf('country') !== -1) {
+                if ((comp.short_name && comp.short_name.toUpperCase() === 'PK') || (comp.long_name && comp.long_name.toLowerCase() === 'pakistan')) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    function geocodePosition(pos, callback, restrictToPakistan = false) {
 
         const loaderToast = showLoaderToast();
 		
         geocoder.geocode({ location: pos }, (results, status) => {
             if (status === "OK" && results[0]) {
+
+                // If caller requested Pakistan-only validation, ensure the result is in Pakistan
+                if (restrictToPakistan && !isInPakistan(results[0])) {
+                    toastr.error("Selected location is outside Pakistan. Please choose a location within Pakistan.");
+                    // revert marker to last known valid Pakistan position
+                    if (lastValidPosition) {
+                        marker.position = lastValidPosition;
+                        map.setCenter(lastValidPosition);
+                    } else {
+	                    marker.position = null;
+                    }
+                    toastClear(loaderToast);
+                    return;
+                }
                 
-				fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
+                // Save this as last known valid Pakistan location (useful for reverts)
+                lastValidPosition = {
+                    lat: (typeof pos.lat === 'function' ? pos.lat() : pos.lat),
+                    lng: (typeof pos.lng === 'function' ? pos.lng() : pos.lng)
+                };
+                
+			fillInputs(results[0].formatted_address, typeof pos.lat === 'function' ? pos.lat() : pos.lat, typeof pos.lng === 'function' ? pos.lng() : pos.lng);
 
                 if (callback) callback(results[0].formatted_address);
-				
+                
             } else {
                 toastr.error("Geolocation failed: " + status);
                 console.error("Geocode failed: " + status);
@@ -120,15 +169,6 @@
 
 			saveBtn.prop("disabled", true);
 
-			toastr.options = {
-				timeOut: 0,
-				extendedTimeOut: 0,
-				closeButton: false,
-				tapToDismiss: false,
-				escapeHtml: false,
-				positionClass: "toastr-bottom-right",
-			};
-
 			return toastr.info(`
 	        <div class="d-flex align-items-center">
 	            <div class="spinner-border spinner-border-sm me-2"></div>
@@ -144,7 +184,6 @@
 		
 		$('.copy-to-fulladdress').on('click', function () {
 			
-			const ethis = $(this);
 
 			const googleAddressVal = googleAddress.val();
 			if(googleAddressVal.trim() === "") {

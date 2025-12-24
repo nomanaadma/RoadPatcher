@@ -124,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 $(document).ready(function () {
-    $('.fetch-location-1, .fetch-location-2, .address-disclaimer').remove();
 
     const quill = new Quill('#editor', {
         theme: 'snow'
