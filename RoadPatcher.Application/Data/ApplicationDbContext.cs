@@ -16,6 +16,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
 	public DbSet<Comment> Comments => Set<Comment>();
 	
+	public DbSet<Share> Shares => Set<Share>();
+	
 
 	protected override void OnModelCreating(ModelBuilder builder)
 	{

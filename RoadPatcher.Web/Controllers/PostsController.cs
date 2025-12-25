@@ -418,11 +418,19 @@ public partial class PostsController(
 	[Authorize]
 	public async Task<IActionResult> IncrementShare(int postId)
 	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		
 		var post = await context.Posts
 			.AsTracking()
 			.FirstOrDefaultAsync(p => p.Id == postId);
 
 		post!.Shares += 1;
+		
+		context.Shares.Add(new Share
+		{
+			PostId = postId,
+			UserId = userId!
+		});
 
 		await context.SaveChangesAsync();
 

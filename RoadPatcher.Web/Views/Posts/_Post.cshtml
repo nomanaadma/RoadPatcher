@@ -39,6 +39,7 @@
 	var isLiked = DbContext.Likes.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isFavourited = DbContext.Favourites.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isDiscussed = DbContext.Comments.Any(l => l.PostId == Model.Id && l.UserId == userId);
+	var isShared = DbContext.Shares.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	
 }
 <div class="card mx-auto road-post">
@@ -319,7 +320,7 @@
 
 					<a href="javascript:void(0)"
 					   data-post-id="@Model.Id"
-					   class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning share-btn">
+					   class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning share-btn @(isShared ? "bg-light-warning" : "")">
 						<i class="las la-share"></i> Share
 						<span class="badge badge-light-warning ms-2 share-count">@Model.Shares</span>
 					</a>

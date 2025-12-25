@@ -68,7 +68,7 @@
         .then(function (response) {
 
             const liked = response.data.liked;
-            const totalLikes = response.data.totalLikes;
+            const totalLikes = response.data.total_likes;
     
             if (liked) {
                 $btn.addClass("bg-light-success");
@@ -113,7 +113,7 @@
         .then(function (response) {
 
             const favourited = response.data.favourited;
-            const totalFavourites = response.data.totalFavourites;
+            const totalFavourites = response.data.total_favourites;
 
             if (favourited) {
                 $btn.addClass("bg-light-danger");
@@ -183,7 +183,8 @@
                         params: { postId: postId }
                     })
                         .then(function (response) {
-                            $countBadge.text(response.data.totalShares);
+                            console.log( $countBadge, response.data.totalShares );
+                            $countBadge.text(response.data.total_shares);
                         })
                         .catch(function (error) {
                             console.error("Error tracking share:", error);

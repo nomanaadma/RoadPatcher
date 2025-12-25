@@ -627,6 +627,15 @@ gmp-place-autocomplete {
     font-size: 22px;
 }
 
+.donation-btn button:hover {
+    background-color: #dfffea !important;
+    border-color: #4bc653 !important;
+    box-shadow: 1px 4px 1px #ddd !important;
+}
+.donation-btn button:hover i {
+    color: #4bc653 !important;
+}
+
 .tooltip-box .text-secondary {
     color: grey !important;
 }
@@ -705,6 +714,7 @@ gmp-place-autocomplete {
     color: #fff !important;
     vertical-align: middle;
     display: flex;
+    padding: 4px 12px 5px !important;
 }
 
 .post-link-btn:hover span {
@@ -803,6 +813,25 @@ gmp-place-autocomplete {
 
 .child-comments .toggle-all {
     font-weight: normal !important;
+}
+
+.jquery-comments .profile-picture {
+    border-radius: 50%;
+}
+
+.jquery-comments ul.main li.comment .comment-header .name {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.reply-to {
+    text-transform: capitalize;
+}
+
+.fa-share:before {
+    content: "\f064";
+    font-family: 'Line Awesome Free', serif;
+    font-weight: 900;
 }
 
 
