@@ -25,7 +25,14 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 	.AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews()
-	.AddNewtonsoftJson();
+	.AddNewtonsoftJson(options =>
+	{
+		options.SerializerSettings.ContractResolver =
+			new Newtonsoft.Json.Serialization.DefaultContractResolver
+			{
+				NamingStrategy = new Newtonsoft.Json.Serialization.SnakeCaseNamingStrategy()
+			};
+	});
 
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();

@@ -19,7 +19,7 @@ public class Post
 	public int PeopleDonated { get; init; }
 	public int Likes { get; set; }
 	
-	public int Discussions { get; init; }
+	public int Discussions { get; set; }
 	public int Shares { get; set; }
 	public int Favourites { get; set; }
 

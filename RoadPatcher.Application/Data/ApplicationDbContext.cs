@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using RoadPatcher.Application.Data.Configurations;
 using RoadPatcher.Application.Entities;
 
 namespace RoadPatcher.Application.Data;
@@ -14,6 +13,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	public DbSet<Like> Likes => Set<Like>();
 
 	public DbSet<Favourite> Favourites => Set<Favourite>();
+
+	public DbSet<Comment> Comments => Set<Comment>();
 	
 
 	protected override void OnModelCreating(ModelBuilder builder)

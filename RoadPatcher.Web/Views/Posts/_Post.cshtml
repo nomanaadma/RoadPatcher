@@ -1,5 +1,6 @@
 ﻿@model RoadPatcher.Application.Entities.Post
 @using System.Security.Claims
+@using System.Linq
 @using RoadPatcher.Application.Data
 @using RoadPatcher.Application.Entities
 @using RoadPatcher.Helpers
@@ -37,13 +38,14 @@
 
 	var isLiked = DbContext.Likes.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isFavourited = DbContext.Favourites.Any(l => l.PostId == Model.Id && l.UserId == userId);
+	var isDiscussed = DbContext.Comments.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	
 }
 <div class="card mx-auto road-post">
 	
 	<div class="d-flex">
 		<div class="col post-media d-flex flex-column justify-content-center position-relative bg-black">
-			
+
 			<button class="zoomBtn btn position-absolute">
 				<i class="las la-search-plus fz-20"></i>
 			</button>
@@ -84,6 +86,7 @@
 				</div>
 				<div class="swiper-button-prev">
 					<?xml version="1.0" encoding="utf-8"?>
+
 					<svg viewBox="5 4 15 15" fill="none"
 					     xmlns="http://www.w3.org/2000/svg">
 						<path
@@ -119,16 +122,16 @@
 				</div>
 				<a asp-action="SinglePost" asp-route-id="@Model.Id" data-bs-toggle="tooltip" title="Open Post" data-bs-placement="bottom" class="btn btn-dark rounded-20 post-link-btn"><i class="las la-link text-white"></i> <span>#@Model.Id</span></a>
 			</div>
-			
+
 			@if (!string.IsNullOrEmpty(Model.Description))
 			{
 				<div class="text-center mb-4 fs-5">@Html.Raw(Model.Description)</div>
 			}
 
 			<div class="container p-6 pt-2 pb-2">
-				
+
 				<div class="d-flex justify-content-center mb-4 location-table shadow-sm">
-					
+
 					<table>
 						<tr>
 							<td colspan="2" style="border-top: 0;">
@@ -180,14 +183,14 @@
 
 							<div class="progress-circle position-absolute translate-middle bg-@progressClass"
 							     style="left: @raisedPercentage%;"></div>
-							
+
 							<div class="detached-arrow tooltip-arrow position-absolute border-@progressClass" style="left: @raisedPercentage%;"></div>
 
 							<!-- Always Visible Tooltip -->
 							<div class="custom-tooltip position-absolute translate-middle-x tooltip-loading"
 							     style="left: @tooltipBoxPercentage%;">
 								<div class="tooltip-content bg-light-@progressClass border-@progressClass rounded fs-6 fw-bold">
-									
+
 									<div class="d-flex justify-content-center">
 										<div class="wrapper-grid">
 											<div class="cube">
@@ -278,7 +281,7 @@
 										</div>
 
 									</div>
-									
+
 								</div>
 							</div>
 						</div>
@@ -298,29 +301,33 @@
 
 				<div class="d-flex justify-content-around text-muted py-1 pb-4">
 
-					<a href="javascript:void(0)" 
-					   data-post-id="@Model.Id" 
+					<a href="javascript:void(0)"
+					   data-post-id="@Model.Id"
 					   class="btn btn-link text-decoration-none d-flex border-light-success shadow-hover text-hover-success like-btn @(isLiked ? "bg-light-success" : "") ">
-						<i class="las la-thumbs-up like-icon p-0"></i> 
+						<i class="las la-thumbs-up like-icon p-0"></i>
 						<span class="ps-1 like-text"> @(isLiked ? "Liked" : "Like")</span>
 						<span class="badge badge-light-success ms-2 like-count">@Model.Likes</span>
 					</a>
-					
-					<a href="#" class="btn btn-link text-decoration-none d-flex border-light-primary shadow-hover text-hover-primary">
-						<i class="las la-comments"></i> Discussion <span class="badge badge-light-primary ms-2">@Model.Discussions</span>
+
+					<a href="javascript:void(0)"
+					   data-post-id="@Model.Id"
+					   class="btn btn-link text-decoration-none d-flex border-light-primary shadow-hover text-hover-primary discussion-btn @(isDiscussed ? "bg-light-primary" : "")">
+						<i class="las la-comments discussion-icon"></i>
+						<span class="ps-1">Discussion</span>
+						<span class="badge badge-light-primary ms-2 discussion-count">@Model.Discussions</span>
 					</a>
-					
-					<a href="javascript:void(0)" 
-					   data-post-id="@Model.Id" 
+
+					<a href="javascript:void(0)"
+					   data-post-id="@Model.Id"
 					   class="btn btn-link text-decoration-none d-flex border-light-warning shadow-hover text-hover-warning share-btn">
-						<i class="las la-share"></i> Share 
+						<i class="las la-share"></i> Share
 						<span class="badge badge-light-warning ms-2 share-count">@Model.Shares</span>
 					</a>
-					
-					<a href="javascript:void(0)" 
-					   data-post-id="@Model.Id" 
+
+					<a href="javascript:void(0)"
+					   data-post-id="@Model.Id"
 					   class="btn btn-link text-decoration-none d-flex border-light-danger shadow-hover text-hover-danger favourite-btn @(isFavourited ? "bg-light-danger" : "") ">
-						<i class="las la-bookmark favourite-icon p-0"></i> 
+						<i class="las la-bookmark favourite-icon p-0"></i>
 						<span class="ps-1 favourite-text"> @(isFavourited ? "Favourited" : "Favourite")</span>
 						<span class="badge badge-light-danger ms-2 favourite-count">@Model.Favourites</span>
 					</a>

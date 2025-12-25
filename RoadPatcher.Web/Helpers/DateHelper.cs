@@ -12,6 +12,9 @@ public static class DateHelper
 		public string ToAgo()
 		{
 			var ts = DateTime.Now - date;
+			
+			if (ts.TotalMinutes < 1)
+				return "Just now";
 
 			if (ts.TotalHours < 24)
 				return Format(ts.TotalHours, "hour");

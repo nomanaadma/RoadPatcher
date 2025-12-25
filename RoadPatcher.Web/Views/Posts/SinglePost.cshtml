@@ -1,7 +1,6 @@
 ﻿@model RoadPatcher.Application.Entities.Post
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-<link href="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.min.css" rel="stylesheet">
+<partial name="_PostStyles" />
 <style>
 	.post-link-btn, .post-link-btn * {
 		pointer-events: none;
@@ -17,14 +16,4 @@
         <div class="my-2">&nbsp;</div>
 	</div>
 </div>
-
-@section Scripts {
-	<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-	<script src="~/js/fslightbox.js"></script>
-	<script
-		src="https://cdn.jsdelivr.net/npm/shareon@2/dist/shareon.iife.js"
-		defer
-		init
-	></script>
-	<script src="~/js/post.js"></script>
-}
+<partial name="_PostScripts" />

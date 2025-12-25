@@ -222,6 +222,46 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("RoadPatcher.Application.Entities.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
+                });
+
             modelBuilder.Entity("RoadPatcher.Application.Entities.Favourite", b =>
                 {
                     b.Property<int>("Id")
@@ -503,6 +543,32 @@ namespace RoadPatcher.Application.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RoadPatcher.Application.Entities.Comment", b =>
+                {
+                    b.HasOne("RoadPatcher.Application.Entities.Comment", "Parent")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RoadPatcher.Application.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RoadPatcher.Application.Entities.Favourite", b =>
                 {
                     b.HasOne("RoadPatcher.Application.Entities.Post", "Post")
@@ -590,6 +656,11 @@ namespace RoadPatcher.Application.Data.Migrations
             modelBuilder.Entity("RoadPatcher.Application.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("UserData");
+                });
+
+            modelBuilder.Entity("RoadPatcher.Application.Entities.Comment", b =>
+                {
+                    b.Navigation("Replies");
                 });
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>

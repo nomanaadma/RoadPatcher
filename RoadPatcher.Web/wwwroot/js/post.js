@@ -193,6 +193,169 @@
         });
         
     });
+    
+    const userProfile = $('.user-profile-nav');
+
+    $('.discussion-btn').on('click', function () {
+
+        const $btn = $(this);
+        const postId = $btn.data('post-id'); // Gets data-post-id
+        const countBadge = $btn.find('.discussion-count');
+
+
+        Swal.fire({
+            title: 'Discussion',
+            width: '900px',
+            customClass: {
+                popup: 'no-padding-swal allow-scroll-swal'
+            },
+            heightAuto: false,
+            html: `
+                <div id="swal-comments-container" style="min-height:300px;">
+                    <div id="swal-comments-loader" style="display:flex;align-items:center;justify-content:center;height:200px;">
+                        <div class="swal2-loader" style="display:block"></div>
+                    </div>
+                    <div id="swal-comments-widget" style="display:none; margin-top:10px;"></div>
+                </div>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            didOpen: () => {
+                // Fetch comments from API and initialize widget
+                fetchCommentsAndRender(postId, countBadge);
+            }
+        });
+
+    });
+
+    // Helper: fetch comments from our API then render the jQuery Comments plugin
+    function fetchCommentsAndRender(postId, countBadge) {
+        const loader = document.getElementById('swal-comments-loader');
+        const widgetContainer = document.getElementById('swal-comments-widget');
+
+        // Show loader
+        if (loader) loader.style.display = 'flex';
+        if (widgetContainer) widgetContainer.style.display = 'none';
+
+        axios.get(`/comments/post/${postId}`)
+            .then(function (response) {
+                
+                const comments = response.data || [];
+
+                // Initialize widget
+                initJQueryComments(widgetContainer, comments, postId, countBadge);
+            })
+            .catch(function (error) {
+                console.error('Failed to load comments', error);
+                if (loader) loader.style.display = 'none';
+                if (widgetContainer) {
+                    widgetContainer.style.display = 'block';
+                    widgetContainer.innerHTML = '<div class="text-center text-danger p-3">Failed to load comments.</div>';
+                }
+            });
+    }
+
+    // Initialize jQuery Comments plugin with restricted features
+    function initJQueryComments(containerEl, items, postId, countBadge) {
+        if (!containerEl) return;
+
+        // Hide loader
+        const loader = document.getElementById('swal-comments-loader');
+        if (loader) loader.style.display = 'none';
+
+        // Show widget container
+        containerEl.style.display = 'block';
+        containerEl.innerHTML = ''; // clear
+
+        // Ensure plugin script & css are loaded in your layout. If not, load them here (skipped).
+
+        // Build initial structure for plugin
+        const $container = $(containerEl);
+
+        // Provide required callbacks for createReply and createComment
+        $container.comments({
+            profilePictureURL: userProfile.data('img'),
+            getComments: function(success, error) {
+                // plugin asks for comments - we already have items
+                success(items);
+            },
+            postComment: function(commentJSON, success, error) {
+                // Called when adding a new root comment
+                const payload = {
+                    postId: postId,
+                    parentId: commentJSON.parent ? parseInt(commentJSON.parent) : null,
+                    content: commentJSON.content
+                };
+                
+                axios.post('/comments', payload)
+                    .then(function(resp) {
+                        countBadge.text(resp.data.total_discussion);
+                        success(resp.data);
+                    })
+                    .catch(function(err) { console.error(err); error('Failed'); });
+            },
+            timeFormatter: function(time) {
+                return formatDateWithAgo(time)
+            },
+            // Disable editing, liking, deleting, attachments and sorting
+            enableEditing: false,
+            enableDeleting: false,
+            enableDeletingCommentWithReplies: false,
+            enableAttachments: false,
+            enablePinging: false,
+            enableNavigation: false,
+            postCommentOnEnter: true,
+            enableUpvoting: false,
+            enableDownvoting: false,
+            enableSorting: false,
+            textareaPlaceholderText: 'Write a comment...',
+            sendText: 'Comment',
+        });
+    }
+
+    function formatDateWithAgo(dateString) {
+        // Normalize timezone (add :00 if missing)
+        if (dateString.match(/\+\d{2}$/)) {
+            dateString += ":00";
+        }
+
+        const date = new Date(dateString);
+        const now = new Date();
+
+        // Format date: 20-Dec-2025 05:21 PM
+        const formattedDate = date.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
+
+        // Time difference
+        const diffMs = now - date;
+        const diffMinutes = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        let agoText = "";
+
+        if (diffMinutes < 60) {
+            agoText = `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+        }
+        else if (diffHours < 24) {
+            agoText = `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+        }
+        else {
+            agoText = `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+        }
+        
+        if(diffMinutes < 1) {
+            return "Just Now";
+        }
+
+        return `${formattedDate} • ${agoText}`;
+    }
 
 
     $('.view_on_map').on('click', function () {
