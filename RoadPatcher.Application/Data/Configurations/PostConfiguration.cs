@@ -50,6 +50,12 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 			.HasForeignKey(p => p.VideoId)
 			.OnDelete(DeleteBehavior.Restrict);
 		
+		builder.Property(p => p.Location)
+			.HasColumnType("geography (point)");
+		
+		builder.HasIndex(p => p.Location)
+			.HasMethod("gist");
+		
 		// Defaults for counters
 		builder.Property(p => p.PeopleDonated).HasDefaultValue(0);
 		builder.Property(p => p.Likes).HasDefaultValue(0);

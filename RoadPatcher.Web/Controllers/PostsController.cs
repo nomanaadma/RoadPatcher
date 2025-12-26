@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
@@ -54,10 +54,11 @@ public partial class PostsController(
 			.Where(f => f.UserId == userId)
 			.Select(f => f.PostId)
 			.ToListAsync();
+		
+		var query = await BasePostQuery();
 
-		var posts = await BasePostQuery()
+		var posts = await query
 			.Where(p => favPostIds.Contains(p.Id))
-			.OrderByDescending(p => p.CreatedAt)
 			.ToPagedListAsync(page, pageSize);
 
 		ViewData["Title"] = "Favourited";
@@ -77,10 +78,11 @@ public partial class PostsController(
 			.Where(d => d.Status == DonationStatus.Completed)
 			.Select(d => d.PostId)
 			.ToListAsync();
+		
+		var query = await BasePostQuery();
 
-		var posts = await BasePostQuery()
+		var posts = await query
 			.Where(p => donatedPostIds.Contains(p.Id))
-			.OrderByDescending(p => p.CreatedAt)
 			.ToPagedListAsync(page, pageSize);
 
 		ViewData["Title"] = "Donated";
@@ -98,37 +100,44 @@ public partial class PostsController(
 		ViewBag.CurrentStatus = status;
 		
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
-			
-		return await BasePostQuery()
+
+		var query = await BasePostQuery();
+		
+		return await query
 			.Where(p => p.Status == status)
-			.OrderByDescending(p => p.CreatedAt)
 			.ToPagedListAsync(page, pageSize);
 	}
 	
 	[HttpGet("Posts/{id:int}")]
 	public async Task<IActionResult> SinglePost(int id)
 	{
-		var post = await BasePostQuery()
+		var query = await BasePostQuery();
+		var post = await query
 			.FirstOrDefaultAsync(p => p.Id == id);
-
+	
 		if (post == null)
 		{
 			return NotFound();
 		}
-
+	
 		ViewData["Title"] = $"Post #{post.Id} Details";
-
+	
 		return View(post);
 	}
 	
-	private IQueryable<Post> BasePostQuery()
+	private async Task<IQueryable<Post>> BasePostQuery()
 	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+		var userData = await context.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
+		
+		var userLocation = new Point(userData!.Longitude, userData.Latitude) { SRID = 4326 };
+
 		return context.Posts
 			.Include(p => p.User)
 			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles);
+			.Include(p => p.MediaFiles)
+			.OrderBy(p => p.Location.Distance(userLocation));
 	}
-
 
 	[HttpGet]
 	public IActionResult Create()
@@ -169,7 +178,6 @@ public partial class PostsController(
 		context.Posts.Add(post);
 		
 		await context.SaveChangesAsync();
-		
 		
 		await AttachMedia(model, post.Id);
 
@@ -497,7 +505,7 @@ public partial class PostsController(
 			? PostStatus.InProcess
 			: PostStatus.Completed;
 
-		var currentStatus = PostHelper.InvertStatus(post.Status);
+		var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status );
 
 		post.UpdatedAt = DateTime.UtcNow;
 

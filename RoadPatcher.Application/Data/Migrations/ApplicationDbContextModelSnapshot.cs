@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RoadPatcher.Application.Data;
 
@@ -17,9 +18,10 @@ namespace RoadPatcher.Application.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -293,7 +295,7 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(2);
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("SucceededAt")
                         .HasColumnType("timestamp with time zone");
@@ -459,6 +461,10 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<Point>("Location")
+                        .IsRequired()
+                        .HasColumnType("geography (point)");
+
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision");
 
@@ -496,6 +502,10 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ImageId");
+
+                    b.HasIndex("Location");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
 
                     b.HasIndex("UserId");
 

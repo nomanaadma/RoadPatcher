@@ -16,7 +16,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-	options.UseNpgsql(connectionString);
+	options.UseNpgsql(connectionString, o => o.UseNetTopologySuite());
 	options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 

@@ -1,4 +1,6 @@
-﻿namespace RoadPatcher.Application.Entities;
+﻿using NetTopologySuite.Geometries;
+
+namespace RoadPatcher.Application.Entities;
 
 public class Post
 {
@@ -11,6 +13,17 @@ public class Post
 	public required string GoogleAddress { get; set; }
 	public double Latitude { get; set; }
 	public double Longitude { get; set; }
+	
+	// Spatial property
+	public Point Location
+	{
+		get => new(Longitude, Latitude) { SRID = 4326 };
+		init
+		{
+			Latitude = value.Y;
+			Longitude = value.X;
+		}
+	}
 
 	public string? Description { get; set; }
 
@@ -23,7 +36,7 @@ public class Post
 	public int Shares { get; set; }
 	public int Favourites { get; set; }
 
-	public PostStatus Status { get; set; } = PostStatus.Pending;
+	public PostStatus? Status { get; set; } = PostStatus.Pending;
 
 	public int ImageId { get; set; }
 	public Media Image { get; init; } = null!;

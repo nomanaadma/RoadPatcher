@@ -188,7 +188,7 @@ public class DonationsController(
 	    // ReSharper disable once InvertIf
 	    if (post.Status != PostStatus.Pending)
 	    {
-			var currentStatus = PostHelper.InvertStatus(post.Status);
+			var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status! );
 			btn = PostHelper.RenderBtn(currentStatus, post.Id);
 	    }
 	    
