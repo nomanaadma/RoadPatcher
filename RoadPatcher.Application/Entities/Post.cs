@@ -23,7 +23,7 @@ public class Post
 	public int Shares { get; set; }
 	public int Favourites { get; set; }
 
-	public PostStatus? Status { get; init; } = PostStatus.Pending;
+	public PostStatus? Status { get; set; } = PostStatus.Pending;
 
 	public int ImageId { get; set; }
 	public Media Image { get; init; } = null!;

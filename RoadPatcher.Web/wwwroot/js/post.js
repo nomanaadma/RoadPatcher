@@ -423,10 +423,25 @@
 
     // Donation flow using Stripe Elements and SweetAlert2
     $(document).on('click', '.donation-btn-button', async function () {
+        
         const $btn = $(this);
+        const $post = $btn.parents('.road-post');
         const postId = $btn.data('post-id');
         
-        const { value: formValues } = await Swal.fire({
+        
+        const remaining_amount = $post.find('.remaining_amount');
+        const raised_amount = $post.find('.raised_amount');
+        const people_donated_count = $post.find('.people_donated_count');
+        const raised_percentage = $post.find('.raised_percentage');
+
+
+        const progress_bar = $post.find('.progress-bar');
+        const progress_circle = $post.find('.progress-circle');
+        const tooltip_arrow = $post.find('.tooltip-arrow');
+        const custom_tooltip = $post.find('.custom-tooltip');
+        
+        
+        await Swal.fire({
             title: 'Donate',
             html:
                 '<div style="max-width:500px">' +
@@ -438,7 +453,6 @@
             confirmButtonText: 'Donate',
             showLoaderOnConfirm: true,
             focusConfirm: false,
-            showCloseButton: true,
             allowOutsideClick: false,
             allowEscapeKey: false,
             preConfirm: async () => {
@@ -454,23 +468,109 @@
                 // Create PaymentIntent on server
                 try {
                     const res = await axios.post('/Donations/CreatePaymentIntent', { post_id: postId, amount: amount });
-                    return { clientSecret: res.data.client_secret, paymentIntentId: res.data.payment_intent_id, amount };
-                }
+                    
+                    // Confirm card payment
+                    const popup = Swal.getPopup();
+                    const stripe = popup.stripe;
+                    const card = popup.card;
+
+                    const result = await stripe.confirmCardPayment(res.data.client_secret, {
+                        payment_method: { card: card }
+                    });
+
+                    if (result.error) {
+                        throw new Error(result.error.message || 'Payment could not be completed.');
+                    }
+
+                    if (!result.paymentIntent || result.paymentIntent.status !== 'succeeded') {
+                        const statusText = result.paymentIntent ? result.paymentIntent.status : 'unknown';
+                        throw new Error('Payment not completed. Status: ' + statusText);
+                    }
+
+                    // Persist donation on server
+                    const resp = await axios.post('/Donations/ConfirmDonation', {
+                        payment_intent_id: result.paymentIntent.id,
+                        post_id: postId
+                    });
+                    const data = resp.data;
+
+                    console.log( data );
+
+                    remaining_amount.html(data.remaining_amount);
+                    raised_amount.html(data.total_raised);
+                    people_donated_count.html(data.people_donated);
+                    raised_percentage.html(data.raised_percentage);
+
+                    progress_bar.css('width', data.raised_percentage + '%');
+                    progress_circle.css('left', data.raised_percentage + '%');
+                    tooltip_arrow.css('left', data.raised_percentage + '%');
+                    custom_tooltip.css('left', data.tooltip_box_percentage + '%');
+
+                    // Replace classes only inside this post
+                    $post.find('.people_donated_count, .progress-bar, .progress-circle, .detached-arrow, .custom-tooltip, .tooltip-content').each(function() {
+                        let $el = $(this);
+                        let classes = $el.attr('class').split(/\s+/);
+
+                        classes.forEach(cls => {
+                            // Match bg-light-* pattern
+                            if (/^bg-light-/.test(cls)) {
+                                $el.removeClass(cls).addClass('bg-light-' + data.progress_class);
+                            }
+
+                            // Match bg-* pattern
+                            else if (/^bg-/.test(cls)) {
+                                $el.removeClass(cls).addClass('bg-' + data.progress_class);
+                            }
+
+                            // Match border-* pattern
+                            else if (/^border-/.test(cls)) {
+                                $el.removeClass(cls).addClass('border-' + data.progress_class);
+                            }
+
+                            else if (/^text-/.test(cls)) {
+                                $el.removeClass(cls).addClass('text-' + data.progress_class);
+                            }
+                        });
+                        
+                    });
+                    
+                    let msg = `<p>We appreciate your <strong>Rs. ${amountStr}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
+                    
+                    if(data.remaining_amount === "0") {
+                        $post.find('.donation-btn-button').remove();
+                        msg = `
+                        <div style="font-size: 1.1em;">
+                            <p>Incredible! Your <strong>Rs. ${amountStr}</strong> donation was the final piece of the puzzle.</p>
+                            <p class="mt-2"><strong>This project is now fully funded! and now will be moved to Pending list</strong> 🚧✅</p>
+                            <p style="color: #666; font-size: 0.9em;">Repair work can now begin immediately thanks to you.</p>
+                        </div>
+                        `;
+                    }
+                    
+                    // Close the donation popup and show success
+                    Swal.close();
+                    Swal.fire({
+                        title: 'Thank you',
+                        html: msg,
+                        icon: 'success'
+                    });
                 
+                }
                 catch (err) {
                     
                     console.error('create payment intent failed', err);
+                    console.log(err)
 
                     // Extract a useful error message from axios/server response to show to the user.
                     let msg = 'Failed to initialize payment. ';
 
-                    const data = err.response.data;
+                    const data = err.response?.data;
 
-                    if (data.message) {
+                    if (data?.message) {
                         msg += data.message;
-                    } else if (data.error) {
+                    } else if (data?.error) {
                         msg += data.error;
-                    } else if (data.title) {
+                    } else if (data?.title) {
                         msg += data.title;
 
                         if(data.errors) {
@@ -482,6 +582,8 @@
                             }
                         }
 
+                    } else if (err.message) {
+                        msg += err.message;
                     } else {
                         // fallback to JSON stringify if something unexpected
                         msg += JSON.stringify(data);
@@ -523,125 +625,10 @@
                 });
             }
         });
-
-        if (!formValues) return; // canceled or failed validation
-
-        // Confirm card payment
-        const popup = Swal.getPopup();
-        const stripe = popup.stripe;
-        const card = popup.card;
-
-        try {
-            const result = await stripe.confirmCardPayment(formValues.clientSecret, {
-                payment_method: {
-                    card: card
-                }
-            });
-
-            if (result.error) {
-                toastr.error(result.error.message || 'Payment could not be completed.');
-                return;
-            }
-
-            if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                // Persist donation on server
-                try {
-                    const resp = await axios.post('/Donations/ConfirmDonation', { payment_intent_id: result.paymentIntent.id, post_id: postId });
-                    const data = resp.data;
-
-                    if (data && data.totalRaised !== undefined) {
-                        // Close donation popup, update UI and show success modal
-                        Swal.close();
-                        const container = $btn.closest('.card.mx-auto.road-post');
-                        updatePostSummaryUI(container, data);
-                        Swal.fire('Thank you', `We appreciate your Rs. ${formValues.amount} donation — your contribution helps patch roads and keep our community safe.`, 'success');
-                    } else if (data && data.success === true) {
-                        Swal.close();
-                        Swal.fire('Notice', 'Donation recorded.', 'success');
-                    } else {
-                        toastr.error('Payment succeeded but server returned an unexpected response. Please contact support.');
-                    }
-                } catch (err) {
-                    console.error('confirm donation server call failed', err);
-                    toastr.error('Payment succeeded but we failed to record the donation on server. Please contact support.');
-                }
-            } else {
-                const statusText = result.paymentIntent ? result.paymentIntent.status : 'unknown';
-                toastr.error('Payment not completed. Status: ' + statusText);
-            }
-        } catch (err) {
-            console.error('confirmCardPayment exception', err);
-            toastr.error('Payment confirmation failed. Please try again.');
-        }
+        
     });
-
-
-    // Helper: format PKR for display
-    function formatPkr(amount) {
-        if (amount === null || amount === undefined) return 'Rs. 0';
-        const num = Number(amount);
-        const fraction = (Math.round((num - Math.floor(num)) * 100) !== 0) ? 2 : 0;
-        return 'Rs. ' + num.toLocaleString('en-US', { minimumFractionDigits: fraction, maximumFractionDigits: 2 });
-    }
-
-    // Helper: update post UI given the card container and server summary
-    function updatePostSummaryUI(container, data) {
-        if (!container || !data) return;
-
-        // people donated
-        container.find('.people_donated_count').each(function () {
-            $(this).text(data.peopleDonated);
-            // update text color class 'text-*'
-            $(this).removeClass(function (index, className) {
-                return (className.match(/(^|\s)text-\S+/g) || []).join(' ');
-            }).addClass('text-' + data.progressClass);
-        });
-
-        // remaining amount display
-        container.find('.remaining_amount').text(formatPkr(data.remainingAmount));
-
-        // tooltip raised amount
-        container.find('.tooltip-content .col-6.p-2 .fw-bold').text(formatPkr(data.totalRaised));
-
-        // achieved percentage inside tooltip
-        container.find('.achieved-box .fw-bold').text(data.raisedPercentage + '%');
-
-        // progress bar width and color
-        const $progress = container.find('.progress-bar');
-        $progress.css('width', data.raisedPercentage + '%');
-        $progress.removeClass(function (index, className) {
-            return (className.match(/(^|\s)bg-\S+/g) || []).join(' ');
-        }).addClass('bg-' + data.progressClass);
-
-        // progress circle
-        const $circle = container.find('.progress-circle');
-        $circle.css('left', data.raisedPercentage + '%');
-        $circle.removeClass(function (index, className) {
-            return (className.match(/(^|\s)bg-\S+/g) || []).join(' ');
-        }).addClass('bg-' + data.progressClass);
-
-        // detached arrow border class
-        const $arrow = container.find('.detached-arrow');
-        $arrow.css('left', data.raisedPercentage + '%');
-        $arrow.removeClass(function (index, className) {
-            return (className.match(/(^|\s)border-\S+/g) || []).join(' ');
-        }).addClass('border-' + data.progressClass);
-
-        // tooltip position and classes
-        const $tooltip = container.find('.custom-tooltip');
-        $tooltip.css('left', data.tooltipBoxPercentage + '%');
-        const $tooltipContent = $tooltip.find('.tooltip-content');
-        $tooltipContent.removeClass(function (index, className) {
-            return (className.match(/(^|\s)bg-light-\S+/g) || []).join(' ');
-        });
-        $tooltipContent.removeClass(function (index, className) {
-            return (className.match(/(^|\s)border-\S+/g) || []).join(' ');
-        });
-        $tooltipContent.addClass('bg-light-' + data.progressClass);
-        $tooltipContent.addClass('border-' + data.progressClass);
-    }
+    
 
 });
 
-// End of file
 
