@@ -8,7 +8,6 @@ using RoadPatcher.Application.Entities;
 using RoadPatcher.Models;
 using X.PagedList;
 using X.PagedList.EF;
-using X.PagedList.Extensions;
 using Sysfile = System.IO.File;
 
 namespace RoadPatcher.Controllers;
@@ -43,6 +42,51 @@ public partial class PostsController(
 		var posts = await GetPostsByStatus(PostStatus.Completed, page);
 		return View("PostList", posts);
 	}
+	
+	public async Task<IActionResult> Favourited(int page = 1)
+	{
+		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		// Fetch favourited post ids for the current user first (single query)
+		var favPostIds = await context.Favourites
+			.Where(f => f.UserId == userId)
+			.Select(f => f.PostId)
+			.ToListAsync();
+
+		var posts = await BasePostQuery()
+			.Where(p => favPostIds.Contains(p.Id))
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+
+		ViewData["Title"] = "Favourited";
+		ViewBag.CurrentStatus = "Favourited";
+
+		return View("PostList", posts);
+    }
+	
+	public async Task<IActionResult> Donated(int page = 1)
+	{
+        var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		// Fetch donated post ids for the current user first (single query)
+		var donatedPostIds = await context.Donations
+			.Where(d => d.UserId == userId)
+			.Where(d => d.Status == DonationStatus.Completed)
+			.Select(d => d.PostId)
+			.ToListAsync();
+
+		var posts = await BasePostQuery()
+			.Where(p => donatedPostIds.Contains(p.Id))
+			.OrderByDescending(p => p.CreatedAt)
+			.ToPagedListAsync(page, pageSize);
+
+		ViewData["Title"] = "Donated";
+		ViewBag.CurrentStatus = "Donated";
+
+		return View("PostList", posts);
+    }
 
 	private async Task<IPagedList<Post>> GetPostsByStatus(
 		PostStatus status,

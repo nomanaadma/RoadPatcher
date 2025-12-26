@@ -2,6 +2,6 @@
 
 public enum DonationStatus
 {
+	Pending,
 	Completed,
-	Pending
 }

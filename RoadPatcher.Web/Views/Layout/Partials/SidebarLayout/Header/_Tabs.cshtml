@@ -7,7 +7,7 @@
 	<!--begin::User menu-->
 	<div class="app-navbar-item" id="kt_header_user_menu_toggle">
 		
-		<div class="d-flex align-items-stretch flex-shrink-0 gap-4 h-100">
+		<div class="d-flex align-items-stretch flex-shrink-0 gap-2 h-100">
 			
 			<div class="d-flex align-items-stretch">
 				<div class="d-flex align-items-center">
@@ -32,6 +32,24 @@
 					<a class="navigation-tab @(currentAction == "Completed" ? "active" : "btn-active-light-warning") btn" asp-action="Completed" asp-controller="Posts">
 						<i class="las la-check-circle fz-24"></i>
 						<span>Completed</span>
+					</a>
+				</div>
+			</div>
+			
+			<div class="d-flex align-items-stretch">
+				<div class="d-flex align-items-center">
+					<a class="navigation-tab @(currentAction == "Favourited" ? "active" : "btn-active-light-warning") btn" asp-action="Favourited" asp-controller="Posts">
+						<i class="las la-bookmark fz-24"></i>
+						<span>Favourited</span>
+					</a>
+				</div>
+			</div>
+			
+			<div class="d-flex align-items-stretch">
+				<div class="d-flex align-items-center">
+					<a class="navigation-tab @(currentAction == "Donated" ? "active" : "btn-active-light-warning") btn" asp-action="Donated" asp-controller="Posts">
+						<i class="las la-donate fz-24"></i>
+						<span>Donated</span>
 					</a>
 				</div>
 			</div>

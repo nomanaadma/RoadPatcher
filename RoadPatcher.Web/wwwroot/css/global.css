@@ -91,7 +91,7 @@ html, body {
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 120px;
+    width: 100px;
     border-radius: 0 !important;
     border-bottom: 4px solid transparent !important;
     color: var(--bs-btn-active-color) !important;
@@ -110,7 +110,7 @@ html, body {
 }
 
 .site-logo {
-    width: 260px;
+    width: 237px;
 }
 
 p {
