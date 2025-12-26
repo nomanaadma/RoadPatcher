@@ -1,0 +1,10 @@
+﻿@{
+    var statusCode = ViewData["StatusCode"] ?? "Unknown";
+    ViewData["Title"] = $"Error {statusCode}";
+}
+
+<div class="container mt-5 text-center">
+    <h1 class="display-4">Error @statusCode</h1>
+    <p class="lead">Sorry — an error occurred.</p>
+    <a class="btn btn-primary" href="@Url.Action("Index", "Home")">Return home</a>
+</div>
