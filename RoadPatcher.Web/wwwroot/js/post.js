@@ -447,7 +447,7 @@
             html:
                 '<div style="max-width:500px">' +
                 '<label for="swal-amount" class="h3">Amount (PKR)</label>' +
-                '<input id="swal-amount" type="number" step="1" class="swal2-input" placeholder="Enter amount">' +
+                '<input name="swal-amount" type="text" class="swal-amount swal2-input number-separator" placeholder="Enter amount">' +
                 '<div id="swal-card-element" class="mt-3"></div>' +
                 '</div>',
             showCancelButton: true,

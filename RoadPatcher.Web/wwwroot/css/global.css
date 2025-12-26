@@ -863,7 +863,7 @@ gmp-place-autocomplete {
     padding: 10px;
 }
 
-#swal-amount {
+.swal-amount {
     margin-left: 0;
     margin-right: 0;
     width: 100%;

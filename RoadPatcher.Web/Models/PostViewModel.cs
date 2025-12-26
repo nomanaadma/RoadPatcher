@@ -7,6 +7,7 @@ public class PostViewModel : AddressViewModel
 {
 	public string? Description { get; init; }
 
+	[Range(200, double.MaxValue, ErrorMessage = "Minimum cost must be at least 200.")]
 	public decimal Cost { get; init; }
 
 	public decimal Raised { get; init; }
