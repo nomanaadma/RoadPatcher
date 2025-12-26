@@ -108,4 +108,33 @@ $(document).ready(function () {
         }
     });
 
+    $('.search_posts').on('click', function () {
+
+        Swal.fire({
+            title: 'Search',
+            width: '900px',
+            customClass: {
+                popup: 'no-padding-swal allow-scroll-swal'
+            },
+            heightAuto: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            html: `
+                <div id="swal-comments-container" style="min-height:300px;">
+                    <div id="swal-comments-loader" style="display:flex;align-items:center;justify-content:center;height:200px;">
+                        <div class="swal2-loader" style="display:block"></div>
+                    </div>
+                    <div id="swal-comments-widget" style="display:none; margin-top:10px;"></div>
+                </div>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            didOpen: () => {
+                // Fetch comments from API and initialize widget
+                // fetchCommentsAndRender(postId, countBadge);
+            }
+        });
+
+    });
+
 });

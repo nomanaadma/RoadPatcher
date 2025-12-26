@@ -62,7 +62,6 @@ public partial class PostsController(
 			.ToPagedListAsync(page, pageSize);
 
 		ViewData["Title"] = "Favourited";
-		ViewBag.CurrentStatus = "Favourited";
 
 		return View("PostList", posts);
     }
@@ -86,10 +85,28 @@ public partial class PostsController(
 			.ToPagedListAsync(page, pageSize);
 
 		ViewData["Title"] = "Donated";
-		ViewBag.CurrentStatus = "Donated";
 
 		return View("PostList", posts);
     }
+	
+	public async Task<IActionResult> Search(string s, int page = 1)
+	{
+		ViewData["Title"] = $"Search Results for: \"{s}\"";
+		ViewData["s"] = s;
+
+		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+		
+		var query = await BasePostQuery();
+		var pattern = $"%{s}%";
+
+		var posts = await query
+			.Where(p => EF.Functions.Like(p.Address, pattern)
+				|| EF.Functions.Like(p.GoogleAddress, pattern)
+				|| EF.Functions.Like(p.Description, pattern))
+			.ToPagedListAsync(page, pageSize);
+
+		return View("PostList", posts);
+	}
 
 	private async Task<IPagedList<Post>> GetPostsByStatus(
 		PostStatus status,
@@ -97,7 +114,6 @@ public partial class PostsController(
 	{
 		
 		ViewData["Title"] = status.ToString();
-		ViewBag.CurrentStatus = status;
 		
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
 
@@ -521,3 +537,4 @@ public partial class PostsController(
 	private static partial System.Text.RegularExpressions.Regex FileNameRegex();
 	
 }
+

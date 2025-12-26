@@ -2,9 +2,19 @@
 @model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
 @inject IConfiguration Configuration
 @{
+	// Use provided ActionName or fall back to current route action
 	var actionName = ViewData["ActionName"]?.ToString();
+
+	// Preserve search query if controller provided it via ViewData["s"]
+	var searchQuery = ViewData["s"]?.ToString();
 }
 <partial name="_PostStyles" />
+
+@if (!string.IsNullOrEmpty(searchQuery))
+{
+	<h2 class="mb-8 mt-3 text-center">@ViewData["Title"]</h2>
+}
+
 <div class="row">
 	<div class="col-12 px-3">
 		
@@ -28,7 +38,7 @@
 	{
 		@Html.PagedListPager(
 			Model,
-			page => Url.Action(actionName, new { page }),
+			page => Url.Action(actionName, searchQuery == null ? new { page } : new { s = searchQuery, page }),
 			new PagedListRenderOptions
 			{
 				DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
