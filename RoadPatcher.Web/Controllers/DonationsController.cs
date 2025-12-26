@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
@@ -177,10 +178,20 @@ public class DonationsController(
 	    var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised).ToPkr();
 	    var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 	    var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
+	    var cost = post.Cost.ToPkr();
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
 
+	    IHtmlContent btn = HtmlString.Empty;
+
+	    // ReSharper disable once InvertIf
+	    if (post.Status != PostStatus.Pending)
+	    {
+			var currentStatus = PostHelper.InvertStatus(post.Status);
+			btn = PostHelper.RenderBtn(currentStatus, post.Id);
+	    }
+	    
 	    return new
 	    {
 		    peopleDonated = post.PeopleDonated,
@@ -188,7 +199,9 @@ public class DonationsController(
 		    raisedPercentage,
 		    remainingAmount,
 		    progressClass,
-		    tooltipBoxPercentage
+		    tooltipBoxPercentage,
+		    btn,
+		    cost
 	    };
     }
 }

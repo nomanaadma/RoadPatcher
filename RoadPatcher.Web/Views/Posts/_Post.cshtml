@@ -164,17 +164,28 @@
 				<div class="card border-0 rounded-3">
 					<div class="card-body p-4 pt-2">
 
-						<div class="row text-center">
+						<div class="post-costing row text-center">
+							
+							@if (remainingAmount == 0)
+							{
+								<div class="col-12">
+									<small class="fw-bold text-success">Goal</small>
+									<h2 class="fw-bolder mb-0 fz-20">Rs. @Model.Cost.ToPkr()</h2>
+								</div>
+							}
+							else
+							{
+								<div class="col-6 border-end">
+									<small class="fw-bold">Goal</small>
+									<h2 class="fw-bolder mb-0 fz-20">Rs. @Model.Cost.ToPkr()</h2>
+								</div>
 
-							<div class="col-6 border-end">
-								<small class="fw-bold">Goal</small>
-								<h2 class="fw-bolder mb-0 fz-20">Rs. @Model.Cost.ToPkr()</h2>
-							</div>
+								<div class="col-6">
+									<small class="text-orange fw-bold">Remaining</small>
+									<h2 class="fw-bolder mb-0 fz-20">Rs. <span class="remaining_amount">@remainingAmount.ToPkr()</span></h2>
+								</div>	
+							}
 
-							<div class="col-6">
-								<small class="text-orange fw-bold">Remaining</small>
-								<h2 class="fw-bolder mb-0 fz-20">Rs. <span class="remaining_amount">@remainingAmount.ToPkr()</span></h2>
-							</div>
 						</div>
 
 						<hr class="text-muted opacity-25">
@@ -289,12 +300,28 @@
 								</div>
 							</div>
 						</div>
-
-						<div class="donation-btn text-center">
-							<button class="btn btn-lg text-uppercase fw-bolder donation-btn-button" data-post-id="@Model.Id">
-								<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
-							</button>
-						</div>
+						<div class="mark-btn null"></div>
+						
+						@if (Model.Status == PostStatus.Pending)
+						{
+							<div class="mark-btn donation-btn text-center">
+								<button class="btn btn-lg text-uppercase fw-bolder donation-btn-button" data-post-id="@Model.Id">
+									<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
+								</button>	
+							</div>
+						}
+						else
+						{
+							@if (Model.Status == PostStatus.InProcess && Model.UserId == userId)
+							{
+								@PostHelper.RenderBtn(PostStatus.Completed, Model.Id)
+							}
+							
+							@if (Model.Status == PostStatus.Completed && Model.UserId == userId)
+							{
+								@PostHelper.RenderBtn(PostStatus.InProcess, Model.Id)
+							}
+						}
 
 					</div>
 				</div>

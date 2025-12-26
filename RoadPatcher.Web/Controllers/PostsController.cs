@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
+using RoadPatcher.Helpers;
 using RoadPatcher.Models;
 using X.PagedList;
 using X.PagedList.EF;
@@ -481,13 +482,34 @@ public partial class PostsController(
 		return Json(new { totalShares = post.Shares });
 	}
 	
+	[HttpPost]
+	[Authorize]
+	public async Task<IActionResult> ToggleStatus(int postId)
+	{
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == postId);
+
+		if (post == null)
+			return NotFound();
+
+		post.Status = post.Status == PostStatus.Completed
+			? PostStatus.InProcess
+			: PostStatus.Completed;
+
+		var currentStatus = PostHelper.InvertStatus(post.Status);
+
+		post.UpdatedAt = DateTime.UtcNow;
+
+		await context.SaveChangesAsync();
+
+		return Ok(new
+		{
+			btn = PostHelper.RenderBtn(currentStatus, post.Id)
+		});
+	}
 
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
 	private static partial System.Text.RegularExpressions.Regex FileNameRegex();
 	
-	[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-	public IActionResult Error()
-	{
-		return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-	}
 }

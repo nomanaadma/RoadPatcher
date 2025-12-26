@@ -604,38 +604,6 @@ gmp-place-autocomplete {
     zoom: 0.76;
 }
 
-.donation-btn {
-    margin-top: 120px;
-}
-
-.donation-btn button {
-    border: 3px solid red !important;
-    border-radius: 34px !important;
-    padding: 8px 20px !important;
-}
-
-.donation-btn button i {
-    position: relative;
-    top: -2px;
-}
-
-.donation-btn button i.la-heart {
-    color: red !important;
-}
-
-.donation-btn button i.la-hand-holding-usd {
-    font-size: 22px;
-}
-
-.donation-btn button:hover {
-    background-color: #dfffea !important;
-    border-color: #4bc653 !important;
-    box-shadow: 1px 4px 1px #ddd !important;
-}
-.donation-btn button:hover i {
-    color: #4bc653 !important;
-}
-
 .tooltip-box .text-secondary {
     color: grey !important;
 }
@@ -840,6 +808,65 @@ gmp-place-autocomplete {
 
 .form-control.form-control-solid {
     background-color: #f5f5f7;
+}
+
+
+
+.mark-btn button {
+    border: 3px solid var(--bs-info) !important;
+    border-radius: 34px !important;
+    padding: 8px 20px !important;
+}
+
+.mark-btn button:hover {
+    background-color: #dfffea !important;
+    border-color: #4bc653 !important;
+    box-shadow: 1px 4px 1px #ddd !important;
+}
+
+.mark-btn button i {
+    font-size: 20px;
+}
+
+.mark-btn {
+    margin-top: 120px;
+}
+
+.donation-btn button i {
+    position: relative;
+    top: -2px;
+}
+
+.donation-btn button i.la-heart {
+    color: red !important;
+}
+
+.donation-btn button i.la-hand-holding-usd {
+    font-size: 22px;
+}
+
+.donation-btn button:hover i {
+    color: #4bc653 !important;
+}
+
+.donation-btn button {
+    border-color: red !important;
+}
+
+.mark-btn.null {
+    margin-top: 105px;
+}
+
+#swal-card-element {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+#swal-amount {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
 }
 
 

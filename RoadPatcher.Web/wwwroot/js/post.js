@@ -425,6 +425,7 @@
     $(document).on('click', '.donation-btn-button', async function () {
         
         const $btn = $(this);
+        const mark_btn = $btn.parent('.mark-btn');
         const $post = $btn.parents('.road-post');
         const postId = $btn.data('post-id');
         
@@ -445,7 +446,7 @@
             title: 'Donate',
             html:
                 '<div style="max-width:500px">' +
-                '<label for="swal-amount" class="form-label">Amount (PKR)</label>' +
+                '<label for="swal-amount" class="h3">Amount (PKR)</label>' +
                 '<input id="swal-amount" type="number" step="1" class="swal2-input" placeholder="Enter amount">' +
                 '<div id="swal-card-element" class="mt-3"></div>' +
                 '</div>',
@@ -537,7 +538,23 @@
                     let msg = `<p>We appreciate your <strong>Rs. ${amountStr}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
                     
                     if(data.remaining_amount === "0") {
+                        
                         $post.find('.donation-btn-button').remove();
+                        
+                        const goalHtml = `<div class="col-12">
+                            <small class="fw-bold text-success">Goal</small>
+                            <h2 class="fw-bolder mb-0 fz-20">Rs. ${data.cost}</h2>
+                        </div>`;
+
+
+                        $post.find('.post-costing').html(goalHtml);
+
+                        mark_btn.hide();
+                        
+                        $(data.btn.value).insertAfter(mark_btn);
+                        
+                        mark_btn.remove();
+                        
                         msg = `
                         <div style="font-size: 1.1em;">
                             <p>Incredible! Your <strong>Rs. ${amountStr}</strong> donation was the final piece of the puzzle.</p>
@@ -628,7 +645,41 @@
         
     });
     
+    $(document).on('click', '.mark-status-btn', async function () {
+
+        const $btn = $(this);
+        const mark_btn = $btn.parent('.mark-btn');
+        const postId = $btn.data('post-id');
+        const currentStatus = $btn.data('status');
+
+        const nextStatus = currentStatus === 'Completed' ? 'InProcess' : 'Completed';
+
+        Swal.fire({
+            title: `Marking as ${nextStatus}`,
+            html: 'Please wait...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const response = await axios.post('/Posts/ToggleStatus', null, {
+            params: { postId }
+        });
+
+        Swal.close();
+
+        mark_btn.hide();
+
+        $(response.data.btn.value).insertAfter(mark_btn);
+        
+        mark_btn.remove();
+
+        Swal.fire({
+            title: `Marked ${nextStatus}`,
+            text: `The post status was updated to ${nextStatus}! and now will be moved to ${nextStatus} list`,
+            icon: 'success'
+        });
+        
+    });
 
 });
-
-
