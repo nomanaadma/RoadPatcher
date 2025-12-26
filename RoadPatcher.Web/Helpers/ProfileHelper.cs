@@ -1,4 +1,6 @@
-﻿namespace RoadPatcher.Helpers;
+﻿using RoadPatcher.Application.Entities;
+
+namespace RoadPatcher.Helpers;
 
 public static class ProfileHelper
 {
@@ -6,4 +8,10 @@ public static class ProfileHelper
 	{
 		return string.IsNullOrEmpty(imageFileName) ? "/img/profile.png" : $"/uploads/users/{imageFileName}";
 	}
+	
+	public static string GetFullName(UserData userData)
+	{
+		return userData.FirstName + ' ' + userData.LastName;
+	}
+	
 }

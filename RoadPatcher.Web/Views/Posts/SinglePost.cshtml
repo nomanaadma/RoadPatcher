@@ -1,4 +1,5 @@
 ﻿@model RoadPatcher.Application.Entities.Post
+@inject IConfiguration Configuration
 
 <partial name="_PostStyles" />
 <style>
@@ -13,7 +14,10 @@
 	<div class="col-12 px-3">
         
 		<partial name="_Post" model="Model"/>
-        <div class="my-2">&nbsp;</div>
+		<div class="my-2">&nbsp;</div>
 	</div>
 </div>
+<script>
+	window.stripePublishableKey = '@Configuration["Stripe:PublishableKey"]';
+</script>
 <partial name="_PostScripts" />

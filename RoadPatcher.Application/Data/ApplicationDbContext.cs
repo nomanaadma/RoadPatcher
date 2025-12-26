@@ -17,6 +17,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	public DbSet<Comment> Comments => Set<Comment>();
 	
 	public DbSet<Share> Shares => Set<Share>();
+
+	public DbSet<Donation> Donations => Set<Donation>();
 	
 
 	protected override void OnModelCreating(ModelBuilder builder)
@@ -25,6 +27,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 		base.OnModelCreating(builder);
 
 		builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+		builder.Entity<Donation>()
+			.HasIndex(d => d.PaymentIntentId)
+			.IsUnique();
 
 	}
 	

@@ -15,8 +15,8 @@ public class Post
 	public string? Description { get; set; }
 
 	public decimal Cost { get; set; }
-	public decimal Raised { get; init; }
-	public int PeopleDonated { get; init; }
+	public decimal Raised { get; set; }
+	public int PeopleDonated { get; set; }
 	public int Likes { get; set; }
 	
 	public int Discussions { get; set; }

@@ -1,5 +1,6 @@
 ﻿@using X.PagedList.Mvc.Core
 @model X.PagedList.IPagedList<RoadPatcher.Application.Entities.Post>
+@inject IConfiguration Configuration
 @{
 	var actionName = ViewData["ActionName"]?.ToString();
 }
@@ -45,5 +46,8 @@
 </div>
 
 @section Scripts {
+	<script>
+		window.stripePublishableKey = '@Configuration["Stripe:PublishableKey"]';
+	</script>
 	<partial name="_PostScripts" />
 }

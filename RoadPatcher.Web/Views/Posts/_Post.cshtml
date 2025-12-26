@@ -29,12 +29,15 @@
 		..otherMedia
 	];
 			
-	var userFullName = userData!.FirstName + ' ' + userData.LastName;
+	var userFullName = ProfileHelper.GetFullName(userData!);
 			
 	var raisedPercentage = PostHelper.GetRaisedPercentage(Model.Cost, Model.Raised);
 	var remainingAmount = PostHelper.GetRemaining(Model.Cost, Model.Raised);
 	var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 	var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
+
+	if (raisedPercentage % 1 == 0)
+		raisedPercentage = (int)raisedPercentage;
 
 	var isLiked = DbContext.Likes.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isFavourited = DbContext.Favourites.Any(l => l.PostId == Model.Id && l.UserId == userId);
@@ -170,7 +173,7 @@
 
 							<div class="col-6">
 								<small class="text-orange fw-bold">Remaining</small>
-								<h2 class="fw-bolder mb-0 fz-20">Rs. @remainingAmount.ToPkr()</h2>
+								<h2 class="remaining_amount fw-bolder mb-0 fz-20">Rs. @remainingAmount.ToPkr()</h2>
 							</div>
 						</div>
 
@@ -275,7 +278,7 @@
 													<span class="fs-4 ">Raised</span>
 												</div>
 												<div class="col-12 p-0">
-													<div class="mt-1"> Donated by <span class="fw-bold text-@progressClass fs-4">@Model.PeopleDonated</span> people</div>
+													<div class="mt-1"> Donated by <span class="people_donated_count fw-bold text-@progressClass fs-4">@Model.PeopleDonated</span> people</div>
 												</div>
 											</div>
 
@@ -288,7 +291,7 @@
 						</div>
 
 						<div class="donation-btn text-center">
-							<button class="btn btn-lg text-uppercase fw-bolder">
+							<button class="btn btn-lg text-uppercase fw-bolder donation-btn-button" data-post-id="@Model.Id">
 								<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
 							</button>
 						</div>

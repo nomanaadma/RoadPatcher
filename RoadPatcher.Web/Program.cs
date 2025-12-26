@@ -6,6 +6,7 @@ using RoadPatcher._keenthemes;
 using RoadPatcher._keenthemes.libs;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +45,13 @@ var themeConfiguration = new ConfigurationBuilder()
 KTThemeSettings.init(themeConfiguration);
 
 DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
+
+// Configure Stripe (if keys present in configuration)
+var stripeSecret = builder.Configuration["Stripe:SecretKey"];
+if (!string.IsNullOrWhiteSpace(stripeSecret))
+{
+	StripeConfiguration.ApiKey = stripeSecret;
+}
 
 var app = builder.Build();
 
