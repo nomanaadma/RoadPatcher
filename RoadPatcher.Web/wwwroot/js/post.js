@@ -546,7 +546,7 @@
             if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
                 // Persist donation on server
                 try {
-                    const resp = await axios.post('/Donations/ConfirmDonation', { payment_intent_id: result.paymentIntent.id });
+                    const resp = await axios.post('/Donations/ConfirmDonation', { payment_intent_id: result.paymentIntent.id, post_id: postId });
                     const data = resp.data;
 
                     if (data && data.totalRaised !== undefined) {

@@ -15,5 +15,6 @@ public class CreatePaymentIntentResponse
 
 public class ConfirmDonationRequest
 {
+	public int PostId { get; set; }
 	public string PaymentIntentId { get; set; } = string.Empty;
 }

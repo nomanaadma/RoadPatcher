@@ -37,7 +37,7 @@ public class DonationsController(ApplicationDbContext db, IConfiguration config)
 	        return BadRequest(new { error = $"Maximum donation amount is Rs. {remainingAmount:0} to achieve the goal amount" });
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        var userData = await db.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
+        var userData = await db.UserData.Include(ud => ud.User).FirstOrDefaultAsync(x => x.UserId == userId);
 
         var amount = (long)(request.Amount * 100);
         
@@ -54,7 +54,8 @@ public class DonationsController(ApplicationDbContext db, IConfiguration config)
             {
 	            { "Url", url },
                 { "Post", '#'+request.PostId.ToString() },
-                { "User", ProfileHelper.GetFullName(userData!) + " - " + userId }
+                { "User", ProfileHelper.GetFullName(userData!) + " - " + userData!.User!.Email},
+                { "UserId", userId}
             }
         };
 
@@ -82,115 +83,97 @@ public class DonationsController(ApplicationDbContext db, IConfiguration config)
         if (intent == null)
             return NotFound(new { error = "PaymentIntent not found" });
 
-        // If succeeded, persist donation
-        if (intent.Status == "succeeded")
+        var postId = request.PostId;
+        var post = await db.Posts.AsTracking().FirstOrDefaultAsync(p => p.Id == request.PostId);
+        if (post == null)
+	        return NotFound(new { error = "Post not found" });
+
+        if (intent.Status != "succeeded")
         {
-            // Idempotency: check if donation with this PaymentIntentId already exists
-            var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
-            if (existing != null)
-            {
-                // Return current post summary if possible
-                var existingDonation = existing;
-                var postForExisting = await db.Posts.FirstOrDefaultAsync(p => p.Id == existingDonation.PostId);
-                if (postForExisting != null)
-                {
-                    var raisedPercentageExisting = PostHelper.GetRaisedPercentage(postForExisting.Cost, postForExisting.Raised);
-                    var remainingAmountExisting = PostHelper.GetRemaining(postForExisting.Cost, postForExisting.Raised);
-                    var progressClassExisting = PostHelper.GetProgressClass(raisedPercentageExisting);
-                    var tooltipBoxPercentageExisting = PostHelper.GetTooltipBoxPercentage(raisedPercentageExisting);
+			return Ok(new { success = false, status = intent.Status });
+        }
+        
+        // Idempotency: check if donation with this PaymentIntentId already exists
+        var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
+        if (existing != null)
+        {
+	        var raisedPercentageExisting = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
+	        var remainingAmountExisting = PostHelper.GetRemaining(post.Cost, post.Raised);
+	        var progressClassExisting = PostHelper.GetProgressClass(raisedPercentageExisting);
+	        var tooltipBoxPercentageExisting = PostHelper.GetTooltipBoxPercentage(raisedPercentageExisting);
 
-                    return Ok(new
-                    {
-                        peopleDonated = postForExisting.PeopleDonated,
-                        totalRaised = postForExisting.Raised,
-                        raisedPercentage = raisedPercentageExisting,
-                        remainingAmount = remainingAmountExisting,
-                        progressClass = progressClassExisting,
-                        tooltipBoxPercentage = tooltipBoxPercentageExisting
-                    });
-                }
-
-                return Ok(new { success = true, message = "Already recorded" });
-            }
-
-            // Read metadata
-            intent.Metadata.TryGetValue("postId", out var postIdMeta);
-            intent.Metadata.TryGetValue("userId", out var userIdMeta);
-
-            if (!int.TryParse(postIdMeta, out var postId))
-            {
-                return BadRequest(new { error = "PaymentIntent missing postId metadata" });
-            }
-
-            var post = await db.Posts.FirstOrDefaultAsync(p => p.Id == postId);
-            if (post == null)
-                return NotFound(new { error = "Post not found2" });
-
-            var amountDecimal = (decimal)intent.AmountReceived / 100m;
-
-            // Persist donation and update post atomically
-            using var tx = await db.Database.BeginTransactionAsync();
-            try
-            {
-                var donation = new Donation
-                {
-                    PostId = postId,
-                    UserId = string.IsNullOrWhiteSpace(userIdMeta) ? null : userIdMeta,
-                    Amount = amountDecimal,
-                    PaymentIntentId = intent.Id,
-                    PaymentMethodId = intent.PaymentMethodId,
-                    Status = DonationStatus.Completed,
-                    CardLast4 = null,
-                    ReceiptUrl = null,
-                    CreatedAt = DateTime.UtcNow,
-                    SucceededAt = DateTime.UtcNow
-                };
-
-                db.Donations.Add(donation);
-
-                // Update Post.Raised
-                post.Raised += amountDecimal;
-
-                // Increase PeopleDonated only if this user hasn't donated successfully before for this post
-                if (!string.IsNullOrWhiteSpace(donation.UserId))
-                {
-                    var hasDonated = await db.Donations
-                        .AnyAsync(d => d.PostId == postId && d.UserId == donation.UserId && d.Status == DonationStatus.Completed);
-
-                    if (!hasDonated)
-                    {
-                        post.PeopleDonated += 1;
-                    }
-                }
-
-                db.Posts.Update(post);
-                await db.SaveChangesAsync();
-                await tx.CommitAsync();
-
-                // Prepare summary to return
-                var raisedPercentage = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
-                var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
-                var progressClass = PostHelper.GetProgressClass(raisedPercentage);
-                var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
-
-                return Ok(new
-                {
-                    peopleDonated = post.PeopleDonated,
-                    totalRaised = post.Raised,
-                    raisedPercentage,
-                    remainingAmount,
-                    progressClass,
-                    tooltipBoxPercentage
-                });
-            }
-            catch (DbUpdateException ex)
-            {
-                await tx.RollbackAsync();
-                return StatusCode(500, new { error = ex.Message });
-            }
+	        return Ok(new
+	        {
+		        peopleDonated = post.PeopleDonated,
+		        totalRaised = post.Raised,
+		        raisedPercentage = raisedPercentageExisting,
+		        remainingAmount = remainingAmountExisting,
+		        progressClass = progressClassExisting,
+		        tooltipBoxPercentage = tooltipBoxPercentageExisting
+	        });
         }
 
-        return Ok(new { success = false, status = intent.Status });
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var amountDecimal = (decimal)intent.AmountReceived / 100m;
+
+        // Persist donation and update post atomically
+        await using var tx = await db.Database.BeginTransactionAsync();
+        try
+        {
+            var donation = new Donation
+            {
+                PostId = postId,
+                UserId = userId,
+                Amount = amountDecimal,
+                PaymentIntentId = intent.Id,
+                PaymentMethodId = intent.PaymentMethodId,
+                Status = DonationStatus.Completed,
+                ReceiptUrl = null,
+                CreatedAt = DateTime.UtcNow,
+                SucceededAt = DateTime.UtcNow
+            };
+
+            db.Donations.Add(donation);
+
+            // Update Post.Raised
+            post.Raised += amountDecimal;
+
+            // Increase PeopleDonated only if this user hasn't donated successfully before for this post
+            var hasDonated = await db.Donations
+                .AnyAsync(d => d.PostId == postId && d.UserId == donation.UserId && d.Status == DonationStatus.Completed);
+
+            if (!hasDonated)
+            {
+                post.PeopleDonated += 1;
+            }
+
+            db.Posts.Update(post);
+            await db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            // Prepare summary to return
+            var raisedPercentage = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
+            var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
+            var progressClass = PostHelper.GetProgressClass(raisedPercentage);
+            var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
+
+            return Ok(new
+            {
+                peopleDonated = post.PeopleDonated,
+                totalRaised = post.Raised,
+                raisedPercentage,
+                remainingAmount,
+                progressClass,
+                tooltipBoxPercentage
+            });
+        }
+        catch (DbUpdateException ex)
+        {
+            await tx.RollbackAsync();
+            return StatusCode(500, new { error = ex.Message });
+        }
+        
     }
 
     [HttpPost("Webhook")]
@@ -200,119 +183,94 @@ public class DonationsController(ApplicationDbContext db, IConfiguration config)
         var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
         var webhookSecret = config["Stripe:WebhookSecret"];
 
-        Event stripeEvent;
+        var signature = Request.Headers["Stripe-Signature"];
+        
+        var stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
 
-        if (!string.IsNullOrEmpty(webhookSecret))
+        switch (stripeEvent.Type)
         {
-            var signature = Request.Headers["Stripe-Signature"];
-            try
-            {
-                stripeEvent = EventUtility.ConstructEvent(json, signature, webhookSecret);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+	        case "payment_intent.succeeded":
+	        {
+		        if (stripeEvent.Data.Object is not PaymentIntent intent)
+			        return BadRequest();
+
+		        // Idempotent handling
+		        var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
+		        if (existing is { Status: DonationStatus.Completed })
+			        return Ok();
+
+		        // Try to read metadata
+		        intent.Metadata.TryGetValue("Post", out var postIdMeta);
+		        intent.Metadata.TryGetValue("UserId", out var userIdMeta);
+
+		        var postId = int.Parse(postIdMeta?.Replace("#", "")!);
+
+		        var post = await db.Posts.AsTracking().FirstOrDefaultAsync(p => p.Id == postId);
+		        if (post == null)
+			        return NotFound();
+
+		        var amountDecimal = intent.AmountReceived / 100m;
+
+		        await using var tx = await db.Database.BeginTransactionAsync();
+		        try
+		        {
+			        if (existing == null)
+			        {
+				        var donation = new Donation
+				        {
+					        PostId = postId,
+					        UserId = userIdMeta,
+					        Amount = amountDecimal,
+					        PaymentIntentId = intent.Id,
+					        PaymentMethodId = intent.PaymentMethodId,
+					        Status = DonationStatus.Completed,
+					        ReceiptUrl = null,
+					        CreatedAt = DateTime.UtcNow,
+					        SucceededAt = DateTime.UtcNow
+				        };
+
+				        db.Donations.Add(donation);
+
+				        post.Raised += amountDecimal;
+
+				        var hasDonated = await db.Donations
+					        .AnyAsync(d => d.PostId == postId && d.UserId == donation.UserId && d.Status == DonationStatus.Completed);
+
+				        if (!hasDonated)
+				        {
+					        post.PeopleDonated += 1;
+				        }
+
+				        db.Posts.Update(post);
+				        await db.SaveChangesAsync();
+			        }
+
+			        await tx.CommitAsync();
+		        }
+		        catch
+		        {
+			        await tx.RollbackAsync();
+		        }
+
+		        return Ok();
+	        }
+	        case "payment_intent.payment_failed":
+	        {
+		        if (stripeEvent.Data.Object is not PaymentIntent intent)
+			        return BadRequest();
+
+		        var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
+		        if (existing == null) return Ok();
+		        
+		        existing.Status = DonationStatus.Failed;
+		        existing.UpdatedAt = DateTime.UtcNow;
+		        db.Donations.Update(existing);
+		        await db.SaveChangesAsync();
+
+		        return Ok();
+	        }
+	        default:
+		        return Ok();
         }
-        else
-        {
-            stripeEvent = EventUtility.ParseEvent(json);
-        }
-
-        if (stripeEvent.Type == "payment_intent.succeeded")
-        {
-            var intent = stripeEvent.Data.Object as PaymentIntent;
-            if (intent is null)
-                return BadRequest();
-
-            // Idempotent handling
-            var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
-            if (existing != null && existing.Status == DonationStatus.Completed)
-                return Ok();
-
-            // Try to read metadata
-            intent.Metadata.TryGetValue("postId", out var postIdMeta);
-            intent.Metadata.TryGetValue("userId", out var userIdMeta);
-
-            if (!int.TryParse(postIdMeta, out var postId))
-            {
-                // Can't associate to post - ignore
-                return Ok();
-            }
-
-            var post = await db.Posts.FirstOrDefaultAsync(p => p.Id == postId);
-            if (post == null)
-                return Ok();
-
-            var amountDecimal = (decimal)intent.AmountReceived / 100m;
-
-            using var tx = await db.Database.BeginTransactionAsync();
-            try
-            {
-                // Re-check idempotency inside tx
-                var existing2 = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
-                if (existing2 == null)
-                {
-                    var donation = new Donation
-                    {
-                        PostId = postId,
-                        UserId = string.IsNullOrWhiteSpace(userIdMeta) ? null : userIdMeta,
-                        Amount = amountDecimal,
-                        PaymentIntentId = intent.Id,
-                        PaymentMethodId = intent.PaymentMethodId,
-                        Status = DonationStatus.Completed,
-                        CardLast4 = null,
-                        ReceiptUrl = null,
-                        CreatedAt = DateTime.UtcNow,
-                        SucceededAt = DateTime.UtcNow
-                    };
-
-                    db.Donations.Add(donation);
-
-                    post.Raised += amountDecimal;
-
-                    if (!string.IsNullOrWhiteSpace(donation.UserId))
-                    {
-                        var hasDonated = await db.Donations
-                            .AnyAsync(d => d.PostId == postId && d.UserId == donation.UserId && d.Status == DonationStatus.Completed);
-
-                        if (!hasDonated)
-                        {
-                            post.PeopleDonated += 1;
-                        }
-                    }
-
-                    db.Posts.Update(post);
-                    await db.SaveChangesAsync();
-                }
-
-                await tx.CommitAsync();
-            }
-            catch
-            {
-                await tx.RollbackAsync();
-            }
-
-            return Ok();
-        }
-        else if (stripeEvent.Type == "payment_intent.payment_failed")
-        {
-            var intent = stripeEvent.Data.Object as PaymentIntent;
-            if (intent is null)
-                return BadRequest();
-
-            var existing = await db.Donations.FirstOrDefaultAsync(d => d.PaymentIntentId == intent.Id);
-            if (existing != null)
-            {
-                existing.Status = DonationStatus.Failed;
-                existing.UpdatedAt = DateTime.UtcNow;
-                db.Donations.Update(existing);
-                await db.SaveChangesAsync();
-            }
-
-            return Ok();
-        }
-
-        return Ok();
     }
 }
