@@ -687,7 +687,6 @@ public partial class PostsController(
 
 		query = query.Where(p => statusList.Contains(p.Status.ToString()));
 		
-		
 		var posts = await query
 			.Select(p => new {
 				p.Id,
@@ -695,6 +694,11 @@ public partial class PostsController(
 				lat = p.Latitude,  
 				lng = p.Longitude,
 				Status = p.Status.ToString(),
+				raisedPercentage = PostHelper.GetRaisedPercentage(p.Cost, p.Raised),
+				remainingAmount = PostHelper.GetRemaining(p.Cost, p.Raised).ToPkr(),
+				cost = p.Cost.ToPkr(),
+				peopleDonated = p.PeopleDonated,
+				totalRaised = p.Raised.ToPkr(),
 			})
 			.ToListAsync();
 

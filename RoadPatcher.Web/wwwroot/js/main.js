@@ -296,7 +296,7 @@ $(document).ready(function () {
                                 </div>
 
                                   <div class="col-md-12">
-                                    <div id="map" style="width: 100%; height: 300px;"></div>
+                                    <div id="map" style="width: 100%; height: 400px;"></div>
                                   </div>
                                 </div>
                             </div>
@@ -340,17 +340,10 @@ $(document).ready(function () {
                     lngInput.value = "";
                 });
                 
-                
-                // temp remove
-                $('#map-search-tab').trigger('click');
-                
             }
         });
 
     });
-
-    // temp remove
-    $('.search_posts').trigger('click');
 
     let map;
     let markers = [];
@@ -456,10 +449,10 @@ $(document).ready(function () {
 
     function getMarkerIcon(status) {
         switch(status) {
-            case "Pending": return "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
-            case "InProcess": return "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
-            case "Completed": return "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
-            default: return "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+            case "Pending": return "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
+            case "InProcess": return "https://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+            case "Completed": return "https://maps.google.com/mapfiles/ms/icons/green-dot.png";
+            default: return "https://maps.google.com/mapfiles/ms/icons/blue-dot.png";
         }
     }
 
@@ -471,11 +464,41 @@ $(document).ready(function () {
             title: `#${post.id}`,
         });
 
+        // Assuming 'post' is the object from your loop corresponding to the C# projection
         const infowindow = new google.maps.InfoWindow({
-            content: `<div>
-                    <h6>Post #${post.id}</h6>
-                    <p>${post.description}</p>
-                  </div>`
+            content: `
+        <div class="map-info-card">
+            
+            <div class="map-info-header">
+                <h6 class="text-center">Post #${post.id}</h6>
+            </div>
+
+            <div class="map-info-desc">
+                ${post.description}
+            </div>
+            
+            <div class="stats-grid">
+            
+                <div class="stat-item">
+                    <span class="stat-label">Goal</span>
+                    <span class="stat-value" style="color: grey;">Rs. ${post.cost}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Raised</span>
+                    <span class="stat-value" style="color: #4CAF50;">Rs. ${post.total_raised} : ${post.raised_percentage}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Remaining</span>
+                    <span class="stat-value" style="color: #e74c3c;">Rs. ${post.remaining_amount}</span>
+                </div>
+            </div>
+
+            <div class="donors-count text-center">
+                <i class="fas fa-users"></i> <span><strong>${post.people_donated}</strong> people have donated</span>
+            </div>
+
+        </div>
+    `
         });
 
         marker.addListener('click', () => infowindow.open(map, marker));
