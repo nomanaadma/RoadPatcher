@@ -1,4 +1,5 @@
 using System.Data.Common;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
@@ -73,6 +74,23 @@ else
 }
 
 app.UseHttpsRedirection();
+
+
+var provider = new FileExtensionContentTypeProvider
+{
+	Mappings =
+	{
+		[".mp4"] = "video/mp4"
+	}
+};
+
+app.UseStaticFiles(new StaticFileOptions
+{
+	ContentTypeProvider = provider,
+	ServeUnknownFileTypes = true
+});
+
+
 app.UseRouting();
 
 // Add authentication middleware so we can check authenticated users in our custom middleware
