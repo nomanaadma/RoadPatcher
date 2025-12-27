@@ -1,5 +1,7 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using Npgsql;
 using RoadPatcher.Middlewares;
 using RoadPatcher._keenthemes;
@@ -37,6 +39,9 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
+
+builder.Services.AddSingleton<GeometryFactory>(sp => 
+    NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326));
 
 var themeConfiguration = new ConfigurationBuilder()
 	.AddJsonFile("_keenthemes/config/themesettings.json")

@@ -1,8 +1,4 @@
-﻿@inject IConfiguration Configuration;
-@{
-	var googleMapsApiKey = Configuration["GoogleMaps:ApiKey"];
-}
-<script>
+﻿<script>
     let map, marker, geocoder, fillAddressInput = false;
 	let showLoaderToast, toastClear, fillInputs;
 	let lastValidPosition = null; // track last confirmed Pakistan location
@@ -24,7 +20,9 @@
         // Note: Geocoding library doesn't use importLibrary yet in many versions, 
         // but is available globally if loaded via script tag.
 
-        let initialPosition = { lat: 30.4188959, lng: 69.9951495 };
+	    const userProfile = $('.user-profile-nav');
+	    
+        let initialPosition = { lat: userProfile.data('lat'), lng: userProfile.data('lng') };
 		if (position) {
 			initialPosition = lastValidPosition = position;
 		}
@@ -150,6 +148,11 @@
     }
 
     window.initMap = initMap;
+
+    window.addEventListener('load', function() {
+	    initMap();
+    });
+	
 </script>
 
 <script>
@@ -324,8 +327,3 @@
 		
 	});
 </script>
-	
-<script
-	src="https://maps.googleapis.com/maps/api/js?key=@googleMapsApiKey&callback=initMap&loading=async&v=weekly"
-	defer
-></script>

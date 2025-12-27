@@ -1,3 +1,4 @@
+@inject IConfiguration Configuration;
 @{
 	// Master layout
 	Layout = "~/Views/Layout/Master.cshtml";
@@ -6,6 +7,7 @@
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-header-fixed", "true");
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-toolbar-enabled", "true");
 	KTTheme.AddHtmlClass("body", "app-default");
+	var googleMapsApiKey = Configuration["GoogleMaps:ApiKey"];
 	
 }
 
@@ -57,4 +59,9 @@
 	};
 </script>
 @await RenderSectionAsync("Scripts", required: false)
+<script src="https://unpkg.com/@@googlemaps/markerclustererplus/dist/index.min.js"></script>
+<script
+	src="https://maps.googleapis.com/maps/api/js?key=@googleMapsApiKey&loading=async&v=weekly&libraries=places"
+	defer
+></script>
 <script src="~/js/main.js"></script>

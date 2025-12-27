@@ -9,6 +9,7 @@ using RoadPatcher.Helpers;
 using RoadPatcher.Models;
 using X.PagedList;
 using X.PagedList.EF;
+using X.PagedList.Extensions;
 using Sysfile = System.IO.File;
 
 namespace RoadPatcher.Controllers;
@@ -533,6 +534,173 @@ public partial class PostsController(
 		});
 	}
 
+	public async Task<IActionResult> AdvancedSearch(
+		[FromQuery(Name = "goal_start")] decimal? goalStart,
+		[FromQuery(Name = "goal_end")] decimal? goalEnd,
+		[FromQuery(Name = "raised_start")] decimal? raisedStart,
+		[FromQuery(Name = "raised_end")] decimal? raisedEnd,
+		[FromQuery(Name = "remaining_start")] decimal? remainingStart,
+		[FromQuery(Name = "remaining_end")] decimal? remainingEnd,
+		[FromQuery(Name = "achieved_start")] decimal? achievedStart,
+		[FromQuery(Name = "achieved_end")] decimal? achievedEnd,
+		[FromQuery(Name = "donated_by_start")] int? donatedByStart,
+		[FromQuery(Name = "donated_by_end")] int? donatedByEnd,
+		string? @as,
+		double? lat,
+		double? lng,
+		int? radius,
+		PostStatus? status,
+		int page = 1)
+	{
+		// Redirect if no filters are provided
+		var hasFilters =
+			!string.IsNullOrWhiteSpace(@as) ||
+			lat.HasValue && lng.HasValue ||
+			goalStart.HasValue || goalEnd.HasValue ||
+			raisedStart.HasValue || raisedEnd.HasValue ||
+			remainingStart.HasValue || remainingEnd.HasValue ||
+			achievedStart.HasValue || achievedEnd.HasValue ||
+			donatedByStart.HasValue || donatedByEnd.HasValue ||
+			status.HasValue;
+	
+		if (!hasFilters)
+			return RedirectToAction("Search", "Posts");
+	
+		ViewData["Title"] = ViewData["s"] = "Advanced Search Results";
+	
+		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+		var query = await BasePostQuery();
+	
+		// ---------------------------
+		// TEXT SEARCH
+		// ---------------------------
+		if (!string.IsNullOrWhiteSpace(@as))
+		{
+			var pattern = $"%{@as}%";
+			query = query.Where(p =>
+				EF.Functions.Like(p.Address, pattern) ||
+				EF.Functions.Like(p.GoogleAddress, pattern) ||
+				EF.Functions.Like(p.Description!, pattern)
+			);
+		}
+		
+		// ---------------------------
+		// GEO FILTER (PostGIS)
+		// ---------------------------
+		if (lat.HasValue && lng.HasValue && radius.HasValue)
+		{
+			var userPoint = new Point(lng.Value, lat.Value) { SRID = 4326 };
+			var distanceMeters = (radius ?? 10) * 1000;
+
+			query = query.Where(p =>
+				EF.Functions.IsWithinDistance(p.Location, userPoint, distanceMeters, false)
+			);
+		}
+	
+		// ---------------------------
+		// COST (GOAL)
+		// ---------------------------
+		if (goalStart.HasValue)
+			query = query.Where(p => p.Cost >= goalStart.Value);
+	
+		if (goalEnd.HasValue)
+			query = query.Where(p => p.Cost <= goalEnd.Value);
+	
+		// ---------------------------
+		// RAISED
+		// ---------------------------
+		if (raisedStart.HasValue)
+			query = query.Where(p => p.Raised >= raisedStart.Value);
+	
+		if (raisedEnd.HasValue)
+			query = query.Where(p => p.Raised <= raisedEnd.Value);
+	
+		// ---------------------------
+		// DONATED BY
+		// ---------------------------
+		if (donatedByStart.HasValue)
+			query = query.Where(p => p.PeopleDonated >= donatedByStart.Value);
+	
+		if (donatedByEnd.HasValue)
+			query = query.Where(p => p.PeopleDonated <= donatedByEnd.Value);
+	
+		// ---------------------------
+		// STATUS
+		// ---------------------------
+		if (status.HasValue)
+			query = query.Where(p => p.Status == status.Value);
+	
+		// ---------------------------
+		// CALCULATED FILTERS (in-memory)
+		// ---------------------------
+		var posts = await query.ToListAsync();
+	
+		if (remainingStart.HasValue)
+			posts = posts.Where(p =>
+				PostHelper.GetRemaining(p.Cost, p.Raised) >= remainingStart.Value).ToList();
+	
+		if (remainingEnd.HasValue)
+			posts = posts.Where(p =>
+				PostHelper.GetRemaining(p.Cost, p.Raised) <= remainingEnd.Value).ToList();
+	
+		if (achievedStart.HasValue)
+			posts = posts.Where(p =>
+				PostHelper.GetRaisedPercentage(p.Cost, p.Raised) >= achievedStart.Value).ToList();
+	
+		if (achievedEnd.HasValue)
+			posts = posts.Where(p =>
+				PostHelper.GetRaisedPercentage(p.Cost, p.Raised) <= achievedEnd.Value).ToList();
+	
+		// ---------------------------
+		// PAGINATION
+		// ---------------------------
+		var paged = posts.ToPagedList(page, pageSize);
+	
+		return View("PostList", paged);
+	}
+	
+	
+	[HttpGet]
+	public async Task<IActionResult> MapPosts(
+		double neLat, double neLng,
+		double swLat, double swLng,
+		string statuses,
+		[FromServices] GeometryFactory geometryFactory) 
+	{
+		
+		var viewportEnvelope = new Envelope(
+			swLng, // Min X (West)
+			neLng, // Max X (East)
+			swLat, // Min Y (South)
+			neLat  // Max Y (North)
+		);
+
+		// Convert the envelope to a Geometry (Polygon) so EF Core can understand it
+		var viewportGeometry = geometryFactory.ToGeometry(viewportEnvelope);
+
+		// 2. Query
+		var query = await BasePostQuery();
+		
+		query = query.Where(p => viewportGeometry.Intersects(p.Location));
+		
+		IEnumerable<string> statusList = statuses.Split(',');
+
+		query = query.Where(p => statusList.Contains(p.Status.ToString()));
+		
+		
+		var posts = await query
+			.Select(p => new {
+				p.Id,
+				p.Description,
+				lat = p.Latitude,  
+				lng = p.Longitude,
+				Status = p.Status.ToString(),
+			})
+			.ToListAsync();
+
+		return Json(posts);
+	}
+	
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
 	private static partial System.Text.RegularExpressions.Regex FileNameRegex();
 	
