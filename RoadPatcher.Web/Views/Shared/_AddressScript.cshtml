@@ -22,7 +22,14 @@
 
 	    const userProfile = $('.user-profile-nav');
 	    
-        let initialPosition = { lat: userProfile.data('lat'), lng: userProfile.data('lng') };
+	    const lat = parseFloat(userProfile.data('lat'));
+	    const lng = parseFloat(userProfile.data('lng'));
+
+	    let initialPosition = {
+		    lat: isNaN(lat) ? 30.4188959 : lat,
+		    lng: isNaN(lng) ? 69.9951495 : lng
+	    };
+		
 		if (position) {
 			initialPosition = lastValidPosition = position;
 		}
@@ -159,7 +166,7 @@
 	
 	$(document).ready(function () {
 
-		const saveBtn = $('#save-btn');
+		const saveBtn = $('#save-btn, #submitBtn');
 		const googleAddress = $('#googleAddress');
 		const fullAddress = $('#Address');
 		const latitude = $('#latitude');

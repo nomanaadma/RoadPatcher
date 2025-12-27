@@ -211,6 +211,7 @@ p {
 .user-profile-nav img {
     width: 45px;
     height: 45px;
+    object-fit: cover;
 }
 
 .btn-sm {
@@ -803,7 +804,9 @@ gmp-place-autocomplete {
 }
 
 .post_profile_image {
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
 }
 
 .form-control.form-control-solid {

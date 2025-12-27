@@ -99,14 +99,14 @@ $(document).ready(function () {
     });
 
 
-    $('.post-cost-field').on('focusout', function() {
-        let value = parseFloat($(this).val());
-
-        // If empty, NaN, or less than 200, set to 200
-        if (isNaN(value) || value < 200) {
-            $(this).val(200).trigger('input');
-        }
-    });
+    // $('.post-cost-field').on('focusout', function() {
+    //     let value = parseFloat($(this).val());
+    //
+    //     // If empty, NaN, or less than 200, set to 200
+    //     if (isNaN(value) || value < 200) {
+    //         $(this).val(200).trigger('input');
+    //     }
+    // });
 
     // Get current URL params
     const urlParams = new URLSearchParams(window.location.search);
@@ -354,8 +354,15 @@ $(document).ready(function () {
     async function initMap() {
 
         const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
-        
-        const initialPos = { lat: userProfile.data('lat'), lng: userProfile.data('lng') }; // Example: Karachi
+
+        const lat = parseFloat(userProfile.data('lat'));
+        const lng = parseFloat(userProfile.data('lng'));
+
+        const initialPos = {
+            lat: isNaN(lat) ? 30.4188959 : lat,
+            lng: isNaN(lng) ? 69.9951495 : lng
+        };
+
         map = new google.maps.Map(document.getElementById("map"), {
             center: initialPos,
             zoom: 13,
