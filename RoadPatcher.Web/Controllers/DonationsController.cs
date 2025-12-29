@@ -28,18 +28,24 @@ public class DonationsController(
             return BadRequest(new { error = "Invalid amount" });
         
         // Enforce server-side minimum donation amount: Rs.200
-        const decimal minPkr = 200m;
-        if (request.Amount < minPkr)
-            return BadRequest(new { error = $"Minimum donation amount is Rs. {minPkr:0}. Please increase the amount." });
+        const decimal minAmount = 200m;
+        if (request.Amount < minAmount)
+        {
+	        var minAmountInCurrency = minAmount.ToPkr();
+            return BadRequest(new { error = $"Minimum donation amount is {minAmountInCurrency}. Please increase the amount." });
+        }
 
         var post = await db.Posts.FirstOrDefaultAsync(p => p.Id == request.PostId);
         if (post == null)
             return NotFound(new { error = "Post not found" });
         
         var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised);
-        
+
         if (request.Amount > remainingAmount)
-	        return BadRequest(new { error = $"Maximum donation amount is Rs. {remainingAmount:0} to achieve the goal amount" });
+        {
+	        var remainingAmountInCurrency = remainingAmount.ToPkr();
+	        return BadRequest(new { error = $"Maximum donation amount is {remainingAmountInCurrency} to achieve the goal amount" });
+        }
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var userData = await db.UserData.Include(ud => ud.User).FirstOrDefaultAsync(x => x.UserId == userId);
@@ -113,7 +119,7 @@ public class DonationsController(
         if (existing != null)
         {
 	        // render partial for the post and return existing summary + receipt if any
-	        var updatedPostValues = UpdatedPostValues(post);
+	        var updatedPostValues = UpdatedPostValues(post, existing.Amount);
 	        return Ok(updatedPostValues);
         }
 
@@ -160,7 +166,7 @@ public class DonationsController(
             await db.SaveChangesAsync();
             await tx.CommitAsync();
             
-            var updatedPostValues = UpdatedPostValues(post);
+            var updatedPostValues = UpdatedPostValues(post, amountDecimal);
             return Ok(updatedPostValues);
             
         }
@@ -172,13 +178,14 @@ public class DonationsController(
         
     }
 
-    private static object UpdatedPostValues(Post post)
+    private static object UpdatedPostValues(Post post, decimal amountDecimal)
     {
 	    var raisedPercentage = PostHelper.GetRaisedPercentage(post.Cost, post.Raised);
 	    var remainingAmount = PostHelper.GetRemaining(post.Cost, post.Raised).ToPkr();
 	    var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 	    var tooltipBoxPercentage = PostHelper.GetTooltipBoxPercentage(raisedPercentage);
 	    var cost = post.Cost.ToPkr();
+	    var donatedAmount = amountDecimal.ToPkr();
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
@@ -201,7 +208,8 @@ public class DonationsController(
 		    progressClass,
 		    tooltipBoxPercentage,
 		    btn,
-		    cost
+		    cost,
+		    donatedAmount
 	    };
     }
 }

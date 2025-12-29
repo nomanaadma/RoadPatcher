@@ -183,7 +183,7 @@
                         params: { postId: postId }
                     })
                         .then(function (response) {
-                            console.log( $countBadge, response.data.totalShares );
+                            $btn.addClass('bg-light-warning');
                             $countBadge.text(response.data.total_shares);
                         })
                         .catch(function (error) {
@@ -494,9 +494,7 @@
                         post_id: postId
                     });
                     const data = resp.data;
-
-                    console.log( data );
-
+                    
                     remaining_amount.html(data.remaining_amount);
                     raised_amount.html(data.total_raised);
                     people_donated_count.html(data.people_donated);
@@ -535,7 +533,7 @@
                         
                     });
                     
-                    let msg = `<p>We appreciate your <strong>Rs. ${amountStr}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
+                    let msg = `<p>We appreciate your <strong>${data.donated_amount}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
                     
                     if(data.remaining_amount === "0") {
                         
@@ -543,7 +541,7 @@
                         
                         const goalHtml = `<div class="col-12">
                             <small class="fw-bold text-success">Goal</small>
-                            <h2 class="fw-bolder mb-0 fz-20">Rs. ${data.cost}</h2>
+                            <h2 class="fw-bolder mb-0 fz-20">${data.cost}</h2>
                         </div>`;
 
 
@@ -557,7 +555,7 @@
                         
                         msg = `
                         <div style="font-size: 1.1em;">
-                            <p>Incredible! Your <strong>Rs. ${amountStr}</strong> donation was the final piece of the puzzle.</p>
+                            <p>Incredible! Your <strong>${data.donatedAmount}</strong> donation was the final piece of the puzzle.</p>
                             <p class="mt-2"><strong>This project is now fully funded! and now will be moved to Pending list</strong> 🚧✅</p>
                             <p style="color: #666; font-size: 0.9em;">Repair work can now begin immediately thanks to you.</p>
                         </div>

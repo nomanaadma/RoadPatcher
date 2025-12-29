@@ -4,6 +4,6 @@ public static class CurrencyHelper
 {
 	public static string ToPkr(this decimal amount)
 	{
-		return amount.ToString("#,0");
+		return "Rs. " + amount.ToString("#,0");
 	} 
 }

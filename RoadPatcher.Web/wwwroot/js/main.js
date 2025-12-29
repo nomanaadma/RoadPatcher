@@ -99,14 +99,17 @@ $(document).ready(function () {
     });
 
 
-    // $('.post-cost-field').on('focusout', function() {
-    //     let value = parseFloat($(this).val());
-    //
-    //     // If empty, NaN, or less than 200, set to 200
-    //     if (isNaN(value) || value < 200) {
-    //         $(this).val(200).trigger('input');
-    //     }
-    // });
+    $('.post-cost-field').on('focusout', function() {
+        
+        const $input = $(this);
+        const hiddenNumber = $input.next('.number-hidden').val();
+        let value = parseFloat(hiddenNumber);
+        
+        // If empty, NaN, or less than 200, set to 200
+        if (isNaN(value) || value < 200) {
+            $(this).val(200).trigger('input');
+        }
+    });
 
     // Get current URL params
     const urlParams = new URLSearchParams(window.location.search);
@@ -313,7 +316,6 @@ $(document).ready(function () {
                 $(".search-form input, .search-form select").each(function () {
                     const name = $(this).attr("name");
                     if (name && urlParams.has(name)) {
-                        console.log( urlParams.get(name) )
                         $(this).val(urlParams.get(name)).trigger('input');
                     }
                 });
@@ -366,6 +368,7 @@ $(document).ready(function () {
         map = new google.maps.Map(document.getElementById("map"), {
             center: initialPos,
             zoom: 13,
+            mapId: "d51644aa08ca7cea704f06a2",
             mapTypeControl: true,
             streetViewControl: false,
             fullscreenControlOptions: {
@@ -481,22 +484,22 @@ $(document).ready(function () {
             </div>
 
             <div class="map-info-desc">
-                ${post.description}
+                ${post.description ?? ''}
             </div>
             
             <div class="stats-grid">
             
                 <div class="stat-item">
                     <span class="stat-label">Goal</span>
-                    <span class="stat-value" style="color: grey;">Rs. ${post.cost}</span>
+                    <span class="stat-value" style="color: grey;">${post.cost}</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Raised</span>
-                    <span class="stat-value" style="color: #4CAF50;">Rs. ${post.total_raised} : ${post.raised_percentage}%</span>
+                    <span class="stat-value" style="color: #4CAF50;">${post.total_raised} : ${post.raised_percentage}%</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Remaining</span>
-                    <span class="stat-value" style="color: #e74c3c;">Rs. ${post.remaining_amount}</span>
+                    <span class="stat-value" style="color: #e74c3c;">${post.remaining_amount}</span>
                 </div>
             </div>
 
