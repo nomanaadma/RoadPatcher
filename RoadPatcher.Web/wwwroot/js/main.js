@@ -501,13 +501,14 @@ $(document).ready(function () {
                 swLat: sw.lat(),
                 swLng: sw.lng(),
                 statuses: selectedStatuses.join(','),
-                users: selectedUsers.join(',')
+                userids: selectedUsers.join(',')
             },
             signal: controller.signal
         })
             .then(response => {
                 clearMarkers();
-                response.data.forEach(addMarker);
+                response.data[0].forEach(addMarker);
+                response.data[1].forEach(addUserMarker);
             })
             .catch(error => {
                 if (axios.isCancel(error)) {
@@ -525,6 +526,30 @@ $(document).ready(function () {
             case "Completed": return "https://maps.google.com/mapfiles/ms/icons/green-dot.png";
             default: return "https://maps.google.com/mapfiles/ms/icons/blue-dot.png";
         }
+    }
+
+    function addUserMarker(user) {
+        const marker = new google.maps.Marker({
+            position: { lat: user.lat, lng: user.lng },
+            map: map,
+            icon: getMarkerIcon(),
+            title: user.full_name,
+        });
+
+        // Assuming 'post' is the object from your loop corresponding to the C# projection
+        const infowindow = new google.maps.InfoWindow({
+            content: `
+        <div class="map-info-card">
+            
+            <div class="map-info-header">
+                <h6 class="text-center">User: ${user.full_name}</h6>
+            </div>
+        </div>
+    `
+        });
+
+        marker.addListener('click', () => infowindow.open(map, marker));
+        markers.push(marker);
     }
 
     function addMarker(post) {
@@ -546,6 +571,24 @@ $(document).ready(function () {
 
             <div class="map-info-desc">
                 ${post.description ?? ''}
+            </div>
+            
+            <div class="stats-grid">
+            
+                <div class="stat-item">
+                    <span class="stat-label">User</span>
+                    <span class="stat-value">${post.cost}</span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">Date</span>
+                    <span class="stat-value">${post.date}</span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">Posted</span>
+                    <span class="stat-value">${post.since}</span>
+                </div>
             </div>
             
             <div class="stats-grid">

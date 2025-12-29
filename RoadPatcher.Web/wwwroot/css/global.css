@@ -928,19 +928,6 @@ gmp-place-autocomplete {
     margin-top: -18px;
 }
 
-.gm-style-iw.gm-style-iw-c .gm-style-iw-d,
-.gm-style-iw.gm-style-iw-c {
-    min-height: 150px;
-}
-
-/*.gm-style-iw-ch:empty {*/
-/*    padding: 0;*/
-/*}*/
-
-/*[title="Close"] {*/
-/*    height: 11px !important;*/
-/*}*/
-
 /* Style for the InfoWindow container */
 .map-info-card {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

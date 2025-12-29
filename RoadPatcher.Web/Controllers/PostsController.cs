@@ -676,12 +676,9 @@ public partial class PostsController(
 		double neLat, double neLng,
 		double swLat, double swLng,
 		string statuses,
-		string users,
+		string userids,
 		[FromServices] GeometryFactory geometryFactory) 
 	{
-
-		Console.WriteLine(users);
-		Console.WriteLine("==================================");
 		
 		var viewportEnvelope = new Envelope(
 			swLng, // Min X (West)
@@ -698,10 +695,23 @@ public partial class PostsController(
 		
 		query = query.Where(p => viewportGeometry.Intersects(p.Location));
 
-		if (!string.IsNullOrEmpty(users))
+		var users = Enumerable.Empty<object>();
+
+		if (!string.IsNullOrEmpty(userids))
 		{
-			IEnumerable<string> userList = users.Split(',');
+			IEnumerable<string> userList = userids.Split(',');
 			query = query.Where(p => userList.Contains(p.UserId));
+			
+			users = await context.UserData
+				.Where(u => userList.Contains(u.UserId))
+				.Select(u => new
+				{
+					fullName = ProfileHelper.GetFullName(u),
+					lat = u.Latitude,
+					lng = u.Longitude,
+				})
+				.ToListAsync();
+			
 		}
 		
 		IEnumerable<string> statusList = statuses.Split(',');
@@ -720,10 +730,18 @@ public partial class PostsController(
 				cost = p.Cost.ToPkr(),
 				peopleDonated = p.PeopleDonated,
 				totalRaised = p.Raised.ToPkr(),
+				date = p.CreatedAt.ToPrettyFormat(),
+				since = p.CreatedAt.ToAgo(),
+				user = ProfileHelper.GetFullName(p.User!.UserData)
 			})
 			.ToListAsync();
 
-		return Json(posts);
+		var response = new[] {
+			posts,
+			users
+		};
+
+		return Json(response);
 	}
 	
 	[System.Text.RegularExpressions.GeneratedRegex(@"[^a-zA-Z0-9_-]+")]
