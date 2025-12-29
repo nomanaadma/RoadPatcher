@@ -920,6 +920,7 @@ gmp-place-autocomplete {
     border-width: 3px !important;
     display: inline-flex;
     gap: 5px;
+    margin-bottom: 15px;
 }
 
 #map-search-tab-ct {
@@ -1009,6 +1010,36 @@ gmp-place-autocomplete {
     align-items: center;
     gap: 5px;
     justify-content: center;
+}
+
+.ss-content,
+.ss-main.form-select {
+    text-align: left;
+    background-image: inherit !important;
+}
+
+.ss-content {
+    padding: 0;
+}
+
+.map-user-select {
+    border-color: transparent !important;
+    display: inline-flex;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+    padding: 0 !important;
+    margin-left: 0 !important;
+}
+
+.map-user-select span {
+    position: absolute;
+    top: -20px;
+}
+
+.map-user-select .form-select {
+    min-height: 33px !important;
+    border-radius: 0;
 }
 
 

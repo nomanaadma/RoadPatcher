@@ -545,11 +545,12 @@ public partial class PostsController(
 		[FromQuery(Name = "achieved_end")] decimal? achievedEnd,
 		[FromQuery(Name = "donated_by_start")] int? donatedByStart,
 		[FromQuery(Name = "donated_by_end")] int? donatedByEnd,
+		[FromQuery(Name = "users")] List<string>? userIds,
+		[FromQuery(Name = "statuses")] List<PostStatus>? statuses,
 		string? @as,
 		double? lat,
 		double? lng,
 		int? radius,
-		PostStatus? status,
 		int page = 1)
 	{
 		// Redirect if no filters are provided
@@ -561,8 +562,9 @@ public partial class PostsController(
 			remainingStart.HasValue || remainingEnd.HasValue ||
 			achievedStart.HasValue || achievedEnd.HasValue ||
 			donatedByStart.HasValue || donatedByEnd.HasValue ||
-			status.HasValue;
-	
+			userIds is { Count: > 0 } ||
+			statuses is { Count: > 0 };
+		
 		if (!hasFilters)
 			return RedirectToAction("Search", "Posts");
 	
@@ -627,8 +629,17 @@ public partial class PostsController(
 		// ---------------------------
 		// STATUS
 		// ---------------------------
-		if (status.HasValue)
-			query = query.Where(p => p.Status == status.Value);
+		
+		if (statuses != null && statuses.Count != 0)
+		{
+			query = query.Where(p => statuses.Contains((PostStatus)p.Status!)); // assuming p.UserId stores the creator/donor
+		}
+		
+		
+		if (userIds != null && userIds.Count != 0)
+		{
+			query = query.Where(p => userIds.Contains(p.UserId)); // assuming p.UserId stores the creator/donor
+		}
 	
 		// ---------------------------
 		// CALCULATED FILTERS (in-memory)
@@ -665,8 +676,12 @@ public partial class PostsController(
 		double neLat, double neLng,
 		double swLat, double swLng,
 		string statuses,
+		string users,
 		[FromServices] GeometryFactory geometryFactory) 
 	{
+
+		Console.WriteLine(users);
+		Console.WriteLine("==================================");
 		
 		var viewportEnvelope = new Envelope(
 			swLng, // Min X (West)
@@ -682,6 +697,12 @@ public partial class PostsController(
 		var query = await BasePostQuery();
 		
 		query = query.Where(p => viewportGeometry.Intersects(p.Location));
+
+		if (!string.IsNullOrEmpty(users))
+		{
+			IEnumerable<string> userList = users.Split(',');
+			query = query.Where(p => userList.Contains(p.UserId));
+		}
 		
 		IEnumerable<string> statusList = statuses.Split(',');
 

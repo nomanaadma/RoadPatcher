@@ -133,8 +133,18 @@ $(document).ready(function () {
         $(this).attr("href", window.location.pathname + "?" + urlParams.toString());
     });
 
-    $('.search_posts').on('click', function () {
+    const slimSettings = {settings: {
+        allowDeselect: true
+    }};
 
+    let userOptions = ``;
+
+    allUsers.forEach(user => {
+        userOptions += `<option value="${user.Id}">${user.fullName}</option>`;
+    });
+
+    $('.search_posts').on('click', function () {
+        
         Swal.fire({
             title: 'Search',
             width: '900px',
@@ -181,7 +191,7 @@ $(document).ready(function () {
                             
                             <div class="tab-pane fade show" id="advanced-search-tab-ct" role="tabpanel" aria-labelledby="advanced-search-tab">
                                
-                               <form action="/Posts/AdvancedSearch" method="get" class="search-form p-4 border rounded bg-light">
+                               <form action="/Posts/AdvancedSearch" id="AdvancedSearchForm" method="get" class="search-form p-4 border rounded bg-light">
 
                                   <div class="row g-3">
                                 
@@ -253,15 +263,22 @@ $(document).ready(function () {
                                       <label for="donatedByEnd" class="form-label">People Donated To</label>
                                       <input type="number" name="donated_by_end" id="donatedByEnd" class="form-control" placeholder="Max">
                                     </div>
-                                
+                                    
                                     <!-- Status -->
                                     <div class="mt-4 col-md-3">
-                                      <label for="status" class="form-label">Status</label>
-                                      <select name="status" id="status" class="form-select">
-                                        <option value="">Any</option>
+                                      <label for="statuses" class="form-label">Statuses</label>
+                                      <select name="statuses" multiple id="statuses" class="form-select">
                                         <option value="Pending">Pending</option>
                                         <option value="InProcess">In Process</option>
                                         <option value="Completed">Completed</option>
+                                      </select>
+                                    </div>
+                                    
+                                    <!-- User -->
+                                    <div class="mt-4 col-md-3">
+                                      <label for="users" class="form-label">Users</label>
+                                      <select name="users" multiple id="users" class="form-select">
+                                        ${userOptions}
                                       </select>
                                     </div>
                                 
@@ -295,6 +312,15 @@ $(document).ready(function () {
                                         <label class="btn shadow-hover bg-light-success border-light-success" for="filterCompleted" data-class="bg-light-success">
                                             <input type="checkbox" class="status-filter" id="filterCompleted" value="Completed" checked autocomplete="off"> Completed
                                         </label>
+                                        
+                                        <!-- User -->
+                                          <label for="users2" class="btn form-label map-user-select">
+                                              <span>Users</span>
+                                              <select name="users2" multiple id="users2" class="form-select">
+                                                ${userOptions}
+                                              </select>
+                                          </label>
+                                        
                                     </div>
                                 </div>
 
@@ -315,10 +341,37 @@ $(document).ready(function () {
 
                 $(".search-form input, .search-form select").each(function () {
                     const name = $(this).attr("name");
-                    if (name && urlParams.has(name)) {
-                        $(this).val(urlParams.get(name)).trigger('input');
+                    if (!name) return;
+
+                    const values = urlParams.getAll(name); // <-- get all values
+                    if (!values.length) return;
+
+                    if ($(this).is('select[multiple]')) {
+                        $(this).val(values).trigger('change'); // multiple select
+                    } else {
+                        $(this).val(values[0]).trigger('input'); // single input/select
                     }
                 });
+                
+                new SlimSelect({
+                    select: '#users',
+                    ...slimSettings
+                })
+
+                new SlimSelect({
+                    select: '#statuses',
+                    ...slimSettings
+                })
+
+                new SlimSelect({
+                    select: '#users2',
+                    ...slimSettings,
+                    events: {
+                        afterChange: () => {
+                            fetchPosts();
+                        }
+                    }
+                })
                 
                 const input = document.getElementById("areaInput");
                 const latInput = document.getElementById("areaLat");
@@ -345,6 +398,11 @@ $(document).ready(function () {
             }
         });
 
+    });
+
+    $(document).on('reset', '#AdvancedSearchForm', function () {
+        const form = $(this);
+        form.find('.ss-deselect').trigger('click');
     });
 
     let map;
@@ -429,6 +487,8 @@ $(document).ready(function () {
         const selectedStatuses = $(".status-filter:checked")
             .map(function() { return this.value; })
             .get();
+        
+        const selectedUsers = $('#users2').val();
 
         // Cancel previous request if still running
         if (controller) controller.abort();
@@ -440,7 +500,8 @@ $(document).ready(function () {
                 neLng: ne.lng(),
                 swLat: sw.lat(),
                 swLng: sw.lng(),
-                statuses: selectedStatuses.join(',')
+                statuses: selectedStatuses.join(','),
+                users: selectedUsers.join(',')
             },
             signal: controller.signal
         })
@@ -547,5 +608,9 @@ $(document).ready(function () {
 
     });
 
+    // $(document).on("change", ".status-filter", function () {
+
+    // users2
+    
 
 });
