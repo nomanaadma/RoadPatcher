@@ -16,7 +16,7 @@
 	var googleMapsApiKey = Configuration["GoogleMaps:ApiKey"];
 	
 	var users = await UserManager.Users
-		.Include(u => u.UserData)
+		.Where(u => u.UserData != null)   // only users with UserData
 		.Select(u => new {
 			u.Id,
 			fullName = ProfileHelper.GetFullName(u.UserData!)

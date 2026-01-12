@@ -732,7 +732,7 @@ public partial class PostsController(
 				totalRaised = p.Raised.ToPkr(),
 				date = p.CreatedAt.ToPrettyFormat(),
 				since = p.CreatedAt.ToAgo(),
-				user = ProfileHelper.GetFullName(p.User!.UserData)
+				user = ProfileHelper.GetFullName(p.User!.UserData!)
 			})
 			.ToListAsync();
 

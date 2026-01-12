@@ -1,4 +1,5 @@
 using System.Data.Common;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite;
@@ -9,6 +10,7 @@ using RoadPatcher._keenthemes;
 using RoadPatcher._keenthemes.libs;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
+using RoadPatcher.Services;
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,6 +42,8 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
+
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddSingleton<GeometryFactory>(sp => 
     NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326));
