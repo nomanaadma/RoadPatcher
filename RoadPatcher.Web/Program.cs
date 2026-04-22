@@ -1,7 +1,14 @@
 using System.Data.Common;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using Npgsql;
@@ -29,6 +36,136 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
 	.AddEntityFrameworkStores<ApplicationDbContext>();
+
+var authBuilder = builder.Services.AddAuthentication();
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+	authBuilder.AddGoogle("Google", options =>
+	{
+		options.SignInScheme = IdentityConstants.ExternalScheme;
+		options.ClientId = googleClientId;
+		options.ClientSecret = googleClientSecret;
+		options.CallbackPath = "/signin-google";
+		options.Scope.Add("email");
+		options.Scope.Add("profile");
+		options.SaveTokens = true;
+	});
+}
+
+var facebookAppId = builder.Configuration["Authentication:Facebook:AppId"];
+var facebookAppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+if (!string.IsNullOrWhiteSpace(facebookAppId) && !string.IsNullOrWhiteSpace(facebookAppSecret))
+{
+	authBuilder.AddFacebook("Facebook", options =>
+	{
+		options.SignInScheme = IdentityConstants.ExternalScheme;
+		options.AppId = facebookAppId;
+		options.AppSecret = facebookAppSecret;
+		options.CallbackPath = "/signin-facebook";
+		options.Fields.Add("name");
+		options.Fields.Add("email");
+		options.Fields.Add("first_name");
+		options.Fields.Add("last_name");
+		options.Scope.Add("email");
+		options.SaveTokens = true;
+	});
+}
+
+var xClientId = builder.Configuration["Authentication:X:ClientId"];
+var xClientSecret = builder.Configuration["Authentication:X:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(xClientId) && !string.IsNullOrWhiteSpace(xClientSecret))
+{
+	authBuilder.AddOAuth("X", options =>
+	{
+		options.SignInScheme = IdentityConstants.ExternalScheme;
+		options.ClientId = xClientId;
+		options.ClientSecret = xClientSecret;
+		options.CallbackPath = "/signin-x";
+		options.AuthorizationEndpoint = "https://twitter.com/i/oauth2/authorize";
+		options.TokenEndpoint = "https://api.twitter.com/2/oauth2/token";
+		options.UserInformationEndpoint = "https://api.twitter.com/2/users/me?user.fields=id,name,username";
+		options.UsePkce = true;
+		options.SaveTokens = true;
+		options.Scope.Add("users.read");
+		options.Scope.Add("tweet.read");
+
+		options.ClaimActions.Clear();
+
+		options.Events = new OAuthEvents
+		{
+			OnCreatingTicket = async context =>
+			{
+				using var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+				request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+				using var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
+					context.HttpContext.RequestAborted);
+				response.EnsureSuccessStatusCode();
+
+				using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync(context.HttpContext.RequestAborted));
+				var data = payload.RootElement.GetProperty("data");
+
+				if (data.TryGetProperty("id", out var idElement))
+				{
+					var id = idElement.GetString();
+					if (!string.IsNullOrWhiteSpace(id))
+					{
+						context.Identity?.AddClaim(new Claim(ClaimTypes.NameIdentifier, id));
+					}
+				}
+
+				if (data.TryGetProperty("name", out var nameElement))
+				{
+					var name = nameElement.GetString();
+					if (!string.IsNullOrWhiteSpace(name))
+					{
+						context.Identity?.AddClaim(new Claim(ClaimTypes.Name, name));
+					}
+				}
+
+				if (data.TryGetProperty("username", out var usernameElement))
+				{
+					var username = usernameElement.GetString();
+					if (!string.IsNullOrWhiteSpace(username))
+					{
+						context.Identity?.AddClaim(new Claim("urn:x:username", username));
+					}
+				}
+			}
+		};
+	});
+}
+
+var linkedInClientId = builder.Configuration["Authentication:LinkedIn:ClientId"];
+var linkedInClientSecret = builder.Configuration["Authentication:LinkedIn:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(linkedInClientId) && !string.IsNullOrWhiteSpace(linkedInClientSecret))
+{
+	authBuilder.AddOpenIdConnect("LinkedIn", options =>
+	{
+		options.SignInScheme = IdentityConstants.ExternalScheme;
+		options.ClientId = linkedInClientId;
+		options.ClientSecret = linkedInClientSecret;
+		options.Authority = "https://www.linkedin.com/oauth";
+		options.CallbackPath = "/signin-linkedin";
+		options.ResponseType = "code";
+		options.UsePkce = true;
+		options.GetClaimsFromUserInfoEndpoint = true;
+		options.SaveTokens = true;
+
+		options.Scope.Clear();
+		options.Scope.Add("openid");
+		options.Scope.Add("profile");
+		options.Scope.Add("email");
+
+		options.TokenValidationParameters = new TokenValidationParameters
+		{
+			NameClaimType = "name"
+		};
+	});
+}
 
 builder.Services.AddControllersWithViews()
 	.AddNewtonsoftJson(options =>

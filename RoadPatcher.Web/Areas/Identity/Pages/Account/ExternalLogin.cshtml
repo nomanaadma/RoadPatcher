@@ -1,0 +1,40 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "External login";
+    Layout = KTTheme.GetView("Auth.cshtml");
+}
+
+<div class="row">
+    <div>
+        <section>
+            <div class="text-center mb-11">
+                <img alt="Logo" src="~/img/default-dark.png" class="h-60px h-lg-75px mb-4"/>
+                <h1 class="text-gray-900 fw-bolder">@ViewData["Title"]</h1>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            @if (!string.IsNullOrEmpty(Model.ProviderDisplayName))
+            {
+                <p class="text-muted mb-5">
+                    You are authenticating with <strong>@Model.ProviderDisplayName</strong>. Please confirm your email to continue.
+                </p>
+            }
+
+            <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <div class="form-floating mb-5">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="name@example.com"/>
+                    <label asp-for="Input.Email" class="text-gray-600"></label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Continue</button>
+            </form>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
