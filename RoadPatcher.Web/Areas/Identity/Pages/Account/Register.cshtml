@@ -7,27 +7,27 @@
 
 <div class="row">
     <div>
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
 
-            <!--begin::Heading-->
-            <div class="text-center mb-11">
+        <!--begin::Heading-->
+        <div class="text-center mb-11">
 
-                <img alt="Logo" src="~/img/default-dark.png" class="h-60px h-lg-75px mb-4"/>
+            <img alt="Logo" src="~/img/default-dark.png" class="h-60px h-lg-75px mb-4"/>
 
-                <!--begin::Title-->
-                <h1 class="text-gray-900 fw-bolder">
-                    @ViewData["Title"]
-                </h1>
-                <!--end::Title-->
-            </div>
-            <!--begin::Heading-->
+            <!--begin::Title-->
+            <h1 class="text-gray-900 fw-bolder">
+                @ViewData["Title"]
+            </h1>
+            <!--end::Title-->
+        </div>
+        <!--begin::Heading-->
 
-            <!--begin::Separator-->
-            <div class="separator separator-content my-9">
-                <span class="w-300px text-gray-500 fw-semibold fs-7">Welcome to RoadPatcher</span>
-            </div>
-            <!--end::Separator-->
+        <!--begin::Separator-->
+        <div class="separator separator-content my-9">
+            <span class="w-300px text-gray-500 fw-semibold fs-7">Welcome to RoadPatcher</span>
+        </div>
+        <!--end::Separator-->
             
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-5">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
@@ -48,36 +48,38 @@
                 <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
             </div>
 
-            @if ((Model.ExternalLogins?.Count ?? 0) > 0)
-            {
-                <div class="separator separator-content my-7">
-                    <span class="text-gray-500 fw-semibold fs-7">Or continue with</span>
-                </div>
-
-                <form id="external-register" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="mb-5">
-                    <div class="d-grid gap-3">
-                        @foreach (var provider in Model.ExternalLogins!)
-                        {
-                            <button type="submit"
-                                    class="btn btn-light-primary btn-lg"
-                                    name="provider"
-                                    value="@provider.Name"
-                                    title="Sign up using your @provider.DisplayName account">
-                                Continue with @provider.DisplayName
-                            </button>
-                        }
-                    </div>
-                </form>
-            }
-
-            <div>
-                <p class="d-flex flex-column">
-	                <a asp-page="./Login">Sign In</a>
-	                <a asp-page="./ForgotPassword">Forgot Password</a>
-	                <a asp-page="./ResendEmailConfirmation">Resend Email Confirmation</a>
-                </p>
-            </div>
         </form>
+
+        @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+        {
+            <div class="separator separator-content my-7">
+                <span class="text-gray-500 fw-semibold fs-7">Or continue with</span>
+            </div>
+
+            <form id="external-register" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="mb-5">
+                <div class="d-grid gap-3">
+                    @foreach (var provider in Model.ExternalLogins!)
+                    {
+                        <button type="submit"
+                                class="btn btn-light-primary btn-lg"
+                                name="provider"
+                                value="@provider.Name"
+                                title="Sign up using your @provider.DisplayName account">
+                            Continue with @provider.DisplayName
+                        </button>
+                    }
+                </div>
+            </form>
+        }
+
+        <div>
+            <p class="d-flex flex-column">
+                <a asp-page="./Login">Sign In</a>
+                <a asp-page="./ForgotPassword">Forgot Password</a>
+                <a asp-page="./ResendEmailConfirmation">Resend Email Confirmation</a>
+            </p>
+        </div>
+
     </div>
 </div>
 

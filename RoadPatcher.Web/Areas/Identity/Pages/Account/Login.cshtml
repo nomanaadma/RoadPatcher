@@ -8,26 +8,27 @@
 <div class="row">
     <div>
         <section>
+
+            <!--begin::Heading-->
+            <div class="text-center mb-11">
+
+                <img alt="Logo" src="~/img/default-dark.png" class="h-60px h-lg-75px mb-4"/>
+
+                <!--begin::Title-->
+                <h1 class="text-gray-900 fw-bolder">
+                    @ViewData["Title"]
+                </h1>
+                <!--end::Title-->
+            </div>
+            <!--begin::Heading-->
+
+            <!--begin::Separator-->
+            <div class="separator separator-content my-9">
+                <span class="w-300px text-gray-500 fw-semibold fs-7">Welcome to RoadPatcher</span>
+            </div>
+            <!--end::Separator-->
+
             <form id="account" method="post">
-
-                <!--begin::Heading-->
-                <div class="text-center mb-11">
-
-                    <img alt="Logo" src="~/img/default-dark.png" class="h-60px h-lg-75px mb-4"/>
-
-                    <!--begin::Title-->
-                    <h1 class="text-gray-900 fw-bolder">
-                        @ViewData["Title"]
-                    </h1>
-                    <!--end::Title-->
-                </div>
-                <!--begin::Heading-->
-
-                <!--begin::Separator-->
-                <div class="separator separator-content my-9">
-                    <span class="w-300px text-gray-500 fw-semibold fs-7">Welcome to RoadPatcher</span>
-                </div>
-                <!--end::Separator-->
                 
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-5">
@@ -50,36 +51,39 @@
                     <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
                 </div>
 
-                @if ((Model.ExternalLogins?.Count ?? 0) > 0)
-                {
-                    <div class="separator separator-content my-7">
-                        <span class="text-gray-500 fw-semibold fs-7">Or continue with</span>
-                    </div>
-
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="mb-5">
-                        <div class="d-grid gap-3">
-                            @foreach (var provider in Model.ExternalLogins!)
-                            {
-                                <button type="submit"
-                                        class="btn btn-light-primary btn-lg"
-                                        name="provider"
-                                        value="@provider.Name"
-                                        title="Log in using your @provider.DisplayName account">
-                                    Continue with @provider.DisplayName
-                                </button>
-                            }
-                        </div>
-                    </form>
-                }
-
-                <div>
-                    <p class="d-flex flex-column">
-	                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-	                    <a asp-page="./ForgotPassword">Forgot Password</a>
-	                    <a asp-page="./ResendEmailConfirmation">Resend Email Confirmation</a>
-                    </p>
-                </div>
             </form>
+
+            @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+            {
+                <div class="separator separator-content my-7">
+                    <span class="text-gray-500 fw-semibold fs-7">Or continue with</span>
+                </div>
+
+                <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="mb-5">
+                    <div class="d-grid gap-3">
+                        @foreach (var provider in Model.ExternalLogins!)
+                        {
+                            <button type="submit"
+                                    class="btn btn-light-primary btn-lg"
+                                    name="provider"
+                                    value="@provider.Name"
+                                    title="Log in using your @provider.DisplayName account">
+                                Continue with @provider.DisplayName
+                            </button>
+                        }
+                    </div>
+                </form>
+            }
+            
+
+            <div>
+                <p class="d-flex flex-column">
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                    <a asp-page="./ForgotPassword">Forgot Password</a>
+                    <a asp-page="./ResendEmailConfirmation">Resend Email Confirmation</a>
+                </p>
+            </div>
+        
         </section>
     </div>
 </div>
