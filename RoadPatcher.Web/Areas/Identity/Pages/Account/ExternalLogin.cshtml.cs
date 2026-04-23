@@ -3,11 +3,14 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.Net.Http;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 
 namespace RoadPatcher.Areas.Identity.Pages.Account;
@@ -18,18 +21,24 @@ public class ExternalLoginModel : PageModel
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserStore<ApplicationUser> _userStore;
     private readonly IUserEmailStore<ApplicationUser> _emailStore;
+    private readonly ApplicationDbContext _db;
+    private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly ILogger<ExternalLoginModel> _logger;
 
     public ExternalLoginModel(
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
+        ApplicationDbContext db,
+        IWebHostEnvironment webHostEnvironment,
         ILogger<ExternalLoginModel> logger)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _userStore = userStore;
         _emailStore = GetEmailStore();
+        _db = db;
+        _webHostEnvironment = webHostEnvironment;
         _logger = logger;
     }
 
@@ -105,6 +114,7 @@ public class ExternalLoginModel : PageModel
                 var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
                 if (addLoginResult.Succeeded)
                 {
+                    await TrySyncExternalImageAsync(existingUser.Id, info);
                     await _signInManager.SignInAsync(existingUser, isPersistent: false, info.LoginProvider);
                     _logger.LogInformation("Linked {LoginProvider} login to existing user {UserId}.", info.LoginProvider,
                         existingUser.Id);
@@ -114,6 +124,7 @@ public class ExternalLoginModel : PageModel
                 // If already linked in edge cases, allow sign-in continuation.
                 if (addLoginResult.Errors.Any(e => e.Code == "LoginAlreadyAssociated"))
                 {
+                    await TrySyncExternalImageAsync(existingUser.Id, info);
                     await _signInManager.SignInAsync(existingUser, isPersistent: false, info.LoginProvider);
                     return LocalRedirect(returnUrl);
                 }
@@ -131,6 +142,7 @@ public class ExternalLoginModel : PageModel
                     var addLoginResult = await _userManager.AddLoginAsync(user, info);
                     if (addLoginResult.Succeeded)
                     {
+                        await TrySyncExternalImageAsync(user.Id, info);
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                         _logger.LogInformation("Created local user and logged in with {LoginProvider}.",
                             info.LoginProvider);
@@ -191,6 +203,7 @@ public class ExternalLoginModel : PageModel
             result = await _userManager.AddLoginAsync(user, info);
             if (result.Succeeded)
             {
+                await TrySyncExternalImageAsync(user.Id, info);
                 await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                 return LocalRedirect(returnUrl);
             }
@@ -227,5 +240,211 @@ public class ExternalLoginModel : PageModel
         }
 
         return (IUserEmailStore<ApplicationUser>)_userStore;
+    }
+
+    private async Task TrySyncExternalImageAsync(string userId, ExternalLoginInfo info)
+    {
+        _logger.LogInformation("🔄 Starting external image sync for user {UserId} via {Provider}", userId, info.LoginProvider);
+        
+        var pictureUrl = await GetPictureUrlAsync(info);
+        if (string.IsNullOrWhiteSpace(pictureUrl))
+        {
+            _logger.LogWarning("❌ No picture URL found in {Provider} claims for user {UserId}", info.LoginProvider, userId);
+            return;
+        }
+
+        _logger.LogInformation("✅ Picture URL found: {PictureUrl}", pictureUrl);
+
+        var user = await _db.Users
+            .AsTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            _logger.LogError("❌ User {UserId} not found in database during image sync", userId);
+            return;
+        }
+
+        var userData = await _db.UserData
+            .AsTracking()
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        _logger.LogInformation("📋 UserData exists: {UserDataExists}, UserData.Image is null: {UserDataImageNull}", 
+            userData != null, userData == null ? "N/A" : string.IsNullOrWhiteSpace(userData.Image));
+        _logger.LogInformation("📋 ApplicationUser.ExternalImage is null: {ExternalImageNull}", 
+            string.IsNullOrWhiteSpace(user.ExternalImage));
+
+        var shouldSaveInUserData = userData != null && string.IsNullOrWhiteSpace(userData.Image);
+        var shouldSaveInAspNetUsers = !shouldSaveInUserData && string.IsNullOrWhiteSpace(user.ExternalImage);
+
+        if (!shouldSaveInUserData && !shouldSaveInAspNetUsers)
+        {
+            _logger.LogWarning("⚠️ Image already exists in both locations or UserData doesn't exist with null Image. Skipping sync.");
+            return;
+        }
+
+        var targetLocation = shouldSaveInUserData ? "UserData.Image" : "ApplicationUser.ExternalImage";
+        _logger.LogInformation("🎯 Target location: {TargetLocation}", targetLocation);
+
+        var savedFile = await DownloadExternalImageAsync(pictureUrl, userId, info.LoginProvider);
+        if (string.IsNullOrWhiteSpace(savedFile))
+        {
+            _logger.LogError("❌ Failed to download external image from {PictureUrl}", pictureUrl);
+            return;
+        }
+
+        _logger.LogInformation("💾 Image downloaded successfully: {FileName}", savedFile);
+
+        if (shouldSaveInUserData)
+        {
+            userData!.Image = savedFile;
+            _logger.LogInformation("✏️ Assigned to UserData.Image: {FileName}", savedFile);
+        }
+        else
+        {
+            user.ExternalImage = savedFile;
+            _logger.LogInformation("✏️ Assigned to ApplicationUser.ExternalImage: {FileName}", savedFile);
+        }
+
+        var saveResult = await _db.SaveChangesAsync();
+        _logger.LogInformation("💾 Database save completed. Changes saved: {ChangeCount}", saveResult);
+    }
+
+    private async Task<string> GetPictureUrlAsync(ExternalLoginInfo info)
+    {
+        var claims = info.Principal;
+
+        // Log all available claims to debug
+        var allClaims = claims.Claims.ToList();
+        _logger.LogInformation("📋 Total claims received: {ClaimCount}", allClaims.Count);
+        foreach (var claim in allClaims)
+        {
+            _logger.LogInformation("  📌 Claim Type: {Type}, Value: {Value}", claim.Type, claim.Value);
+        }
+
+        // First, try to get picture from claims
+        var pictureClaimValue = claims.FindFirstValue("picture");
+        if (!string.IsNullOrWhiteSpace(pictureClaimValue))
+        {
+            _logger.LogInformation("📸 Found picture claim via 'picture': {Value}", pictureClaimValue);
+            return pictureClaimValue;
+        }
+
+        var googlePictureValue = claims.FindFirstValue("urn:google:picture");
+        if (!string.IsNullOrWhiteSpace(googlePictureValue))
+        {
+            _logger.LogInformation("📸 Found picture claim via 'urn:google:picture': {Value}", googlePictureValue);
+            return googlePictureValue;
+        }
+
+        var avatarValue = claims.FindFirstValue("avatar_url");
+        if (!string.IsNullOrWhiteSpace(avatarValue))
+        {
+            _logger.LogInformation("📸 Found picture claim via 'avatar_url': {Value}", avatarValue);
+            return avatarValue;
+        }
+
+        _logger.LogWarning("⚠️ No picture in claims. Attempting to fetch from {Provider} API...", info.LoginProvider);
+
+        // If no picture in claims, try to fetch from provider API using access token
+        if (info.LoginProvider == "Google")
+        {
+            return await FetchGoogleProfilePictureAsync(info);
+        }
+
+        _logger.LogWarning("❌ Provider {Provider} API fetch not implemented", info.LoginProvider);
+        return null;
+    }
+
+    private async Task<string> FetchGoogleProfilePictureAsync(ExternalLoginInfo info)
+    {
+        try
+        {
+            // Get access token from authentication properties
+            var accessToken = info.AuthenticationProperties?.GetTokenValue("access_token");
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                _logger.LogWarning("❌ No access token found in Google authentication properties");
+                return null;
+            }
+
+            _logger.LogInformation("🔑 Access token retrieved. Calling Google UserInfo API...");
+
+            using var http = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+            var response = await http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("❌ Google UserInfo API returned {StatusCode}: {Reason}", response.StatusCode, response.ReasonPhrase);
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("📨 Google UserInfo response: {Content}", content);
+
+            // Parse JSON response to extract picture
+            using var jsonDoc = System.Text.Json.JsonDocument.Parse(content);
+            if (jsonDoc.RootElement.TryGetProperty("picture", out var pictureElement))
+            {
+                var pictureUrl = pictureElement.GetString();
+                if (!string.IsNullOrWhiteSpace(pictureUrl))
+                {
+                    _logger.LogInformation("✅ Picture URL retrieved from Google API: {URL}", pictureUrl);
+                    return pictureUrl;
+                }
+            }
+
+            _logger.LogWarning("❌ 'picture' property not found in Google UserInfo response");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error fetching Google profile picture: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    private async Task<string> DownloadExternalImageAsync(string pictureUrl, string userId, string provider)
+    {
+        try
+        {
+            _logger.LogInformation("⬇️ Downloading image from URL: {URL}", pictureUrl);
+
+            using var http = new HttpClient();
+            var bytes = await http.GetByteArrayAsync(pictureUrl);
+            
+            if (bytes.Length == 0)
+            {
+                _logger.LogWarning("❌ Downloaded image is empty (0 bytes) from {URL}", pictureUrl);
+                return null;
+            }
+
+            _logger.LogInformation("✅ Image downloaded: {ByteCount} bytes", bytes.Length);
+
+            var uploadFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "users");
+            if (!Directory.Exists(uploadFolder))
+            {
+                _logger.LogInformation("📁 Creating uploads folder: {Path}", uploadFolder);
+                Directory.CreateDirectory(uploadFolder);
+            }
+
+            var providerSafe = provider.ToLowerInvariant().Replace(" ", "-");
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var fileName = $"ext-{providerSafe}-{userId}-{timestamp}.jpg";
+            var fullPath = Path.Combine(uploadFolder, fileName);
+
+            _logger.LogInformation("💾 Saving to: {FullPath}", fullPath);
+            await System.IO.File.WriteAllBytesAsync(fullPath, bytes);
+            
+            _logger.LogInformation("✅ File saved successfully: {FileName}", fileName);
+            return fileName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error downloading/saving external image from {URL}. Exception: {Message}", pictureUrl, ex.Message);
+            return null;
+        }
     }
 }

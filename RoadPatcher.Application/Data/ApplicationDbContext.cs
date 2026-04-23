@@ -28,6 +28,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
 		builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+		builder.Entity<ApplicationUser>()
+			.Property(u => u.ExternalImage)
+			.HasMaxLength(200);
+
 		builder.Entity<Donation>()
 			.HasIndex(d => d.PaymentIntentId)
 			.IsUnique();

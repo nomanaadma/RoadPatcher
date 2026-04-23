@@ -90,6 +90,13 @@ public partial class SettingsController(
 			Longitude = existing.Longitude,
 			ExistingImage = existing.Image,
 		};
+		
+		if(model.ExistingImage == null)
+		{
+			var user = await userManager.GetUserAsync(User);
+			model.ExistingImage = user?.ExternalImage;
+		}
+
 
 		return View(model);
 	}
@@ -145,7 +152,7 @@ public partial class SettingsController(
 				GoogleAddress = model.GoogleAddress,
 				Latitude = model.Latitude,
 				Longitude = model.Longitude,
-				Image = savedImage,
+				Image = savedImage ?? user.ExternalImage,
 			};
 	
 			context.UserData.Add(userData);
@@ -153,7 +160,7 @@ public partial class SettingsController(
 		else
 		{
 			
-			if (savedImage != null && existing.Image != null)
+			if (savedImage != null && existing.Image != null && !string.Equals(existing.Image, user.ExternalImage, StringComparison.OrdinalIgnoreCase))
 			{
 				var oldFile = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "users", existing.Image);
 
@@ -167,7 +174,7 @@ public partial class SettingsController(
 			existing.GoogleAddress = model.GoogleAddress;
 			existing.Latitude = model.Latitude;
 			existing.Longitude = model.Longitude;
-			existing.Image = savedImage ?? existing.Image;
+			existing.Image = savedImage ?? existing.Image ?? user.ExternalImage;
 		}
 	
 		await context.SaveChangesAsync();

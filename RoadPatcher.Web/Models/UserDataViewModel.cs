@@ -17,5 +17,5 @@ public class UserDataViewModel : AddressViewModel
 	public IFormFile? ImageUpload { get; init; }
 	
 	// Existing image filename stored on server (e.g. uploads/users/filename.jpg)
-	public string? ExistingImage { get; init; }
+	public string? ExistingImage { get; set; }
 }
