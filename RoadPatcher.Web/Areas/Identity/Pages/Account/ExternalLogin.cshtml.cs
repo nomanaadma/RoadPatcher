@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -344,6 +345,17 @@ public class ExternalLoginModel : PageModel
             return avatarValue;
         }
 
+        var twitterProfileImageValue = claims.FindFirstValue("urn:twitter:profilepicture")
+                                       ?? claims.FindFirstValue("profile_image_url_https")
+                                       ?? claims.FindFirstValue("profile_image_url");
+        if (!string.IsNullOrWhiteSpace(twitterProfileImageValue))
+        {
+            var normalizedTwitterImage = NormalizeTwitterProfileImageUrl(twitterProfileImageValue);
+            _logger.LogInformation("📸 Found Twitter picture claim. Original: {OriginalValue}, Normalized: {NormalizedValue}",
+                twitterProfileImageValue, normalizedTwitterImage);
+            return normalizedTwitterImage;
+        }
+
         _logger.LogWarning("⚠️ No picture in claims. Attempting to fetch from {Provider} API...", info.LoginProvider);
 
         // If no picture in claims, try to fetch from provider API using access token
@@ -359,6 +371,17 @@ public class ExternalLoginModel : PageModel
 
         _logger.LogWarning("❌ Provider {Provider} API fetch not implemented", info.LoginProvider);
         return null;
+    }
+
+    private static string NormalizeTwitterProfileImageUrl(string imageUrl)
+    {
+        // Twitter/X profile image URLs often include size suffixes like _normal, _bigger, or _mini.
+        // Removing them yields a higher-resolution image.
+        return Regex.Replace(
+            imageUrl,
+            "_(normal|bigger|mini)(\\.[a-zA-Z0-9]+)(\\?.*)?$",
+            "$2$3",
+            RegexOptions.IgnoreCase);
     }
 
     private async Task<string> FetchGoogleProfilePictureAsync(ExternalLoginInfo info)
