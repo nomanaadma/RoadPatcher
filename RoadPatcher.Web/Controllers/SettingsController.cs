@@ -91,13 +91,6 @@ public partial class SettingsController(
 			ExistingImage = existing.Image,
 		};
 		
-		if(model.ExistingImage == null)
-		{
-			var user = await userManager.GetUserAsync(User);
-			model.ExistingImage = user?.ExternalImage;
-		}
-
-
 		return View(model);
 	}
 	

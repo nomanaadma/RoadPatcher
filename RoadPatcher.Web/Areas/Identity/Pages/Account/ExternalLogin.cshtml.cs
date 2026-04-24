@@ -352,6 +352,11 @@ public class ExternalLoginModel : PageModel
             return await FetchGoogleProfilePictureAsync(info);
         }
 
+        if (info.LoginProvider == "Facebook")
+        {
+            return await FetchFacebookProfilePictureAsync(info);
+        }
+
         _logger.LogWarning("❌ Provider {Provider} API fetch not implemented", info.LoginProvider);
         return null;
     }
@@ -402,6 +407,61 @@ public class ExternalLoginModel : PageModel
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Error fetching Google profile picture: {Message}", ex.Message);
+            return null;
+        }
+    }
+
+    private async Task<string> FetchFacebookProfilePictureAsync(ExternalLoginInfo info)
+    {
+        try
+        {
+            // Get access token from authentication properties
+            var accessToken = info.AuthenticationProperties?.GetTokenValue("access_token");
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                _logger.LogWarning("❌ No access token found in Facebook authentication properties");
+                return null;
+            }
+
+            _logger.LogInformation("🔑 Access token retrieved. Calling Facebook Graph API...");
+
+            using var http = new HttpClient();
+            // Facebook Graph API endpoint to get user profile picture
+            // redirect=false tells Facebook to return JSON with URL instead of redirecting to image
+            var url = $"https://graph.facebook.com/me/picture?type=large&redirect=false&access_token={accessToken}";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+            var response = await http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("❌ Facebook Graph API returned {StatusCode}: {Reason}", response.StatusCode, response.ReasonPhrase);
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("📨 Facebook Graph API response: {Content}", content);
+
+            // Parse JSON response to extract picture URL
+            using var jsonDoc = System.Text.Json.JsonDocument.Parse(content);
+            if (jsonDoc.RootElement.TryGetProperty("data", out var dataElement))
+            {
+                if (dataElement.TryGetProperty("url", out var urlElement))
+                {
+                    var pictureUrl = urlElement.GetString();
+                    if (!string.IsNullOrWhiteSpace(pictureUrl))
+                    {
+                        _logger.LogInformation("✅ Picture URL retrieved from Facebook API: {URL}", pictureUrl);
+                        return pictureUrl;
+                    }
+                }
+            }
+
+            _logger.LogWarning("❌ 'data.url' property not found in Facebook Graph API response");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error fetching Facebook profile picture: {Message}", ex.Message);
             return null;
         }
     }
