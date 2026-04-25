@@ -90,13 +90,17 @@ public class ExternalLoginModel : PageModel
         }
 
         var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false,
-            // Current policy: trusted external providers bypass local 2FA challenge.
-            bypassTwoFactor: true);
+            bypassTwoFactor: false);
 
         if (result.Succeeded)
         {
             _logger.LogInformation("User logged in with {LoginProvider} provider.", info.LoginProvider);
             return LocalRedirect(returnUrl);
+        }
+
+        if (result.RequiresTwoFactor)
+        {
+            return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = false });
         }
 
         if (result.IsLockedOut)
@@ -117,18 +121,37 @@ public class ExternalLoginModel : PageModel
                 if (addLoginResult.Succeeded)
                 {
                     await TrySyncExternalImageAsync(existingUser.Id, info);
-                    await _signInManager.SignInAsync(existingUser, isPersistent: false, info.LoginProvider);
-                    _logger.LogInformation("Linked {LoginProvider} login to existing user {UserId}.", info.LoginProvider,
-                        existingUser.Id);
-                    return LocalRedirect(returnUrl);
+                    var linkedSignInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+
+                    if (linkedSignInResult.Succeeded)
+                    {
+                        _logger.LogInformation("Linked {LoginProvider} login to existing user {UserId}.", info.LoginProvider,
+                            existingUser.Id);
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    if (linkedSignInResult.RequiresTwoFactor)
+                    {
+                        _logger.LogInformation("Linked {LoginProvider} login for user {UserId} requires two-factor authentication.", info.LoginProvider, existingUser.Id);
+                        return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = false });
+                    }
                 }
 
                 // If already linked in edge cases, allow sign-in continuation.
                 if (addLoginResult.Errors.Any(e => e.Code == "LoginAlreadyAssociated"))
                 {
                     await TrySyncExternalImageAsync(existingUser.Id, info);
-                    await _signInManager.SignInAsync(existingUser, isPersistent: false, info.LoginProvider);
-                    return LocalRedirect(returnUrl);
+                    var associatedSignInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+
+                    if (associatedSignInResult.Succeeded)
+                    {
+                        return LocalRedirect(returnUrl);
+                    }
+
+                    if (associatedSignInResult.RequiresTwoFactor)
+                    {
+                        return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = false });
+                    }
                 }
             }
             else
@@ -145,10 +168,19 @@ public class ExternalLoginModel : PageModel
                     if (addLoginResult.Succeeded)
                     {
                         await TrySyncExternalImageAsync(user.Id, info);
-                        await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                        _logger.LogInformation("Created local user and logged in with {LoginProvider}.",
-                            info.LoginProvider);
-                        return LocalRedirect(returnUrl);
+                        var createdSignInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+
+                        if (createdSignInResult.Succeeded)
+                        {
+                            _logger.LogInformation("Created local user and logged in with {LoginProvider}.",
+                                info.LoginProvider);
+                            return LocalRedirect(returnUrl);
+                        }
+
+                        if (createdSignInResult.RequiresTwoFactor)
+                        {
+                            return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = false });
+                        }
                     }
 
                     foreach (var error in addLoginResult.Errors)
@@ -206,8 +238,17 @@ public class ExternalLoginModel : PageModel
             if (result.Succeeded)
             {
                 await TrySyncExternalImageAsync(user.Id, info);
-                await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                return LocalRedirect(returnUrl);
+                var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
+
+                if (signInResult.Succeeded)
+                {
+                    return LocalRedirect(returnUrl);
+                }
+
+                if (signInResult.RequiresTwoFactor)
+                {
+                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = false });
+                }
             }
         }
 

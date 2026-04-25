@@ -65,4 +65,25 @@ public class TwoFactorAuthenticationModel : PageModel
 
         return RedirectToPage();
     }
+
+    public async Task<IActionResult> OnPostDisable2faAsync()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        var disableResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
+        if (!disableResult.Succeeded)
+        {
+            throw new InvalidOperationException("Unexpected error occurred disabling 2FA.");
+        }
+
+        await _signInManager.RefreshSignInAsync(user);
+        StatusMessage = "Two-factor authentication has been disabled.";
+        _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", await _userManager.GetUserIdAsync(user));
+
+        return RedirectToPage();
+    }
 }

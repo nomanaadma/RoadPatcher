@@ -49,6 +49,13 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
 		options.Scope.Add("email");
 		options.Scope.Add("profile");
 		options.SaveTokens = true;
+		options.Events.OnRemoteFailure = context =>
+		{
+			var message = context.Failure?.Message ?? "Google sign-in was canceled or denied.";
+			context.Response.Redirect($"/Identity/Account/ExternalLogin?handler=Callback&remoteError={Uri.EscapeDataString(message)}");
+			context.HandleResponse();
+			return Task.CompletedTask;
+		};
 	});
 }
 
@@ -68,6 +75,13 @@ if (!string.IsNullOrWhiteSpace(facebookAppId) && !string.IsNullOrWhiteSpace(face
 		options.Fields.Add("last_name");
 		options.Scope.Add("email");
 		options.SaveTokens = true;
+		options.Events.OnRemoteFailure = context =>
+		{
+			var message = context.Failure?.Message ?? "Facebook sign-in was canceled or denied.";
+			context.Response.Redirect($"/Identity/Account/ExternalLogin?handler=Callback&remoteError={Uri.EscapeDataString(message)}");
+			context.HandleResponse();
+			return Task.CompletedTask;
+		};
 	});
 }
 
@@ -84,71 +98,15 @@ if (!string.IsNullOrWhiteSpace(xClientId) && !string.IsNullOrWhiteSpace(xClientS
 		twitterOptions.SaveTokens = true;
 		twitterOptions.ClaimActions.Add(new JsonKeyClaimAction("urn:twitter:profilepicture", ClaimValueTypes.String, "profile_image_url_https"));
 		twitterOptions.ClaimActions.Add(new JsonKeyClaimAction("urn:twitter:profilepicture", ClaimValueTypes.String, "profile_image_url"));
+		twitterOptions.Events.OnRemoteFailure = context =>
+		{
+			var message = context.Failure?.Message ?? "Twitter sign-in was canceled or denied.";
+			context.Response.Redirect($"/Identity/Account/ExternalLogin?handler=Callback&remoteError={Uri.EscapeDataString(message)}");
+			context.HandleResponse();
+			return Task.CompletedTask;
+		};
 	});
 
-	// authBuilder.AddOAuth("X", options =>
-	// {
-	// 	options.SignInScheme = IdentityConstants.ExternalScheme;
-	// 	options.ClientId = xClientId;
-	// 	options.ClientSecret = xClientSecret;
-	// 	options.CallbackPath = "/signin-x";
-	// 	options.AuthorizationEndpoint = "https://x.com/i/oauth2/authorize";
-	// 	options.TokenEndpoint = "https://api.x.com/2/oauth2/token";
-	// 	options.UserInformationEndpoint = "https://api.x.com/2/users/me?user.fields=id,name,username";
-	// 	options.Backchannel = new HttpClient(new XTokenAuthorizationHandler(xClientId, xClientSecret))
-	// 	{
-	// 		Timeout = TimeSpan.FromSeconds(60)
-	// 	};
-	// 	options.UsePkce = true;
-	// 	options.SaveTokens = true;
-	// 	options.Scope.Add("users.read");
-	// 	options.Scope.Add("tweet.read");
-
-	// 	options.ClaimActions.Clear();
-
-	// 	options.Events = new OAuthEvents
-	// 	{
-	// 		OnCreatingTicket = async context =>
-	// 		{
-	// 			using var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
-	// 			request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", context.AccessToken);
-
-	// 			using var response = await context.Backchannel.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
-	// 				context.HttpContext.RequestAborted);
-	// 			response.EnsureSuccessStatusCode();
-
-	// 			using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync(context.HttpContext.RequestAborted));
-	// 			var data = payload.RootElement.GetProperty("data");
-
-	// 			if (data.TryGetProperty("id", out var idElement))
-	// 			{
-	// 				var id = idElement.GetString();
-	// 				if (!string.IsNullOrWhiteSpace(id))
-	// 				{
-	// 					context.Identity?.AddClaim(new Claim(ClaimTypes.NameIdentifier, id));
-	// 				}
-	// 			}
-
-	// 			if (data.TryGetProperty("name", out var nameElement))
-	// 			{
-	// 				var name = nameElement.GetString();
-	// 				if (!string.IsNullOrWhiteSpace(name))
-	// 				{
-	// 					context.Identity?.AddClaim(new Claim(ClaimTypes.Name, name));
-	// 				}
-	// 			}
-
-	// 			if (data.TryGetProperty("username", out var usernameElement))
-	// 			{
-	// 				var username = usernameElement.GetString();
-	// 				if (!string.IsNullOrWhiteSpace(username))
-	// 				{
-	// 					context.Identity?.AddClaim(new Claim("urn:x:username", username));
-	// 				}
-	// 			}
-	// 		}
-	// 	};
-	// });
 }
 
 

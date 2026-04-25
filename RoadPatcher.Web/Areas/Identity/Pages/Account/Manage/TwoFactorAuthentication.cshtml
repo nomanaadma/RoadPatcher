@@ -43,6 +43,10 @@
                 <a class="btn btn-light-primary btn-sm" asp-page="./EnableAuthenticator">Reconfigure authenticator app</a>
                 <a class="btn btn-light-warning btn-sm" asp-page="./GenerateRecoveryCodes">Generate new recovery codes</a>
 
+                <form method="post" asp-page-handler="Disable2fa" class="d-inline">
+                    <button type="submit" class="btn btn-light-danger btn-sm">Disable 2FA</button>
+                </form>
+
                 @if (Model.IsMachineRemembered)
                 {
                     <form method="post" asp-page-handler="ForgetBrowser" class="d-inline">

@@ -105,6 +105,14 @@ public class LoginWith2faModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
+        // Recovery-code path should not validate the authenticator-code field.
+        ModelState.Remove("Input.TwoFactorCode");
+
+        if (string.IsNullOrWhiteSpace(Input?.RecoveryCode))
+        {
+            ModelState.AddModelError("Input.RecoveryCode", "Recovery code is required.");
+        }
+
         if (!ModelState.IsValid)
         {
             return Page();
