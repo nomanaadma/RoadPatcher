@@ -90,6 +90,7 @@ public class ExternalLoginModel : PageModel
         }
 
         var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false,
+            // Current policy: trusted external providers bypass local 2FA challenge.
             bypassTwoFactor: true);
 
         if (result.Succeeded)
