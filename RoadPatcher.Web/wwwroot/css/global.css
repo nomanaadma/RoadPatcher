@@ -1029,4 +1029,7 @@ gmp-place-autocomplete {
     border-radius: 0;
 }
 
+.external-auth-form button {
+    padding: 10px !important;
+}
 
