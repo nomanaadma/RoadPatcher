@@ -25,8 +25,10 @@ public partial class SettingsController(
 	}
 	
 	[HttpGet]
-	public IActionResult ChangePassword()
+	public async Task<IActionResult> ChangePassword()
 	{
+		var user = await userManager.GetUserAsync(User);
+		await PopulateChangePasswordViewStateAsync(user!);
 		return View();
 	}
 	
@@ -34,17 +36,6 @@ public partial class SettingsController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
 	{
-		
-		if (!ModelState.IsValid)
-		{
-			TempData["FormErrors"] = string.Join("||", 
-				ModelState.Values
-					.SelectMany(v => v.Errors)
-					.Select(e => e.ErrorMessage));
-
-			return View(model);
-		}
-
 		var user = await userManager.GetUserAsync(User);
 
 		if (user == null)
@@ -53,10 +44,37 @@ public partial class SettingsController(
 			return Challenge();
 		}
 
-		var result = await userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+		var hasPassword = await userManager.HasPasswordAsync(user);
+
+		if (hasPassword && string.IsNullOrWhiteSpace(model.OldPassword))
+		{
+			ModelState.AddModelError(nameof(model.OldPassword), "Current Password field is required.");
+		}
+		
+		if (!ModelState.IsValid)
+		{
+			await PopulateChangePasswordViewStateAsync(user);
+			TempData["FormErrors"] = string.Join("||", 
+				ModelState.Values
+					.SelectMany(v => v.Errors)
+					.Select(e => e.ErrorMessage));
+
+			return View(model);
+		}
+
+		IdentityResult result;
+		if (hasPassword)
+		{
+			result = await userManager.ChangePasswordAsync(user, model.OldPassword!, model.NewPassword);
+		}
+		else
+		{
+			result = await userManager.AddPasswordAsync(user, model.NewPassword);
+		}
 
 		if (!result.Succeeded)
 		{
+			await PopulateChangePasswordViewStateAsync(user);
 			
 			TempData["FormErrors"] = string.Join("||",
 				result.Errors.Select(e => e.Description));
@@ -66,8 +84,22 @@ public partial class SettingsController(
 
 		await signInManager.RefreshSignInAsync(user);
 
-		TempData["Success"] = "Your password has been changed successfully.";
+		TempData["Success"] = hasPassword
+			? "Your password has been changed successfully."
+			: "Your password has been set successfully.";
 		return RedirectToAction("ChangePassword");
+	}
+
+	private async Task PopulateChangePasswordViewStateAsync(ApplicationUser user)
+	{
+		var hasPassword = await userManager.HasPasswordAsync(user);
+		ViewBag.HasPassword = hasPassword;
+
+		if (!hasPassword)
+		{
+			var logins = await userManager.GetLoginsAsync(user);
+			ViewBag.ExternalProvider = logins.FirstOrDefault()?.LoginProvider ?? "social account";
+		}
 	}
 	
 	[HttpGet]
