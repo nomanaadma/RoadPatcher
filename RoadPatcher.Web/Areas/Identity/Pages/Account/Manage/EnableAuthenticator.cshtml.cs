@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using QRCoder;
 using RoadPatcher.Application.Entities;
 
 namespace RoadPatcher.Areas.Identity.Pages.Account.Manage;
@@ -37,6 +38,7 @@ public class EnableAuthenticatorModel : PageModel
 
     public string SharedKey { get; set; }
     public string AuthenticatorUri { get; set; }
+    public string QrCodeImageUrl { get; set; }
     public IList<string> RecoveryCodes { get; set; }
 
     [TempData]
@@ -112,6 +114,7 @@ public class EnableAuthenticatorModel : PageModel
         SharedKey = FormatKey(unformattedKey);
         var email = await _userManager.GetEmailAsync(user) ?? await _userManager.GetUserNameAsync(user) ?? "user";
         AuthenticatorUri = GenerateQrCodeUri(email, unformattedKey);
+        QrCodeImageUrl = GenerateQrCodeImageUrl(AuthenticatorUri);
     }
 
     private string FormatKey(string unformattedKey)
@@ -139,5 +142,15 @@ public class EnableAuthenticatorModel : PageModel
             _urlEncoder.Encode("RoadPatcher"),
             _urlEncoder.Encode(email),
             unformattedKey);
+    }
+
+    private string GenerateQrCodeImageUrl(string authenticatorUri)
+    {
+        using var qrGenerator = new QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(authenticatorUri, QRCodeGenerator.ECCLevel.Q);
+        using var pngQrCode = new PngByteQRCode(qrCodeData);
+        var qrCodeBytes = pngQrCode.GetGraphic(20);
+
+        return $"data:image/png;base64,{Convert.ToBase64String(qrCodeBytes)}";
     }
 }

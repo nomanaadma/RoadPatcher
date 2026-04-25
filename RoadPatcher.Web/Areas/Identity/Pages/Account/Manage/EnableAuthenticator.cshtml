@@ -4,52 +4,49 @@
     ViewData["Title"] = "Set up authenticator app";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header card-header-secondary">
-                    <h1 class="fs-2 m-0">@ViewData["Title"]</h1>
-                </div>
-                <div class="card-body">
-                    <partial name="~/Areas/Identity/Pages/Account/_StatusMessage.cshtml" model="Model.StatusMessage" />
+<div class="card">
+    <div class="card-header card-header-secondary">
+        <h1 class="fs-2 m-0">@ViewData["Title"]</h1>
+    </div>
+    <div class="card-body">
+        <partial name="~/Areas/Identity/Pages/Account/_StatusMessage.cshtml" model="Model.StatusMessage" />
 
-                    <p>Scan this key in your authenticator app. If scanning is not available, enter the key manually.</p>
+        <p>Scan this key in your authenticator app. If scanning is not available, enter the key manually.</p>
 
-                    <div class="alert alert-light-info mb-4">
-                        <div><strong>Shared key:</strong> @Model.SharedKey</div>
-                        <div class="mt-2"><strong>Authenticator URI:</strong> <code>@Model.AuthenticatorUri</code></div>
-                    </div>
-
-                    <form method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-
-                        <div class="form-floating mb-4">
-                            <input asp-for="Input.Code" class="form-control" autocomplete="off" placeholder="123456" />
-                            <label asp-for="Input.Code"></label>
-                            <span asp-validation-for="Input.Code" class="text-danger"></span>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-sm">Verify and enable</button>
-                        <a asp-page="./TwoFactorAuthentication" class="btn btn-secondary btn-sm ms-2">Back</a>
-                    </form>
-
-                    @if (Model.RecoveryCodes?.Count > 0)
-                    {
-                        <div class="alert alert-warning mt-5">
-                            <h5 class="mb-3">Save these recovery codes in a safe place</h5>
-                            <p>If you lose access to your authenticator app, you can use one of these codes to sign in.</p>
-                            <ul class="mb-0">
-                                @foreach (var code in Model.RecoveryCodes)
-                                {
-                                    <li><code>@code</code></li>
-                                }
-                            </ul>
-                        </div>
-                    }
-                </div>
+        <div class="alert alert-light-info mb-4">
+            <div class="text-center mb-4">
+                <img src="@Model.QrCodeImageUrl" alt="Authenticator QR code" style="max-width: 220px; width: 100%; height: auto;" />
             </div>
+            <div><strong>Shared key:</strong> @Model.SharedKey</div>
+            <div class="mt-2"><strong>Authenticator URI:</strong> <code>@Model.AuthenticatorUri</code></div>
         </div>
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="form-floating mb-4">
+                <input asp-for="Input.Code" class="form-control" autocomplete="off" placeholder="123456" />
+                <label asp-for="Input.Code"></label>
+                <span asp-validation-for="Input.Code" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">Verify and enable</button>
+            <a asp-page="./TwoFactorAuthentication" class="btn btn-secondary btn-sm ms-2">Back</a>
+        </form>
+
+        @if (Model.RecoveryCodes?.Count > 0)
+        {
+            <div class="alert alert-warning mt-5">
+                <h5 class="mb-3">Save these recovery codes in a safe place</h5>
+                <p>If you lose access to your authenticator app, you can use one of these codes to sign in.</p>
+                <ul class="mb-0">
+                    @foreach (var code in Model.RecoveryCodes)
+                    {
+                        <li><code>@code</code></li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 </div>
 

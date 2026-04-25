@@ -4,58 +4,52 @@
     ViewData["Title"] = "Two-factor authentication";
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="card">
-                <div class="card-header card-header-secondary">
-                    <h1 class="fs-2 m-0">@ViewData["Title"]</h1>
-                </div>
-                <div class="card-body">
-                    <partial name="~/Areas/Identity/Pages/Account/_StatusMessage.cshtml" model="Model.StatusMessage" />
+<div class="card">
+    <div class="card-header card-header-secondary">
+        <h1 class="fs-2 m-0">@ViewData["Title"]</h1>
+    </div>
+    <div class="card-body">
+        <partial name="~/Areas/Identity/Pages/Account/_StatusMessage.cshtml" model="Model.StatusMessage" />
 
-                    <p class="mb-3">Two-factor authentication adds an extra verification step when signing in with email and password.</p>
+        <p class="mb-3">Two-factor authentication adds an extra verification step when signing in with email and password.</p>
 
-                    <div class="mb-3">
-                        <strong>Status:</strong>
-                        @if (Model.Is2faEnabled)
-                        {
-                            <span class="badge badge-light-success">Enabled</span>
-                        }
-                        else
-                        {
-                            <span class="badge badge-light-danger">Disabled</span>
-                        }
-                    </div>
-
-                    <div class="mb-4">
-                        <strong>Recovery codes left:</strong> @Model.RecoveryCodesLeft
-                    </div>
-
-                    @if (!Model.HasAuthenticator)
-                    {
-                        <a class="btn btn-primary btn-sm" asp-page="./EnableAuthenticator">Set up authenticator app</a>
-                    }
-                    else if (!Model.Is2faEnabled)
-                    {
-                        <a class="btn btn-primary btn-sm" asp-page="./EnableAuthenticator">Enable authenticator app</a>
-                    }
-                    else
-                    {
-                        <div class="d-flex flex-wrap gap-2">
-                            <a class="btn btn-light-primary btn-sm" asp-page="./EnableAuthenticator">Reconfigure authenticator app</a>
-                            <a class="btn btn-light-warning btn-sm" asp-page="./GenerateRecoveryCodes">Generate new recovery codes</a>
-
-                            @if (Model.IsMachineRemembered)
-                            {
-                                <form method="post" asp-page-handler="ForgetBrowser" class="d-inline">
-                                    <button type="submit" class="btn btn-light-danger btn-sm">Forget this browser</button>
-                                </form>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
+        <div class="mb-3">
+            <strong>Status:</strong>
+            @if (Model.Is2faEnabled)
+            {
+                <span class="badge badge-light-success">Enabled</span>
+            }
+            else
+            {
+                <span class="badge badge-light-danger">Disabled</span>
+            }
         </div>
+
+        <div class="mb-4">
+            <strong>Recovery codes left:</strong> @Model.RecoveryCodesLeft
+        </div>
+
+        @if (!Model.HasAuthenticator)
+        {
+            <a class="btn btn-primary btn-sm" asp-page="./EnableAuthenticator">Set up authenticator app</a>
+        }
+        else if (!Model.Is2faEnabled)
+        {
+            <a class="btn btn-primary btn-sm" asp-page="./EnableAuthenticator">Enable authenticator app</a>
+        }
+        else
+        {
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-light-primary btn-sm" asp-page="./EnableAuthenticator">Reconfigure authenticator app</a>
+                <a class="btn btn-light-warning btn-sm" asp-page="./GenerateRecoveryCodes">Generate new recovery codes</a>
+
+                @if (Model.IsMachineRemembered)
+                {
+                    <form method="post" asp-page-handler="ForgetBrowser" class="d-inline">
+                        <button type="submit" class="btn btn-light-danger btn-sm">Forget this browser</button>
+                    </form>
+                }
+            </div>
+        }
     </div>
 </div>
