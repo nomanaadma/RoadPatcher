@@ -40,9 +40,9 @@
                 <h5 class="mb-3">Save these recovery codes in a safe place</h5>
                 <p>If you lose access to your authenticator app, you can use one of these codes to sign in.</p>
                 <ul class="mb-0">
-                    @foreach (var code in Model.RecoveryCodes)
+                    @foreach (var recoveryCode in Model.RecoveryCodes)
                     {
-                        <li><code>@code</code></li>
+                        <li><code>@recoveryCode</code></li>
                     }
                 </ul>
             </div>
