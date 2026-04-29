@@ -20,6 +20,17 @@
 	<div class="app-navbar-item ms-1 ms-md-4" id="kt_header_user_menu_toggle">
 		
 		<div class="d-flex align-items-stretch flex-shrink-0 gap-0">
+
+			@if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+			{
+				<div class="d-flex align-items-stretch ms-1 ms-lg-2">
+					<div class="d-flex align-items-center">
+						<a data-bs-toggle="tooltip" title="Admin Panel" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-area="Admin" asp-controller="Users" asp-action="Index" target="_blank">
+							<i class="las la-cogs fz-24"></i>
+						</a>
+					</div>
+				</div>
+			}
 			
 			<div class="d-flex align-items-stretch ms-1">
 				<div class="d-flex align-items-center">

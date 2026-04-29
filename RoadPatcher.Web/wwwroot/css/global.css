@@ -1036,6 +1036,7 @@ gmp-place-autocomplete {
 #kt_app_sidebar_toggle {
     border-radius: 0.425rem !important;
     padding: 0 !important;
+    border: 1px solid #d3d3d3 !important;
 }
 
 .app-sidebar {
@@ -1048,7 +1049,13 @@ gmp-place-autocomplete {
     top: -2px;
 }
 
-#logoutForm {
+.menu-item #logoutForm {
     display: none;
+}
+
+[data-kt-app-layout=dark-sidebar] .app-sidebar .app-sidebar-logo {
+    border-right: 1px solid #1F212A;
+    background: #ffffff;
+    border-bottom: 0;
 }
 

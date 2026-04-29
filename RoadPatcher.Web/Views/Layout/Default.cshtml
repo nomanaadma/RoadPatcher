@@ -14,8 +14,14 @@
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-toolbar-enabled", "true");
 	KTTheme.AddHtmlClass("body", "app-default");
 
-	if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) 
+	// Check if current route is in Admin area
+	var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? string.Empty;
+	var isAdminRoute = currentArea.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+
+	// Show sidebar only for admin users AND on admin routes
+	if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && isAdminRoute) 
 	{
+		KTTheme.AddHtmlAttribute("body", "data-kt-app-layout", "dark-sidebar");
 		KTTheme.AddHtmlAttribute("body", "data-kt-app-sidebar-fixed", "true");
 		KTTheme.AddHtmlAttribute("body", "data-kt-app-sidebar-hoverable", "true");
 		KTTheme.AddHtmlAttribute("body", "data-kt-app-sidebar-push-header", "true");
@@ -52,14 +58,14 @@
 	<!--begin::Page-->
 	<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
 
-		@* @if (User.IsInRole("User"))  *@
-		@* { *@
+		@if (!isAdminRoute) 
+		{
 			<partial name="Partials/SidebarLayout/_header.cshtml" />
-		@* } *@
+		}
 		<!--begin::Wrapper-->
 		<div class="app-wrapper flex-column flex-row-fluid mt-6" id="kt_app_wrapper">
 			
-			@if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) 
+			@if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && isAdminRoute) 
 			{
 				<partial name="Partials/SidebarLayout/_sidebar.cshtml" />
 			}

@@ -35,7 +35,8 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
                 "/_content",
                 "/Identity",
                 "/Home/Error",
-                "/Account"
+                "/Account",
+                "/Admin"
             ];
 
             if (allowedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))

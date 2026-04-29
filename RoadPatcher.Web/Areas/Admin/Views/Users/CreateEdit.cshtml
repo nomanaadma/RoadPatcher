@@ -1,0 +1,94 @@
+@model AdminUserCreateEditDto
+@{
+    Layout = "~/Views/Layout/Default.cshtml";
+    ViewData["Title"] = Model?.Id != null ? "Edit User" : "Create User";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-8">
+    <h1 class="fs-3 fw-bold">@ViewData["Title"]</h1>
+    <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-secondary">
+        <i class="las la-arrow-left me-2"></i>Back to Users
+    </a>
+</div>
+
+<div class="row g-5 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">User Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-area="Admin" asp-controller="Users" asp-action="@(Model?.Id != null ? "Edit" : "Create")" asp-route-id="@Model?.Id">
+                    @if (Model?.Id != null)
+                    {
+                        <input type="hidden" name="id" value="@Model.Id" />
+                    }
+
+                    <!-- Email -->
+                    <div class="mb-5">
+                        <label asp-for="Email" class="form-label required fw-semibold">Email Address</label>
+                        <input asp-for="Email" type="email" class="form-control @(ViewData.ModelState["Email"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")" placeholder="user@example.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-5">
+                        <label asp-for="Password" class="form-label @(Model?.Id == null ? "required" : "") fw-semibold">
+                            Password
+                            @if (Model?.Id != null)
+                            {
+                                <small class="text-muted">(Leave empty to keep current password)</small>
+                            }
+                        </label>
+                        <input asp-for="Password" type="password" class="form-control @(ViewData.ModelState["Password"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")" placeholder="@(Model?.Id == null ? "Enter password" : "New password (optional)")" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        @if (Model?.Id == null)
+                        {
+                            <small class="form-text text-muted">Password must be at least 6 characters.</small>
+                        }
+                    </div>
+
+                    <!-- Role -->
+                    <div class="mb-5">
+                        <label asp-for="Role" class="form-label required fw-semibold">Role</label>
+                        <select asp-for="Role" class="form-select @(ViewData.ModelState["Role"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")">
+                            <option value="User">User</option>
+                            <option value="Admin">Admin</option>
+                            <option value="SuperAdmin">SuperAdmin</option>
+                            @if (ViewBag.Roles != null)
+                            {
+                                @foreach (var role in ViewBag.Roles)
+                                {
+                                    <option value="@role.Name">@role.Name</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+                    <!-- Form Errors -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h5>Please fix the errors below:</h5>
+                            <ul class="mb-0">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="las la-save me-2"></i>@(Model?.Id != null ? "Update User" : "Create User")
+                        </button>
+                        <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
