@@ -65,10 +65,7 @@
                             <th>Last Name</th>
                             <th>Address</th>
                             <th>Google Address</th>
-                            @if (canManageRoles)
-                            {
-                                <th>Role</th>
-                            }
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Image</th>
                             <th>Actions</th>
@@ -77,16 +74,23 @@
                     <tbody>
                         @foreach (var user in Model)
                         {
+                            var isAdminUser = user.Roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
                             <tr>
                                 <td class="fw-semibold">@user.Email</td>
                                 <td>@user.FirstName</td>
                                 <td>@user.LastName</td>
                                 <td><small>@user.Address</small></td>
                                 <td><small>@user.GoogleAddress</small></td>
-                                @if (canManageRoles)
-                                {
-                                    <td><span class="badge bg-primary">@user.PrimaryRole</span></td>
+                                @{
+
+                                    var roleClass = "light-warning";
+
+                                    if(user.PrimaryRole == "Admin") {
+                                        roleClass = "light-success";
+
+                                    }
                                 }
+                                <td><span class="badge bg-@roleClass">@user.PrimaryRole</span></td>
                                 <td>
                                     @if (user.IsDisabled)
                                     {
@@ -109,16 +113,26 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a asp-area="Admin" asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-light btn-sm">
-                                            <i class="las la-edit"></i> Edit
-                                        </a>
-                                        <form method="post" asp-area="Admin" asp-controller="Users" asp-action="ToggleStatus" asp-route-id="@user.Id" class="d-inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn @(user.IsDisabled ? "btn-success" : "btn-warning") btn-sm">
-                                                <i class="@(user.IsDisabled ? "las la-toggle-on" : "las la-toggle-off")"></i>
-                                                @(user.IsDisabled ? "Enable" : "Disable")
+                                        @if (!isAdminUser || canManageRoles)
+                                        {
+                                            <a asp-area="Admin" asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-light btn-sm">
+                                                <i class="las la-edit"></i> Edit
+                                            </a>
+
+                                            <form method="post" asp-area="Admin" asp-controller="Users" asp-action="ToggleStatus" asp-route-id="@user.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn @(user.IsDisabled ? "btn-success" : "btn-warning") btn-sm">
+                                                    <i class="@(user.IsDisabled ? "las la-toggle-on" : "las la-toggle-off")"></i>
+                                                    @(user.IsDisabled ? "Enable" : "Disable")
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-light btn-sm" disabled title="SuperAdmin only">
+                                                <i class="las la-lock"></i> Restricted
                                             </button>
-                                        </form>
+                                        }
                                     </div>
                                 </td>
                             </tr>

@@ -1059,3 +1059,12 @@ gmp-place-autocomplete {
     border-bottom: 0;
 }
 
+.badge.bg-light-success {
+    color: #17c653 !important;
+}
+
+.badge.bg-light-warning {
+    color: #de802b !important;
+}
+
+

@@ -35,6 +35,9 @@ public class UsersController(
 		foreach (var user in allUsers)
 		{
 			var roles = await userManager.GetRolesAsync(user);
+			if (roles.Contains("SuperAdmin"))
+				continue;
+
 			var isDisabled = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
 			var profileImage = ProfileHelper.GetProfileImage(user.UserData?.Image);
 
@@ -137,6 +140,10 @@ public class UsersController(
 		{
 			await userManager.AddToRoleAsync(user, roleToAssign);
 		}
+		else
+		{
+			await userManager.AddToRoleAsync(user, "User");
+		}
 
 		TempData["Success"] = $"User '{model.Email}' created successfully.";
 		return RedirectToAction("Index");
@@ -172,6 +179,13 @@ public class UsersController(
 		var user = await userManager.FindByIdAsync(id);
 		if (user == null)
 			return NotFound();
+
+		var targetRoles = await userManager.GetRolesAsync(user);
+		var targetIsAdminOrAbove = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
+		var requesterIsSuperAdmin = User.IsInRole("SuperAdmin");
+
+		if (targetIsAdminOrAbove && !requesterIsSuperAdmin)
+			return Forbid();
 
 		var canManageRoles = User.IsInRole("SuperAdmin");
 		await PrepareFormDataAsync(model.Role);
@@ -264,6 +278,13 @@ public class UsersController(
 		if (user == null)
 			return NotFound();
 
+		var targetRoles = await userManager.GetRolesAsync(user);
+		var targetIsAdminOrAbove = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
+		var requesterIsSuperAdmin = User.IsInRole("SuperAdmin");
+
+		if (targetIsAdminOrAbove && !requesterIsSuperAdmin)
+			return Forbid();
+
 		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (user.Id == currentUserId)
 		{
@@ -303,6 +324,7 @@ public class UsersController(
 	private async Task<List<string>> GetAvailableRolesAsync()
 	{
 		return await roleManager.Roles
+			.Where(r => r.Name != "SuperAdmin")
 			.OrderBy(r => r.Name)
 			.Select(r => r.Name!)
 			.ToListAsync();
