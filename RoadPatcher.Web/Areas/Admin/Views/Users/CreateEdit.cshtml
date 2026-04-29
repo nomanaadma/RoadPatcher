@@ -2,6 +2,10 @@
 @{
     Layout = "~/Views/Layout/Default.cshtml";
     ViewData["Title"] = Model?.Id != null ? "Edit User" : "Create User";
+
+    var canManageRoles = ViewBag.CanManageRoles as bool? == true;
+    var availableRoles = ViewBag.AvailableRoles as IEnumerable<string> ?? Enumerable.Empty<string>();
+    var selectedRole = ViewBag.SelectedRole?.ToString() ?? Model?.Role ?? "User";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-8">
@@ -24,14 +28,14 @@
                         <input type="hidden" name="id" value="@Model.Id" />
                     }
 
-                    <!-- Email -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
                     <div class="mb-5">
                         <label asp-for="Email" class="form-label required fw-semibold">Email Address</label>
-                        <input asp-for="Email" type="email" class="form-control @(ViewData.ModelState["Email"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")" placeholder="user@example.com" />
+                        <input asp-for="Email" type="email" class="form-control" placeholder="user@example.com" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
-                    <!-- Password -->
                     <div class="mb-5">
                         <label asp-for="Password" class="form-label @(Model?.Id == null ? "required" : "") fw-semibold">
                             Password
@@ -40,47 +44,24 @@
                                 <small class="text-muted">(Leave empty to keep current password)</small>
                             }
                         </label>
-                        <input asp-for="Password" type="password" class="form-control @(ViewData.ModelState["Password"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")" placeholder="@(Model?.Id == null ? "Enter password" : "New password (optional)")" />
+                        <input asp-for="Password" type="password" class="form-control" placeholder="@(Model?.Id == null ? "Enter password" : "New password (optional)")" />
                         <span asp-validation-for="Password" class="text-danger"></span>
-                        @if (Model?.Id == null)
-                        {
-                            <small class="form-text text-muted">Password must be at least 6 characters.</small>
-                        }
                     </div>
 
-                    <!-- Role -->
-                    <div class="mb-5">
-                        <label asp-for="Role" class="form-label required fw-semibold">Role</label>
-                        <select asp-for="Role" class="form-select @(ViewData.ModelState["Role"]?.ValidationState == ModelValidationState.Invalid ? "is-invalid" : "")">
-                            <option value="User">User</option>
-                            <option value="Admin">Admin</option>
-                            <option value="SuperAdmin">SuperAdmin</option>
-                            @if (ViewBag.Roles != null)
-                            {
-                                @foreach (var role in ViewBag.Roles)
-                                {
-                                    <option value="@role.Name">@role.Name</option>
-                                }
-                            }
-                        </select>
-                        <span asp-validation-for="Role" class="text-danger"></span>
-                    </div>
-
-                    <!-- Form Errors -->
-                    @if (!ViewData.ModelState.IsValid)
+                    @if (canManageRoles)
                     {
-                        <div class="alert alert-danger" role="alert">
-                            <h5>Please fix the errors below:</h5>
-                            <ul class="mb-0">
-                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        <div class="mb-5">
+                            <label asp-for="Role" class="form-label required fw-semibold">Role</label>
+                            <select asp-for="Role" class="form-select">
+                                @foreach (var role in availableRoles)
                                 {
-                                    <li>@error.ErrorMessage</li>
+                                    <option value="@role" selected="@(string.Equals(selectedRole, role, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@role</option>
                                 }
-                            </ul>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger"></span>
                         </div>
                     }
 
-                    <!-- Buttons -->
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="las la-save me-2"></i>@(Model?.Id != null ? "Update User" : "Create User")

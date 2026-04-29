@@ -1,4 +1,6 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 
@@ -57,6 +59,17 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
             if (string.IsNullOrEmpty(userId))
             {
                 await next(context);
+                return;
+            }
+
+            var isDisabled = await db.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.Id == userId && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow);
+
+            if (isDisabled)
+            {
+                await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+                context.Response.Redirect("/Identity/Account/Login?error=disabled");
                 return;
             }
 

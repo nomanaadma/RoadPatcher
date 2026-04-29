@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
@@ -21,61 +20,63 @@ public class UsersController(
 ) : Controller
 {
 	[HttpGet]
-	public async Task<IActionResult> Index(string? search, int page = 1)
+	public async Task<IActionResult> Index(string? search, string? role, int page = 1)
 	{
 		var pageSize = int.Parse(configuration["Paging:PageSize"] ?? "5");
+		var canManageRoles = User.IsInRole("SuperAdmin");
 
-		// Get all users
-		var query = userManager.Users.AsQueryable();
-
-		// Apply search filter
-		if (!string.IsNullOrWhiteSpace(search))
-		{
-			var searchLower = search.ToLower();
-			query = query.Where(u =>
-				u.Email!.ToLower().Contains(searchLower) ||
-				u.UserData!.FirstName.ToLower().Contains(searchLower) ||
-				u.UserData!.LastName.ToLower().Contains(searchLower) ||
-				u.UserData!.Address.ToLower().Contains(searchLower) ||
-				u.UserData!.GoogleAddress.ToLower().Contains(searchLower)
-			);
-		}
-
-		// Fetch users with their roles and profile data
-		var users = await query
+		var allUsers = await userManager.Users
 			.Include(u => u.UserData)
-			.OrderByDescending(u => u.Id)
+			.OrderBy(u => u.Email)
 			.ToListAsync();
 
-		// Project to DTO with role information
-		var userDtos = new List<AdminUserListItemDto>();
-		foreach (var user in users)
+		var users = new List<AdminUserListItemDto>();
+
+		foreach (var user in allUsers)
 		{
 			var roles = await userManager.GetRolesAsync(user);
-			var profileImage = user.UserData != null 
-				? ProfileHelper.GetProfileImage(user.UserData.Image) 
-				: ProfileHelper.GetProfileImage(null);
+			var isDisabled = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+			var profileImage = ProfileHelper.GetProfileImage(user.UserData?.Image);
 
-			userDtos.Add(new AdminUserListItemDto
+			users.Add(new AdminUserListItemDto
 			{
 				Id = user.Id,
-				Email = user.Email!,
+				Email = user.Email ?? string.Empty,
 				FirstName = user.UserData?.FirstName ?? "N/A",
 				LastName = user.UserData?.LastName ?? "N/A",
 				Address = user.UserData?.Address ?? "N/A",
 				GoogleAddress = user.UserData?.GoogleAddress ?? "N/A",
 				Image = profileImage,
-				Role = roles.FirstOrDefault() ?? "No Role",
-				AllRoles = string.Join(", ", roles),
-				CreatedAt = user.Id // We don't have CreatedAt on ApplicationUser, so we'll use Id
+				PrimaryRole = roles.FirstOrDefault() ?? "User",
+				Roles = roles.ToList(),
+				IsDisabled = isDisabled
 			});
 		}
 
-		// Paginate
-		var pagedUsers = userDtos.ToPagedList(page, pageSize);
+		IEnumerable<AdminUserListItemDto> filteredUsers = users;
 
-		// Store search for view
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			filteredUsers = filteredUsers.Where(u =>
+				u.Email.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+				u.FirstName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+				u.LastName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+				u.Address.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+				u.GoogleAddress.Contains(search, StringComparison.OrdinalIgnoreCase)
+			);
+		}
+
+		if (canManageRoles && !string.IsNullOrWhiteSpace(role))
+		{
+			filteredUsers = filteredUsers.Where(u => u.Roles.Contains(role));
+		}
+
+		var pagedUsers = filteredUsers.ToPagedList(page, pageSize);
+
 		ViewData["Search"] = search;
+		ViewData["RoleFilter"] = role;
+		ViewBag.CanManageRoles = canManageRoles;
+		ViewBag.AvailableRoles = canManageRoles ? await GetAvailableRolesAsync() : new List<string>();
 
 		return View(pagedUsers);
 	}
@@ -83,8 +84,7 @@ public class UsersController(
 	[HttpGet]
 	public async Task<IActionResult> Create()
 	{
-		var roles = await roleManager.Roles.ToListAsync();
-		ViewBag.Roles = roles;
+		await PrepareFormDataAsync();
 		return View("CreateEdit");
 	}
 
@@ -92,10 +92,19 @@ public class UsersController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Create(AdminUserCreateEditDto model)
 	{
+		await PrepareFormDataAsync(model.Role);
+
 		if (!ModelState.IsValid)
 		{
-			var roles = await roleManager.Roles.ToListAsync();
-			ViewBag.Roles = roles;
+			return View("CreateEdit", model);
+		}
+
+		var canManageRoles = User.IsInRole("SuperAdmin");
+		var roleToAssign = canManageRoles ? (string.IsNullOrWhiteSpace(model.Role) ? "User" : model.Role) : "User";
+
+		if (canManageRoles && !await roleManager.RoleExistsAsync(roleToAssign))
+		{
+			ModelState.AddModelError(nameof(model.Role), "Selected role does not exist.");
 			return View("CreateEdit", model);
 		}
 
@@ -104,8 +113,6 @@ public class UsersController(
 		if (existingUser != null)
 		{
 			ModelState.AddModelError(nameof(model.Email), "Email already in use.");
-			var roles = await roleManager.Roles.ToListAsync();
-			ViewBag.Roles = roles;
 			return View("CreateEdit", model);
 		}
 
@@ -114,7 +121,8 @@ public class UsersController(
 		{
 			UserName = model.Email,
 			Email = model.Email,
-			EmailConfirmed = true // Admin-created users are pre-confirmed
+			EmailConfirmed = true,
+			LockoutEnabled = true
 		};
 
 		var result = await userManager.CreateAsync(user, model.Password!);
@@ -122,23 +130,12 @@ public class UsersController(
 		{
 			foreach (var error in result.Errors)
 				ModelState.AddModelError(string.Empty, error.Description);
-
-			var roleList = await roleManager.Roles.ToListAsync();
-			ViewBag.Roles = roleList;
 			return View("CreateEdit", model);
 		}
 
-		// Assign role (default to "User" if not specified)
-		var roleToAssign = !string.IsNullOrWhiteSpace(model.Role) ? model.Role : "User";
-		var roleExists = await roleManager.RoleExistsAsync(roleToAssign);
-		if (roleExists)
+		if (canManageRoles)
 		{
 			await userManager.AddToRoleAsync(user, roleToAssign);
-		}
-		else if (!string.IsNullOrWhiteSpace(model.Role))
-		{
-			// If a role was specified but doesn't exist, log or warn (for now, just skip)
-			ModelState.AddModelError(string.Empty, $"Role '{model.Role}' does not exist.");
 		}
 
 		TempData["Success"] = $"User '{model.Email}' created successfully.";
@@ -152,8 +149,9 @@ public class UsersController(
 		if (user == null)
 			return NotFound();
 
-		var roles = await roleManager.Roles.ToListAsync();
+		await PrepareFormDataAsync();
 		var userRoles = await userManager.GetRolesAsync(user);
+		var canManageRoles = User.IsInRole("SuperAdmin");
 
 		var model = new AdminUserCreateEditDto
 		{
@@ -162,7 +160,7 @@ public class UsersController(
 			Role = userRoles.FirstOrDefault() ?? "User"
 		};
 
-		ViewBag.Roles = roles;
+		ViewBag.CanManageRoles = canManageRoles;
 		ViewBag.UserRoles = userRoles;
 		return View("CreateEdit", model);
 	}
@@ -175,11 +173,13 @@ public class UsersController(
 		if (user == null)
 			return NotFound();
 
+		var canManageRoles = User.IsInRole("SuperAdmin");
+		await PrepareFormDataAsync(model.Role);
+
 		if (!ModelState.IsValid)
 		{
-			var roles = await roleManager.Roles.ToListAsync();
 			var userRoles = await userManager.GetRolesAsync(user);
-			ViewBag.Roles = roles;
+			ViewBag.CanManageRoles = canManageRoles;
 			ViewBag.UserRoles = userRoles;
 			return View("CreateEdit", model);
 		}
@@ -191,17 +191,16 @@ public class UsersController(
 			if (existingUser != null)
 			{
 				ModelState.AddModelError(nameof(model.Email), "Email already in use.");
-				var rolesList = await roleManager.Roles.ToListAsync();
 				var userRolesList = await userManager.GetRolesAsync(user);
-				ViewBag.Roles = rolesList;
+				ViewBag.CanManageRoles = canManageRoles;
 				ViewBag.UserRoles = userRolesList;
 				return View("CreateEdit", model);
 			}
 		}
 
 		// Update email
-		user.Email = model.Email;
-		user.UserName = model.Email;
+		await userManager.SetUserNameAsync(user, model.Email);
+		await userManager.SetEmailAsync(user, model.Email);
 
 		// Update password if provided
 		if (!string.IsNullOrWhiteSpace(model.Password))
@@ -213,22 +212,32 @@ public class UsersController(
 				foreach (var error in resetResult.Errors)
 					ModelState.AddModelError(string.Empty, error.Description);
 
-				var rolesList = await roleManager.Roles.ToListAsync();
 				var userRolesList = await userManager.GetRolesAsync(user);
-				ViewBag.Roles = rolesList;
+				ViewBag.CanManageRoles = canManageRoles;
 				ViewBag.UserRoles = userRolesList;
 				return View("CreateEdit", model);
 			}
 		}
 
-		// Update role
-		var currentRoles = await userManager.GetRolesAsync(user);
-		if (!currentRoles.Contains(model.Role))
+		if (canManageRoles)
 		{
-			await userManager.RemoveFromRolesAsync(user, currentRoles);
-			var roleExists = await roleManager.RoleExistsAsync(model.Role);
-			if (roleExists)
-				await userManager.AddToRoleAsync(user, model.Role);
+			var currentRoles = await userManager.GetRolesAsync(user);
+			var selectedRole = string.IsNullOrWhiteSpace(model.Role) ? "User" : model.Role;
+
+			if (!await roleManager.RoleExistsAsync(selectedRole))
+			{
+				ModelState.AddModelError(nameof(model.Role), "Selected role does not exist.");
+				var userRolesList = await userManager.GetRolesAsync(user);
+				ViewBag.CanManageRoles = canManageRoles;
+				ViewBag.UserRoles = userRolesList;
+				return View("CreateEdit", model);
+			}
+
+			if (currentRoles.Count != 1 || !string.Equals(currentRoles[0], selectedRole, StringComparison.OrdinalIgnoreCase))
+			{
+				await userManager.RemoveFromRolesAsync(user, currentRoles);
+				await userManager.AddToRoleAsync(user, selectedRole);
+			}
 		}
 
 		var updateResult = await userManager.UpdateAsync(user);
@@ -237,9 +246,8 @@ public class UsersController(
 			foreach (var error in updateResult.Errors)
 				ModelState.AddModelError(string.Empty, error.Description);
 
-			var rolesList = await roleManager.Roles.ToListAsync();
 			var userRolesList = await userManager.GetRolesAsync(user);
-			ViewBag.Roles = rolesList;
+			ViewBag.CanManageRoles = canManageRoles;
 			ViewBag.UserRoles = userRolesList;
 			return View("CreateEdit", model);
 		}
@@ -250,29 +258,54 @@ public class UsersController(
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> Delete(string id)
+	public async Task<IActionResult> ToggleStatus(string id)
 	{
 		var user = await userManager.FindByIdAsync(id);
 		if (user == null)
 			return NotFound();
 
-		// Prevent deleting self
 		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (user.Id == currentUserId)
 		{
-			TempData["Error"] = "You cannot delete your own account.";
+			TempData["Error"] = "You cannot disable your own account.";
 			return RedirectToAction("Index");
 		}
 
-		var result = await userManager.DeleteAsync(user);
+		var isDisabled = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+		user.LockoutEnabled = true;
+		user.LockoutEnd = isDisabled ? null : DateTimeOffset.MaxValue;
+
+		var result = await userManager.UpdateAsync(user);
 		if (!result.Succeeded)
 		{
-			TempData["Error"] = "Failed to delete user.";
+			TempData["Error"] = "Failed to update user status.";
 			return RedirectToAction("Index");
 		}
 
-		TempData["Success"] = $"User '{user.Email}' deleted successfully.";
+		TempData["Success"] = isDisabled
+			? $"User '{user.Email}' enabled successfully."
+			: $"User '{user.Email}' disabled successfully.";
 		return RedirectToAction("Index");
+	}
+
+	private async Task PrepareFormDataAsync(string? selectedRole = null)
+	{
+		var canManageRoles = User.IsInRole("SuperAdmin");
+		ViewBag.CanManageRoles = canManageRoles;
+
+		if (canManageRoles)
+		{
+			ViewBag.AvailableRoles = await GetAvailableRolesAsync();
+			ViewBag.SelectedRole = string.IsNullOrWhiteSpace(selectedRole) ? "User" : selectedRole;
+		}
+	}
+
+	private async Task<List<string>> GetAvailableRolesAsync()
+	{
+		return await roleManager.Roles
+			.OrderBy(r => r.Name)
+			.Select(r => r.Name!)
+			.ToListAsync();
 	}
 }
 
@@ -286,9 +319,9 @@ public class AdminUserListItemDto
 	public string Address { get; set; } = null!;
 	public string GoogleAddress { get; set; } = null!;
 	public string Image { get; set; } = null!;
-	public string Role { get; set; } = null!;
-	public string AllRoles { get; set; } = null!;
-	public string CreatedAt { get; set; } = null!;
+	public string PrimaryRole { get; set; } = null!;
+	public List<string> Roles { get; set; } = [];
+	public bool IsDisabled { get; set; }
 }
 
 public class AdminUserCreateEditDto
