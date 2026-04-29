@@ -72,7 +72,7 @@ html, body {
     transform: rotate(270deg);
 }
 
-.rotate-180 {
+.rotate-180:not(svg) {
     transform: rotate(180deg);
 }
 
@@ -1031,5 +1031,24 @@ gmp-place-autocomplete {
 
 .external-auth-form button {
     padding: 10px !important;
+}
+
+#kt_app_sidebar_toggle {
+    border-radius: 0.425rem !important;
+    padding: 0 !important;
+}
+
+.app-sidebar {
+    background: #ffffff;
+}
+
+.sidebar-specific-logo {
+    height: 39px !important;
+    left: -5px;
+    top: -2px;
+}
+
+#logoutForm {
+    display: none;
 }
 
