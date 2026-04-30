@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
-using RoadPatcher.Models;
-using X.PagedList;
 using X.PagedList.Extensions;
 
 namespace RoadPatcher.Web.Areas.Admin.Controllers;
@@ -85,10 +83,13 @@ public class UsersController(
 	}
 
 	[HttpGet]
-	public async Task<IActionResult> Create()
+	public async Task<IActionResult> Create(string? returnUrl = null)
 	{
-		await PrepareFormDataAsync();
-		return View("CreateEdit");
+		await PrepareFormDataAsync("User");
+		return View("CreateEdit", new AdminUserCreateEditDto
+		{
+			ReturnUrl = returnUrl
+		});
 	}
 
 	[HttpPost]
@@ -99,6 +100,13 @@ public class UsersController(
 
 		if (!ModelState.IsValid)
 		{
+			return View("CreateEdit", model);
+		}
+
+		// Validate password is provided on create
+		if (string.IsNullOrWhiteSpace(model.Password))
+		{
+			ModelState.AddModelError(nameof(model.Password), "Password is required.");
 			return View("CreateEdit", model);
 		}
 
@@ -136,35 +144,33 @@ public class UsersController(
 			return View("CreateEdit", model);
 		}
 
-		if (canManageRoles)
-		{
-			await userManager.AddToRoleAsync(user, roleToAssign);
-		}
-		else
-		{
-			await userManager.AddToRoleAsync(user, "User");
-		}
+		var roleAssignment = canManageRoles ? roleToAssign : "User";
+		await userManager.AddToRoleAsync(user, roleAssignment);
 
 		TempData["Success"] = $"User '{model.Email}' created successfully.";
+		if (Url.IsLocalUrl(model.ReturnUrl))
+			return Redirect(model.ReturnUrl!);
 		return RedirectToAction("Index");
 	}
 
 	[HttpGet]
-	public async Task<IActionResult> Edit(string id)
+	public async Task<IActionResult> Edit(string id, string? returnUrl = null)
 	{
 		var user = await userManager.FindByIdAsync(id);
 		if (user == null)
 			return NotFound();
 
-		await PrepareFormDataAsync();
 		var userRoles = await userManager.GetRolesAsync(user);
 		var canManageRoles = User.IsInRole("SuperAdmin");
+		var currentRole = userRoles.FirstOrDefault() ?? "User";
+		await PrepareFormDataAsync(currentRole);
 
 		var model = new AdminUserCreateEditDto
 		{
 			Id = user.Id,
 			Email = user.Email!,
-			Role = userRoles.FirstOrDefault() ?? "User"
+			Role = currentRole,
+			ReturnUrl = returnUrl
 		};
 
 		ViewBag.CanManageRoles = canManageRoles;
@@ -215,6 +221,7 @@ public class UsersController(
 		// Update email
 		await userManager.SetUserNameAsync(user, model.Email);
 		await userManager.SetEmailAsync(user, model.Email);
+		user.EmailConfirmed = true;
 
 		// Update password if provided
 		if (!string.IsNullOrWhiteSpace(model.Password))
@@ -267,6 +274,8 @@ public class UsersController(
 		}
 
 		TempData["Success"] = $"User '{model.Email}' updated successfully.";
+		if (Url.IsLocalUrl(model.ReturnUrl))
+			return Redirect(model.ReturnUrl!);
 		return RedirectToAction("Index");
 	}
 
@@ -276,20 +285,19 @@ public class UsersController(
 	{
 		var user = await userManager.FindByIdAsync(id);
 		if (user == null)
-			return NotFound();
+			return Json(new { success = false, message = "User not found." });
 
 		var targetRoles = await userManager.GetRolesAsync(user);
 		var targetIsAdminOrAbove = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
 		var requesterIsSuperAdmin = User.IsInRole("SuperAdmin");
 
 		if (targetIsAdminOrAbove && !requesterIsSuperAdmin)
-			return Forbid();
+			return Json(new { success = false, message = "SuperAdmin only action." });
 
 		var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 		if (user.Id == currentUserId)
 		{
-			TempData["Error"] = "You cannot disable your own account.";
-			return RedirectToAction("Index");
+			return Json(new { success = false, message = "You cannot disable your own account." });
 		}
 
 		var isDisabled = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
@@ -299,14 +307,17 @@ public class UsersController(
 		var result = await userManager.UpdateAsync(user);
 		if (!result.Succeeded)
 		{
-			TempData["Error"] = "Failed to update user status.";
-			return RedirectToAction("Index");
+			return Json(new { success = false, message = "Failed to update user status." });
 		}
 
-		TempData["Success"] = isDisabled
-			? $"User '{user.Email}' enabled successfully."
-			: $"User '{user.Email}' disabled successfully.";
-		return RedirectToAction("Index");
+		return Json(new
+		{
+			success = true,
+			isDisabled = !isDisabled,
+			message = isDisabled
+				? $"User '{user.Email}' enabled successfully."
+				: $"User '{user.Email}' disabled successfully."
+		});
 	}
 
 	private async Task PrepareFormDataAsync(string? selectedRole = null)
@@ -317,7 +328,7 @@ public class UsersController(
 		if (canManageRoles)
 		{
 			ViewBag.AvailableRoles = await GetAvailableRolesAsync();
-			ViewBag.SelectedRole = string.IsNullOrWhiteSpace(selectedRole) ? "User" : selectedRole;
+			ViewBag.SelectedRole = selectedRole;
 		}
 	}
 
@@ -352,4 +363,5 @@ public class AdminUserCreateEditDto
 	public string Email { get; set; } = null!;
 	public string? Password { get; set; }
 	public string Role { get; set; } = "User";
+	public string? ReturnUrl { get; set; }
 }

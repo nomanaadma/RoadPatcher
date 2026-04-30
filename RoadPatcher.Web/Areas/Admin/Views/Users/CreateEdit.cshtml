@@ -6,11 +6,14 @@
     var canManageRoles = ViewBag.CanManageRoles as bool? == true;
     var availableRoles = ViewBag.AvailableRoles as IEnumerable<string> ?? Enumerable.Empty<string>();
     var selectedRole = ViewBag.SelectedRole?.ToString() ?? Model?.Role ?? "User";
+    var backUrl = !string.IsNullOrWhiteSpace(Model?.ReturnUrl) && Url.IsLocalUrl(Model.ReturnUrl)
+        ? Model.ReturnUrl
+        : Url.Action("Index", "Users", new { area = "Admin" });
 }
 
 <div class="d-flex justify-content-between align-items-center mb-8">
     <h1 class="fs-3 fw-bold">@ViewData["Title"]</h1>
-    <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-secondary">
+    <a href="@backUrl" class="btn btn-secondary">
         <i class="las la-arrow-left me-2"></i>Back to Users
     </a>
 </div>
@@ -27,6 +30,7 @@
                     {
                         <input type="hidden" name="id" value="@Model.Id" />
                     }
+                    <input asp-for="ReturnUrl" type="hidden" />
 
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
@@ -44,7 +48,11 @@
                                 <small class="text-muted">(Leave empty to keep current password)</small>
                             }
                         </label>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="@(Model?.Id == null ? "Enter password" : "New password (optional)")" />
+                        <input asp-for="Password"
+                            type="password"
+                            class="form-control"
+                            placeholder="@(Model?.Id == null ? "Enter password" : "New password (optional)")"
+                            required="@(Model?.Id == null)" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
@@ -64,9 +72,9 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="las la-save me-2"></i>@(Model?.Id != null ? "Update User" : "Create User")
+                            @(Model?.Id != null ? "Update User" : "Create User")
                         </button>
-                        <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        <a href="@backUrl" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

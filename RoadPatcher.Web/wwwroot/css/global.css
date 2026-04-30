@@ -1067,4 +1067,17 @@ gmp-place-autocomplete {
     color: #de802b !important;
 }
 
+.btn-edit {
+    padding: 2px 3px 4px 11px !important;
+    border-radius: 16px !important;
+}
+
+.search-btn {
+    height: 39px; 
+}
+
+.admin-root .app-container {
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+}
 
