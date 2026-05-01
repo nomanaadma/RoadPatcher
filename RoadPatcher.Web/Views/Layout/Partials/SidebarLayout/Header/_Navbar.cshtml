@@ -32,7 +32,7 @@
 				</div>
 			}
 			
-			<div class="d-flex align-items-stretch ms-1">
+			<div class="d-flex align-items-stretch ms-1 ms-lg-2">
 				<div class="d-flex align-items-center">
 					<a data-bs-toggle="tooltip" title="Search" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px search_posts" href="javascript:void(0)">
 						<i class="las la-search fz-24 rotate-270"></i>	
@@ -42,7 +42,7 @@
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-2">
 				<div class="d-flex align-items-center">
-					<a data-bs-toggle="tooltip" title="Create Post" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Posts" asp-action="Create">
+					<a data-bs-toggle="tooltip" title="Create Post" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Posts" asp-action="Create" asp-area="">
 						<i class="las la-plus-square fz-24"></i>
 					</a>
 				</div>
@@ -58,13 +58,13 @@
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-2">
 				<div class="d-flex align-items-center">
-					<a data-bs-toggle="tooltip" title="Setting" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Settings" asp-action="Index">
+					<a data-bs-toggle="tooltip" title="Setting" data-bs-placement="bottom" class="btn btn-icon btn-active-light-warning w-30px h-30px w-md-40px h-md-40px" asp-controller="Settings" asp-action="Index" asp-area="">
 						<i class="las la-cog fz-24"></i>
 					</a>
 				</div>
 			</div>
 			
-			<a asp-controller="Settings" asp-action="EditProfile" data-bs-toggle="tooltip" title="@user!.Email" class="ms-3 symbol user-profile-nav" data-img="@profileImage" data-id="@user.Id" aria-label="User Profile" data-lat="@userData?.Latitude" data-lng="@userData?.Longitude">
+			<a asp-controller="Settings" asp-action="EditProfile" asp-area="" data-bs-toggle="tooltip" title="@user!.Email" class="ms-3 symbol user-profile-nav" data-img="@profileImage" data-id="@user.Id" aria-label="User Profile" data-lat="@userData?.Latitude" data-lng="@userData?.Longitude">
 				<img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
 			</a>
 			

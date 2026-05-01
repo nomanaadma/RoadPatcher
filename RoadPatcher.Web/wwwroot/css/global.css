@@ -1081,3 +1081,19 @@ gmp-place-autocomplete {
     padding-right: 30px !important;
 }
 
+.menu-content-profile {
+    opacity: 1 !important;
+    padding-left: 4px !important;
+}
+
+[data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item.hover:not(.here) > .menu-link:not(.disabled):not(.active):not(.here) .menu-title, [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item:not(.here) .menu-link:hover:not(.disabled):not(.active):not(.here) i.la
+{
+    color: #fff;
+}
+
+.app-sidebar .user-profile-nav {
+    display: flex;
+    align-items: center;
+}
+
+

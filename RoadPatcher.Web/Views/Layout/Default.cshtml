@@ -9,17 +9,30 @@
 	// Master layout
 	Layout = "~/Views/Layout/Master.cshtml";
 
+	// Check if current route is in Admin area
+	var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? string.Empty;
+	var isAdminRoute = currentArea.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+	var isAdminRole = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+
+	var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var path = Context.Request.Path.Value ?? "";
+
+    var isSettingsRoute = controller == "Settings" || path.StartsWith("/Settings");
+
+    var isIdentityManage = path.StartsWith("/Identity/Account/Manage");
+
+    var showSidebarInSettings = (isSettingsRoute || isIdentityManage);
+
+	var showSidebar = (isAdminRole && isAdminRoute) ||
+		(isAdminRole && showSidebarInSettings);
+
 	// Layout options
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-header-fixed", "true");
 	KTTheme.AddHtmlAttribute("body", "data-kt-app-toolbar-enabled", "true");
 	KTTheme.AddHtmlClass("body", "app-default");
 
-	// Check if current route is in Admin area
-	var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? string.Empty;
-	var isAdminRoute = currentArea.Equals("Admin", StringComparison.OrdinalIgnoreCase);
-
 	// Show sidebar only for admin users AND on admin routes
-	if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && isAdminRoute) 
+	if (showSidebar) 
 	{
 		KTTheme.AddHtmlAttribute("body", "data-kt-app-layout", "dark-sidebar");
 		KTTheme.AddHtmlAttribute("body", "data-kt-app-sidebar-fixed", "true");
@@ -58,14 +71,14 @@
 	<!--begin::Page-->
 	<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
 
-		@if (!isAdminRoute) 
+		@if (!isAdminRoute && !showSidebar) 
 		{
 			<partial name="Partials/SidebarLayout/_header.cshtml" />
 		}
 		<!--begin::Wrapper-->
 		<div class="app-wrapper flex-column flex-row-fluid mt-6" id="kt_app_wrapper">
 			
-			@if ((User.IsInRole("SuperAdmin") || User.IsInRole("Admin")) && isAdminRoute) 
+			@if (showSidebar) 
 			{
 				<partial name="Partials/SidebarLayout/_sidebar.cshtml" />
 			}
