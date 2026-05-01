@@ -60,15 +60,24 @@
                     
                 </span></div><!--end:Menu content--></div>
 
+                <div class="menu-item">
+                    <!--begin:Menu link-->
+                    <a class="menu-link @(controller == "Admin" ? "active" : "")" href="/Admin">
+                        <span class="menu-icon"><i class="la la-tachometer-alt fz-24"></i></span>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </div>
+
+
                 <!-- Non-Admin Menu -->
                 <div data-kt-menu-trigger="click" class="menu-item menu-accordion @(showAccountMenu ? "show" : "")">
-                    <span class="menu-link">
+                    <span class="menu-link @(showAccountMenu ? "active" : "")">
                         <span class="menu-icon"><i class="las la-user fz-24"></i></span>
                         <span class="menu-title">Account</span>
                         <span class="menu-arrow"></span>
                     </span><!--end:Menu link--><!--begin:Menu sub-->
 
-                    <div class="menu-sub menu-sub-accordion">
+                    <div class="menu-sub menu-sub-accordion mt-3">
                         <!--begin:Menu item-->
                         
                         <div class="menu-item">
@@ -80,7 +89,7 @@
                         </div>
 
                         <div class="menu-item">
-                            <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="menu-link @(isIdentity ? "active" : "")"><i class="la la-lock fz-24"></i><span class="menu-title ms-1">2FA</span></a>
+                            <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="menu-link @(isIdentity ? "active" : "")"><i class="la la-unlock-alt fz-24"></i><span class="menu-title ms-1">2FA</span></a>
                         </div>
                         
 
@@ -115,38 +124,6 @@
                         <span class="menu-icon"><i class="las la-sign-out-alt fz-24"></i></span>
                         <span class="menu-title">Logout</span>
                     </a>
-                </div>
-
-                <div class="menu-item">
-                    <!--begin:Menu link-->
-                    <a class="menu-link @(controller == "Home" ? "active" : "") " href="/">
-                        <span class="menu-icon"><i class="fa-solid fa-house-chimney-crack"></i></span>
-                        <span class="menu-title">Dashboard</span>
-                    </a>
-                    <!--end:Menu link-->
-                </div>
-
-                <div class="menu-item">
-                    <!--begin:Menu link-->
-                    <a class="menu-link @(controller!.Contains("PayrollReport") ? "active" : "")" asp-action="Index" asp-controller="PayrollReports">
-                        <span class="menu-icon"><i class="fa-regular fa-rectangle-list"></i></span>
-                        <span class="menu-title">Payroll Reports</span>
-                    </a>
-                    <!--end:Menu link-->
-                </div>
-
-                <div class="menu-item">
-
-                    <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/">
-                        <button id="logout" type="submit" class="nav-link btn btn-link text-dark border-0">Logout</button>
-                    </form>
-                    
-                    <!--begin:Menu link-->
-                    <a class="menu-link logout-link" href="javascript:void(0);">
-                        <span class="menu-icon"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
-                        <span class="menu-title">Logout</span>
-                    </a>
-                    <!--end:Menu link-->
                 </div>
 				
             </div>

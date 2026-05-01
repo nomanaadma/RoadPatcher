@@ -130,6 +130,16 @@ namespace RoadPatcher.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+
+                    if (string.IsNullOrWhiteSpace(returnUrl) || Url.IsLocalUrl(returnUrl) && returnUrl == Url.Content("~/"))
+                    {
+                        var signedInUser = await _userManager.FindByEmailAsync(Input.Email);
+                        if (signedInUser != null && (await _userManager.IsInRoleAsync(signedInUser, "Admin") || await _userManager.IsInRoleAsync(signedInUser, "SuperAdmin")))
+                        {
+                            return LocalRedirect("/Admin");
+                        }
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

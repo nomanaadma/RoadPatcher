@@ -1074,6 +1074,7 @@ gmp-place-autocomplete {
 
 .search-btn {
     height: 39px; 
+    word-wrap: normal;
 }
 
 .admin-root .app-container {
@@ -1094,6 +1095,11 @@ gmp-place-autocomplete {
 .app-sidebar .user-profile-nav {
     display: flex;
     align-items: center;
+
 }
 
+.js-user-status-toggle:checked {
+    background-color: transparent;
+    border-color: var(--bs-gray-300); 
+}
 

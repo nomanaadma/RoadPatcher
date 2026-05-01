@@ -80,8 +80,8 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
 
             if (!hasProfile)
             {
-                // Redirect to EditProfile. Preserve original requested URL in returnUrl query.
-                const string redirectUrl = "/Settings/EditProfile";
+                // Redirect to EditProfile with required flag
+                const string redirectUrl = "/Settings/EditProfile?required=true";
                 
                 context.Response.Redirect(redirectUrl);
                 return;
