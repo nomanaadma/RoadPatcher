@@ -20,6 +20,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
 	public DbSet<Donation> Donations => Set<Donation>();
 	
+	public DbSet<Notification> Notifications => Set<Notification>();
 
 	protected override void OnModelCreating(ModelBuilder builder)
 	{

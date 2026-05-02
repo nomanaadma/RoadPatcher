@@ -27,8 +27,8 @@
     <!--begin::Global Stylesheets(mandatory)-->
     <link rel="stylesheet" type="text/css" href="~/css/style.bundle.css" />
     <!--end::Global Stylesheets-->
-    
-   
+        <!-- SignalR Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>   
     <link rel="stylesheet" href="~/css/global.css" />
 </head>
 <!--end::Head-->
@@ -36,6 +36,8 @@
 <!--begin::Body-->
 <!body @Html.Raw(KTTheme.PrintHtmlAttributes("body")) class='@KTTheme.PrintHtmlClasses("body")'>
     @RenderBody()
+
+    <script src="~/js/notification-hub.js"></script>
 </!body>
 <!--end::Body-->
 </html>

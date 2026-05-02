@@ -409,6 +409,51 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.ToTable("Media");
                 });
 
+            modelBuilder.Entity("RoadPatcher.Application.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .IsDescending()
+                        .HasDatabaseName("IX_Notification_CreatedAt_Desc");
+
+                    b.HasIndex("UserId", "IsRead")
+                        .HasDatabaseName("IX_Notification_UserId_IsRead");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -731,6 +776,17 @@ namespace RoadPatcher.Application.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("RoadPatcher.Application.Entities.Notification", b =>
+                {
+                    b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>

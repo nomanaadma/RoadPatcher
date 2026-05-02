@@ -1,0 +1,181 @@
+@using X.PagedList.Mvc.Core
+@model X.PagedList.IPagedList<NotificationDto>
+@{
+    Layout = "~/Views/Layout/Default.cshtml";
+    ViewData["Title"] = "Notifications";
+
+    var currentSearch = ViewBag.CurrentSearch as string ?? string.Empty;
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-8">
+    <h1 class="fs-3 fw-bold">Notifications</h1>
+</div>
+
+<div class="card mb-8">
+    <div class="card-body">
+        @Html.AntiForgeryToken()
+        <form method="get" asp-controller="Notifications" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-lg-11">
+                <label class="form-label fw-semibold">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search notifications by content..." value="@currentSearch" />
+            </div>
+
+            <div class="col-lg-1 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+
+            <div class="col-12">
+                <a asp-controller="Notifications" asp-action="Index" class="btn btn-light-secondary btn-sm">Clear filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Notifications List</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            @if (Model.Count > 0)
+            {
+                <table class="table table-row-bordered align-middle gy-4 gs-9">
+                    <thead class="border-bottom border-gray-200 fs-6 text-gray-600 fw-bold bg-light bg-opacity-75">
+                        <tr>
+                            <th style="min-width: 300px;">Notification</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 150px;">Date</th>
+                            <th style="width: 120px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var notification in Model)
+                        {
+                            var statusBadgeClass = notification.IsRead ? "bg-secondary" : "bg-success";
+                            var statusText = notification.IsRead ? "Read" : "Unread";
+
+                            <tr>
+                                <td class="fw-semibold">
+                                    <div class="text-truncate" title="@notification.Content">
+                                        @notification.Content
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @statusBadgeClass">@statusText</span>
+                                </td>
+                                <td>
+                                    <small>@notification.CreatedAtFormatted</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="form-check form-switch mb-0">
+                                        <input
+                                            class="form-check-input js-notification-toggle"
+                                            type="checkbox"
+                                            role="switch"
+                                            data-notification-id="@notification.Id"
+                                            data-url="@Url.Action("MarkAsRead", "Notifications", new { id = notification.Id })"
+                                            @(notification.IsRead ? string.Empty : "checked") />
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="p-8">
+                    <div class="alert alert-info mb-0" role="alert">
+                        No notifications found.
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model.PageCount > 1)
+        {
+            <div class="d-flex justify-content-center mt-8">
+                @Html.PagedListPager(
+                    Model,
+                    page => Url.Action("Index", new { page, search = currentSearch }),
+                    new PagedListRenderOptions
+                    {
+                        DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+                        DisplayLinkToNextPage = PagedListDisplayMode.Always,
+                        MaximumPageNumbersToDisplay = 5,
+                        LinkToPreviousPageFormat = "<i class=\"las la-angle-left\"></i>",
+                        LinkToNextPageFormat = "<i class=\"las la-angle-right\"></i>",
+                        LiElementClasses = ["page-item"],
+                        PageClasses = ["page-link"],
+                        UlElementClasses = ["pagination", "justify-content-center", "mb-10"]
+                    }
+                )
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            $(document).on('change', '.js-notification-toggle', function () {
+                const toggle = this;
+                const $toggle = $(toggle);
+                const url = $toggle.data('url');
+                const notificationId = $toggle.data('notification-id');
+                const $row = $toggle.closest('tr');
+                const $statusBadge = $row.find('td:nth-child(2) .badge');
+
+                $toggle.prop('disabled', true);
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: {
+                        __RequestVerificationToken: antiForgeryToken
+                    },
+                    success: function (response) {
+                        if (!response || !response.success) {
+                            const message = response && response.message ? response.message : 'Failed to update notification status.';
+                            if (window.toastr) {
+                                toastr.error(message);
+                            } else {
+                                alert(message);
+                            }
+                            return;
+                        }
+
+                        // Update badge styling based on new read status
+                        if (response.isRead) {
+                            $statusBadge.removeClass('bg-success').addClass('bg-secondary');
+                            $statusBadge.text('Read');
+                            $toggle.prop('checked', false);
+                        } else {
+                            $statusBadge.removeClass('bg-secondary').addClass('bg-success');
+                            $statusBadge.text('Unread');
+                            $toggle.prop('checked', true);
+                        }
+
+                        if (window.toastr) {
+                            toastr.success(response.message);
+                        }
+                    },
+                    error: function () {
+                        const message = 'Failed to update notification status.';
+                        if (window.toastr) {
+                            toastr.error(message);
+                        } else {
+                            alert(message);
+                        }
+                    },
+                    complete: function () {
+                        $toggle.prop('disabled', false);
+                    }
+                });
+            });
+        })();
+    </script>
+}

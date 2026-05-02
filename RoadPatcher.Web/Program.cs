@@ -14,6 +14,7 @@ using RoadPatcher._keenthemes.libs;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Services;
+using RoadPatcher.Hubs;
 using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -121,6 +122,8 @@ builder.Services.AddControllersWithViews()
 			};
 	});
 
+builder.Services.AddSignalR();
+
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
 
@@ -207,6 +210,9 @@ app.UseThemeMiddleware();
 app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
 app.MapStaticAssets();
+
+// Map SignalR hubs
+app.MapHub<NotificationHub>("/hubs/notification");
 
 // Map area routes first (more specific)
 app.MapControllerRoute(
