@@ -11,6 +11,9 @@ public record NotificationDto
     [JsonProperty("is_read")]
     public bool IsRead { get; init; }
 
+    [JsonProperty("toast_status")]
+    public bool ToastStatus { get; init; }
+
     [JsonProperty("created_at")]
     public DateTime CreatedAt { get; init; }
 

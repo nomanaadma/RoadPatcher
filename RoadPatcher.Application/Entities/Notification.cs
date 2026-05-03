@@ -21,6 +21,12 @@ public class Notification
     /// </summary>
     public bool IsRead { get; set; }
 
+    /// <summary>
+    /// Controls whether the toast has already been shown/acknowledged.
+    /// False = toast still eligible to show, True = toast already handled.
+    /// </summary>
+    public bool ToastStatus { get; set; }
+
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

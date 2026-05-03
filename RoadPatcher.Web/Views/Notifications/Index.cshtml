@@ -46,7 +46,7 @@
                             <th style="min-width: 300px;">Notification</th>
                             <th style="width: 100px;">Status</th>
                             <th style="width: 150px;">Date</th>
-                            <th style="width: 120px;">Action</th>
+                            <th style="width: 160px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,15 +68,12 @@
                                     <small>@notification.CreatedAtFormatted</small>
                                 </td>
                                 <td class="text-center">
-                                    <div class="form-check form-switch mb-0">
-                                        <input
-                                            class="form-check-input js-notification-toggle"
-                                            type="checkbox"
-                                            role="switch"
-                                            data-notification-id="@notification.Id"
-                                            data-url="@Url.Action("MarkAsRead", "Notifications", new { id = notification.Id })"
-                                            @(notification.IsRead ? string.Empty : "checked") />
-                                    </div>
+                                    <form method="post" asp-controller="Notifications" asp-action="MarkAsRead" asp-route-id="@notification.Id" asp-route-returnUrl="@returnUrl" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="badge border-0 @(notification.IsRead ? "bg-secondary" : "bg-success") text-white px-3 py-2">
+                                            @(notification.IsRead ? "Mark as unread" : "Mark as read")
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         }
@@ -117,65 +114,4 @@
 </div>
 
 @section Scripts {
-    <script>
-        (function () {
-            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-
-            $(document).on('change', '.js-notification-toggle', function () {
-                const toggle = this;
-                const $toggle = $(toggle);
-                const url = $toggle.data('url');
-                const notificationId = $toggle.data('notification-id');
-                const $row = $toggle.closest('tr');
-                const $statusBadge = $row.find('td:nth-child(2) .badge');
-
-                $toggle.prop('disabled', true);
-
-                $.ajax({
-                    url: url,
-                    method: 'POST',
-                    data: {
-                        __RequestVerificationToken: antiForgeryToken
-                    },
-                    success: function (response) {
-                        if (!response || !response.success) {
-                            const message = response && response.message ? response.message : 'Failed to update notification status.';
-                            if (window.toastr) {
-                                toastr.error(message);
-                            } else {
-                                alert(message);
-                            }
-                            return;
-                        }
-
-                        // Update badge styling based on new read status
-                        if (response.isRead) {
-                            $statusBadge.removeClass('bg-success').addClass('bg-secondary');
-                            $statusBadge.text('Read');
-                            $toggle.prop('checked', false);
-                        } else {
-                            $statusBadge.removeClass('bg-secondary').addClass('bg-success');
-                            $statusBadge.text('Unread');
-                            $toggle.prop('checked', true);
-                        }
-
-                        if (window.toastr) {
-                            toastr.success(response.message);
-                        }
-                    },
-                    error: function () {
-                        const message = 'Failed to update notification status.';
-                        if (window.toastr) {
-                            toastr.error(message);
-                        } else {
-                            alert(message);
-                        }
-                    },
-                    complete: function () {
-                        $toggle.prop('disabled', false);
-                    }
-                });
-            });
-        })();
-    </script>
 }

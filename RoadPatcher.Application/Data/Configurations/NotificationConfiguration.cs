@@ -31,6 +31,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .IsRequired()
             .HasDefaultValue(false);
 
+        // Toast status configuration
+        builder.Property(n => n.ToastStatus)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         // Date Configuration
         builder.Property(n => n.CreatedAt)
             .IsRequired()
@@ -44,6 +49,10 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         // Index on UserId + IsRead for fast unread count queries
         builder.HasIndex(n => new { n.UserId, n.IsRead })
             .HasDatabaseName("IX_Notification_UserId_IsRead");
+
+        // Index on UserId + ToastStatus for fast toast lookup queries
+        builder.HasIndex(n => new { n.UserId, n.ToastStatus })
+            .HasDatabaseName("IX_Notification_UserId_ToastStatus");
 
         // Index on CreatedAt DESC for sorting latest notifications first
         builder.HasIndex(n => n.CreatedAt)

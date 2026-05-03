@@ -49,6 +49,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
                 Id = n.Id,
                 Content = n.Content,
                 IsRead = n.IsRead,
+                ToastStatus = n.ToastStatus,
                 CreatedAt = n.CreatedAt,
                 CreatedAtFormatted = DateHelper.ToAgo(n.CreatedAt)
             })
@@ -61,11 +62,11 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
     }
 
     /// <summary>
-    /// POST: /Notifications/MarkAsRead/{id} - Toggle notification read status (AJAX)
+    /// POST: /Notifications/MarkAsRead/{id} - Toggle notification read status and clear toast flag
     /// </summary>
     [HttpPost]
     [Route("Notifications/MarkAsRead/{id:int}")]
-    public async Task<IActionResult> MarkAsRead(int id)
+    public async Task<IActionResult> MarkAsRead(int id, string? returnUrl = null)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -81,18 +82,44 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
 
         // Toggle IsRead status
         notification.IsRead = !notification.IsRead;
+        notification.ToastStatus = true;
         notification.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
-        var statusText = notification.IsRead ? "Read" : "Unread";
-        var message = $"Notification marked as {statusText}";
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// POST: /Notifications/MarkToastAsSeen/{id} - Mark toast as handled so it won't show again.
+    /// </summary>
+    [HttpPost]
+    [Route("Notifications/MarkToastAsSeen/{id:int}")]
+    public async Task<IActionResult> MarkToastAsSeen(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var notification = await db.Notifications
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
+
+        if (notification == null)
+            return NotFound();
+
+        notification.ToastStatus = true;
+        notification.UpdatedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
 
         return Json(new
         {
             success = true,
-            message = message,
-            isRead = notification.IsRead
+            message = "Toast marked as seen"
         });
     }
 
@@ -112,5 +139,35 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             .CountAsync(n => n.UserId == userId && !n.IsRead);
 
         return Json(new { unreadCount = unreadCount });
+    }
+
+    /// <summary>
+    /// GET: /Notifications/GetPendingToasts - Get notifications whose toast has not yet been seen.
+    /// </summary>
+    [HttpGet]
+    [Route("Notifications/GetPendingToasts")]
+    public async Task<IActionResult> GetPendingToasts()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var notifications = await db.Notifications
+            .AsNoTracking()
+            .Where(n => n.UserId == userId && !n.IsRead && !n.ToastStatus)
+            .OrderByDescending(n => n.CreatedAt)
+            .Select(n => new NotificationDto
+            {
+                Id = n.Id,
+                Content = n.Content,
+                IsRead = n.IsRead,
+                ToastStatus = n.ToastStatus,
+                CreatedAt = n.CreatedAt,
+                CreatedAtFormatted = DateHelper.ToAgo(n.CreatedAt)
+            })
+            .ToListAsync();
+
+        return Json(notifications);
     }
 }

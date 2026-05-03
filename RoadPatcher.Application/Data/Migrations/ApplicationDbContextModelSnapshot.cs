@@ -432,6 +432,11 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("ToastStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -450,6 +455,9 @@ namespace RoadPatcher.Application.Data.Migrations
 
                     b.HasIndex("UserId", "IsRead")
                         .HasDatabaseName("IX_Notification_UserId_IsRead");
+
+                    b.HasIndex("UserId", "ToastStatus")
+                        .HasDatabaseName("IX_Notification_UserId_ToastStatus");
 
                     b.ToTable("Notifications");
                 });

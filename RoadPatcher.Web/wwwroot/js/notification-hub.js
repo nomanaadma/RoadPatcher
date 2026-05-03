@@ -21,7 +21,6 @@
 
     // DOM elements
     const badgeElement = document.getElementById('unreadNotificationCount');
-    const notificationLink = document.querySelector('a[href="/Notifications"]');
 
     /**
      * Update the notification badge with count
@@ -55,16 +54,73 @@
         });
     }
 
+    async function getPendingToasts() {
+        try {
+            const response = await fetch('/Notifications/GetPendingToasts');
+            if (!response.ok) return [];
+
+            return await response.json();
+        } catch (error) {
+            console.warn('Failed to load pending toasts:', error);
+            return [];
+        }
+    }
+
+    async function markToastAsSeen(notificationId) {
+        try {
+            const formData = new FormData();
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+
+            if (tokenInput) {
+                formData.append('__RequestVerificationToken', tokenInput.value);
+            }
+
+            const response = await fetch(`/Notifications/MarkToastAsSeen/${notificationId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            return response.ok;
+        } catch (error) {
+            console.warn('Failed to mark toast as seen:', error);
+            return false;
+        }
+    }
+
+    async function showPendingToasts() {
+        const notifications = await getPendingToasts();
+
+        if (!notifications.length) return;
+
+        notifications.forEach((notification) => {
+            if (typeof toastr === 'undefined') return;
+
+            const $toast = toastr.info(notification.content, 'Notifications', {
+                timeOut: 0,
+                extendedTimeOut: 0,
+                closeButton: true,
+                tapToDismiss: true,
+                positionClass: 'toast-bottom-right',
+                onclick: async function () {
+                    await markToastAsSeen(notification.id);
+                    toastr.clear($toast);
+                    if (!window.location.pathname.includes('/Notifications')) {
+                        window.location.href = '/Notifications';
+                    }
+                }
+            });
+        });
+    }
+
     /**
      * Handle incoming notification count updates from hub
      */
     connection.on('NotificationCountUpdated', function (unreadCount) {
         console.log('NotificationCountUpdated:', unreadCount);
         updateBadge(unreadCount);
-        
-        // Only show toast if count > 0 and we're not on the notifications page
+
         if (unreadCount > 0 && !window.location.pathname.includes('/Notifications')) {
-            showToast(unreadCount);
+            showPendingToasts();
         }
     });
 
@@ -97,6 +153,10 @@
             if (response.ok) {
                 const data = await response.json();
                 updateBadge(data.unreadCount);
+            }
+
+            if (!window.location.pathname.includes('/Notifications')) {
+                await showPendingToasts();
             }
         } catch (error) {
             console.error('Failed to connect to SignalR:', error);
