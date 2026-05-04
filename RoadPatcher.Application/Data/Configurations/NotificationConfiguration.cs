@@ -26,6 +26,12 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .IsRequired()
             .HasMaxLength(500);
 
+        // Label Configuration
+        builder.Property(n => n.Label)
+            .IsRequired()
+            .HasMaxLength(100)
+            .HasDefaultValue("General");
+
         // IsRead Configuration
         builder.Property(n => n.IsRead)
             .IsRequired()

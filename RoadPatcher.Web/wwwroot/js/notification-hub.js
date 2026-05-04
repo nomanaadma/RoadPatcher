@@ -110,16 +110,6 @@
                         const ok = await markToastAsSeen(notification.id);
                         if (ok) {
                             console.log('Successfully marked as seen:', notification.id);
-                            // refresh unread count badge from server
-                            try {
-                                const resp = await fetch('/Notifications/GetUnreadCount');
-                                if (resp.ok) {
-                                    const data = await resp.json();
-                                    updateBadge(data.unreadCount);
-                                }
-                            } catch (e) {
-                                console.warn('Failed to refresh unread count:', e);
-                            }
                         } else {
                             console.warn('Failed to mark as seen:', notification.id);
                         }
@@ -171,7 +161,7 @@
             const response = await fetch('/Notifications/GetUnreadCount');
             if (response.ok) {
                 const data = await response.json();
-                updateBadge(data.unreadCount);
+                updateBadge(data.unread_count);
             }
 
             if (!window.location.pathname.includes('/Notifications')) {
@@ -193,7 +183,7 @@
                 const response = await fetch('/Notifications/GetUnreadCount');
                 if (response.ok) {
                     const data = await response.json();
-                    updateBadge(data.unreadCount);
+                    updateBadge(data.unread_count);
                 }
             } catch (error) {
                 console.warn('Failed to poll notification count:', error);

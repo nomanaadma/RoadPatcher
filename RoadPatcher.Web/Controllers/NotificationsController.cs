@@ -14,14 +14,14 @@ namespace RoadPatcher.Controllers;
 [Authorize]
 public class NotificationsController(ApplicationDbContext db, IConfiguration config) : Controller
 {
-    private readonly int _pageSize = config.GetValue("Paging:PageSize", 10);
+    private readonly int _pageSize = config.GetValue("Paging:NotificationsPageSize", 10);
 
     /// <summary>
     /// GET: /Notifications - List user's notifications with search and pagination
     /// </summary>
     [HttpGet]
     [Route("Notifications")]
-    public async Task<IActionResult> Index(string? search, int page = 1)
+    public async Task<IActionResult> Index(string? search, string? label, int page = 1)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -39,10 +39,27 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             .Where(n => n.UserId == userId)
             .AsNoTracking();
 
-        // Apply search filter on content
+        // Provide available labels for filter dropdown
+        var availableLabels = await db.Notifications
+            .Where(n => n.UserId == userId)
+            .Select(n => n.Label)
+            .Distinct()
+            .OrderBy(l => l)
+            .ToListAsync();
+
+        ViewBag.AvailableLabels = availableLabels;
+        ViewData["LabelFilter"] = label;
+
+        // Apply search filter on content (case-insensitive using PostgreSQL ILike)
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(n => n.Content.Contains(search, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(n => EF.Functions.ILike(n.Content, $"%{search}%"));
+        }
+
+        // Apply label filter if provided
+        if (!string.IsNullOrWhiteSpace(label))
+        {
+            query = query.Where(n => n.Label == label);
         }
 
         // Order by latest first
@@ -54,6 +71,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             {
                 Id = n.Id,
                 Content = n.Content,
+                Label = n.Label,
                 IsRead = n.IsRead,
                 ToastStatus = n.ToastStatus,
                 CreatedAt = n.CreatedAt,
@@ -81,6 +99,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
 
         // Security: Ensure user can only toggle their own notifications
         var notification = await db.Notifications
+            .AsTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
 
         if (notification == null)
@@ -145,7 +164,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
         var unreadCount = await db.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead);
 
-        return Json(new { unreadCount = unreadCount });
+        return Json(new { unreadCount });
     }
 
     /// <summary>
@@ -168,6 +187,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             {
                 Id = n.Id,
                 Content = n.Content,
+                Label = n.Label,
                 IsRead = n.IsRead,
                 ToastStatus = n.ToastStatus,
                 CreatedAt = n.CreatedAt,

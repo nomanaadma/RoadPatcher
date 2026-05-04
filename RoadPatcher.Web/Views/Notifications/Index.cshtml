@@ -8,25 +8,41 @@
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-8">
+<div class="d-flex justify-content-between align-items-center mb-6">
     <h1 class="fs-3 fw-bold">Notifications</h1>
 </div>
 
-<div class="card mb-8">
+<div class="card mb-6">
     <div class="card-body">
         @Html.AntiForgeryToken()
+        @{
+            var availableLabels = ViewBag.AvailableLabels as IEnumerable<string> ?? Enumerable.Empty<string>();
+            var selectedLabel = ViewData["LabelFilter"]?.ToString();
+        }
+
         <form method="get" asp-controller="Notifications" asp-action="Index" class="row g-3 align-items-end">
-            <div class="col-lg-11">
+            <div class="col-lg-@(availableLabels.Any() ? 7 : 10)">
                 <label class="form-label fw-semibold">Search</label>
                 <input type="text" name="search" class="form-control" placeholder="Search notifications by content..." value="@currentSearch" />
             </div>
 
-            <div class="col-lg-1 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
-            </div>
+            @if (availableLabels.Any())
+            {
+                <div class="col-lg-3">
+                    <label class="form-label fw-semibold">Label</label>
+                    <select name="label" class="form-select form-control">
+                        <option value="">All Labels</option>
+                        @foreach (var lab in availableLabels)
+                        {
+                            <option value="@lab" selected="@(string.Equals(selectedLabel, lab, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@lab</option>
+                        }
+                    </select>
+                </div>
+            }
 
-            <div class="col-12">
-                <a asp-controller="Notifications" asp-action="Index" class="btn btn-light-secondary btn-sm">Clear filters</a>
+            <div class="col-lg-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+                <a asp-controller="Notifications" asp-action="Index" class="btn btn-light-secondary btn-sm">Clear</a>
             </div>
         </form>
     </div>
@@ -34,7 +50,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title mb-0">Notifications List</h5>
+        <h5 class="card-title mb-0">Notifications</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -43,7 +59,8 @@
                 <table class="table table-row-bordered align-middle gy-4 gs-9">
                     <thead class="border-bottom border-gray-200 fs-6 text-gray-600 fw-bold bg-light bg-opacity-75">
                         <tr>
-                            <th style="min-width: 300px;">Notification</th>
+                            <th style="min-width: 300px;">Content</th>
+                            <th style="width: 140px;">Label</th>
                             <th style="width: 100px;">Status</th>
                             <th style="width: 150px;">Date</th>
                             <th style="width: 160px;">Action</th>
@@ -52,25 +69,28 @@
                     <tbody>
                         @foreach (var notification in Model)
                         {
-                            var statusBadgeClass = notification.IsRead ? "bg-secondary" : "bg-success";
+                            var statusBadgeClass = notification.IsRead ? "bg-light-success" : "bg-light-primary";
                             var statusText = notification.IsRead ? "Read" : "Unread";
 
                             <tr>
-                                <td class="fw-semibold">
-                                    <div class="text-truncate" title="@notification.Content">
-                                        @notification.Content
+                                <td class="fw-semibold notification-td">
+                                    <div class="text-truncate">
+                                        @Html.Raw(notification.Content)
                                     </div>
                                 </td>
-                                <td class="text-center">
+                                <td>
+                                    <span class="badge bg-light-info text-gray-700">@notification.Label</span>
+                                </td>
+                                <td>
                                     <span class="badge @statusBadgeClass">@statusText</span>
                                 </td>
                                 <td>
                                     <small>@notification.CreatedAtFormatted</small>
                                 </td>
-                                <td class="text-center">
+                                <td>
                                     <form method="post" asp-controller="Notifications" asp-action="MarkAsRead" asp-route-id="@notification.Id" asp-route-returnUrl="@returnUrl" class="d-inline">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="badge border-0 @(notification.IsRead ? "bg-secondary" : "bg-success") text-white px-3 py-2">
+                                        <button type="submit" class="badge border-0 @(notification.IsRead ? "bg-light-warning" : "bg-light-success") text-white px-3 py-2">
                                             @(notification.IsRead ? "Mark as unread" : "Mark as read")
                                         </button>
                                     </form>
@@ -82,10 +102,8 @@
             }
             else
             {
-                <div class="p-8">
-                    <div class="alert alert-info mb-0" role="alert">
-                        No notifications found.
-                    </div>
+                <div class="alert alert-info mb-0" role="alert">
+                    No notifications found.
                 </div>
             }
         </div>

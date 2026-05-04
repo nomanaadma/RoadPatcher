@@ -17,6 +17,11 @@ public class Notification
     public required string Content { get; init; }
 
     /// <summary>
+    /// Notification type label (e.g., Donation, Approval, Comment).
+    /// </summary>
+    public required string Label { get; init; }
+
+    /// <summary>
     /// Read/Unread status. False = unread, True = read.
     /// </summary>
     public bool IsRead { get; set; }

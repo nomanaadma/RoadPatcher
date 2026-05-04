@@ -111,7 +111,15 @@ namespace RoadPatcher.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+
+            var AfterLoginUrl = "~/";
+
+            if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            {
+                AfterLoginUrl += "Admin";
+            }
+
+            returnUrl ??= Url.Content(AfterLoginUrl);
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 

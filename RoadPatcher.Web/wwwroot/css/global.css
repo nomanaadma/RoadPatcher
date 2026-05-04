@@ -62,8 +62,6 @@ html, body {
     padding: 0;
 }
 
-
-
 .las {
     color: #71717b !important;
 }
@@ -1067,6 +1065,15 @@ gmp-place-autocomplete {
     color: #de802b !important;
 }
 
+
+.notification-td a {
+    color: #4e54ff;
+}
+
+.badge.bg-light-primary {
+    color: #007384;
+}
+
 .btn-edit {
     padding: 2px 3px 4px 11px !important;
     border-radius: 16px !important;
@@ -1102,4 +1109,14 @@ gmp-place-autocomplete {
     background-color: transparent;
     border-color: var(--bs-gray-300); 
 }
+
+#unreadNotificationCount {
+    display: none; 
+    font-size: 0.65rem;
+    top: 10px;
+    left: 33px;
+    padding: 4px;
+}
+
+
 

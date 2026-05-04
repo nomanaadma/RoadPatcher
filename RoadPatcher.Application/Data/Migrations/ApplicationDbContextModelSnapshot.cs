@@ -432,6 +432,13 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("General");
+
                     b.Property<bool>("ToastStatus")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")

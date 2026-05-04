@@ -63,8 +63,17 @@
                 <div class="menu-item">
                     <!--begin:Menu link-->
                     <a class="menu-link @(controller == "Admin" ? "active" : "")" href="/Admin">
-                        <span class="menu-icon"><i class="la la-tachometer-alt fz-24"></i></span>
+                        <span class="menu-icon"><i class="las la-tachometer-alt fz-24"></i></span>
                         <span class="menu-title">Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="menu-item position-relative">
+                    <!--begin:Menu link-->
+                    <a class="menu-link @(controller == "Notifications" ? "active" : "")" href="/Notifications">
+                        <span class="menu-icon"><i class="las la-bell fz-24"></i></span>
+                        <span class="menu-title">Notifications</span>
+                        <span id="unreadNotificationCount" class="badge bg-danger position-absolute translate-middle text-white">0</span>
                     </a>
                 </div>
 

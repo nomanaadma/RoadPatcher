@@ -8,6 +8,8 @@ public record NotificationDto
 
     public string Content { get; init; } = null!;
 
+    public string Label { get; init; } = null!;
+
     [JsonProperty("is_read")]
     public bool IsRead { get; init; }
 

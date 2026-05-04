@@ -14,13 +14,15 @@ namespace RoadPatcher.Web.Areas.Admin.Controllers;
 public class UsersController(
 	UserManager<ApplicationUser> userManager,
 	RoleManager<IdentityRole> roleManager,
-	IConfiguration configuration
+	IConfiguration config
 ) : Controller
 {
+
+	private readonly int _pageSize = config.GetValue("Paging:UsersPageSize", 10);
+
 	[HttpGet]
 	public async Task<IActionResult> Index(string? search, string? role, int page = 1)
 	{
-		var pageSize = int.Parse(configuration["Paging:PageSize"] ?? "5");
 		var canManageRoles = User.IsInRole("SuperAdmin");
 
 		var allUsers = await userManager.Users
@@ -72,7 +74,7 @@ public class UsersController(
 			filteredUsers = filteredUsers.Where(u => u.Roles.Contains(role));
 		}
 
-		var pagedUsers = filteredUsers.ToPagedList(page, pageSize);
+		var pagedUsers = filteredUsers.ToPagedList(page, _pageSize);
 
 		ViewData["Search"] = search;
 		ViewData["RoleFilter"] = role;

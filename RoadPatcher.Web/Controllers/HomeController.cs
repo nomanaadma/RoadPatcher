@@ -1,7 +1,5 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RoadPatcher.Models;
 
 namespace RoadPatcher.Controllers;
 
@@ -10,12 +8,6 @@ public class HomeController : Controller
 {
 	public IActionResult Index()
 	{
-		// Redirect admin and super admin to admin dashboard
-		if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-		{
-			return Redirect("/Admin");
-		}
-
 		return RedirectToAction("Index", "Posts");
 	}
 	

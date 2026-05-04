@@ -19,9 +19,11 @@
 
     var isSettingsRoute = controller == "Settings" || path.StartsWith("/Settings");
 
+	var isNotificationsRoute = controller == "Notifications" || path.StartsWith("/Notifications");
+
     var isIdentityManage = path.StartsWith("/Identity/Account/Manage");
 
-    var showSidebarInSettings = (isSettingsRoute || isIdentityManage);
+    var showSidebarInSettings = (isSettingsRoute || isIdentityManage || isNotificationsRoute);
 
 	var showSidebar = (isAdminRole && isAdminRoute) ||
 		(isAdminRole && showSidebarInSettings);
@@ -67,7 +69,7 @@
 }
 
 <!--begin::Root-->
-<div class="d-flex flex-column flex-root app-root @(isAdminRoute ? "admin-root" : "")" id="kt_app_root">
+<div class="d-flex flex-column flex-root app-root @(showSidebar ? "admin-root" : "")" id="kt_app_root">
 	<!--begin::Page-->
 	<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
 
