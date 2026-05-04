@@ -38,21 +38,7 @@
         }
     }
 
-    /**
-     * Show toast notification for new or updated notifications
-     */
-    function showToast(count) {
-        if (typeof toastr === 'undefined') return;
 
-        const message = count === 1 
-            ? 'You have 1 new notification'
-            : `You have ${count} new notifications`;
-
-        toastr.info(message, 'Notifications', {
-            timeOut: 5000,
-            positionClass: 'toast-bottom-right'
-        });
-    }
 
     async function getPendingToasts() {
         try {
@@ -87,29 +73,65 @@
         }
     }
 
+    let showingToastIds = new Set(); // Track which notifications already have toasts showing
+
     async function showPendingToasts() {
-        const notifications = await getPendingToasts();
+        try {
+            const notifications = await getPendingToasts();
+            if (!notifications.length) {
+                console.log('No pending notifications.');
+                return;
+            }
 
-        if (!notifications.length) return;
+            if (typeof toastr === 'undefined') {
+                console.warn('Toastr not loaded.');
+                return;
+            }
 
-        notifications.forEach((notification) => {
-            if (typeof toastr === 'undefined') return;
-
-            const $toast = toastr.info(notification.content, 'Notifications', {
-                timeOut: 0,
-                extendedTimeOut: 0,
-                closeButton: true,
-                tapToDismiss: true,
-                positionClass: 'toast-bottom-right',
-                onclick: async function () {
-                    await markToastAsSeen(notification.id);
-                    toastr.clear($toast);
-                    if (!window.location.pathname.includes('/Notifications')) {
-                        window.location.href = '/Notifications';
-                    }
+            // Show a toast for each notification that doesn't already have one
+            notifications.forEach((notification) => {
+                if (showingToastIds.has(notification.id)) {
+                    console.log('Toast already shown for notification:', notification.id);
+                    return; // Skip if we've already shown a toast for this notification
                 }
+
+                console.log('Showing toast for notification:', notification.id);
+                showingToastIds.add(notification.id);
+
+                const $toast = toastr.info('You have a new notification', '', {
+                    timeOut: 3000,
+                    extendedTimeOut: 3000,
+                    closeButton: true,
+                    tapToDismiss: true,
+                    positionClass: 'toastr-bottom-right',
+                    onclick: async function () {
+                        console.log('Toast clicked, marking as seen:', notification.id);
+                        // mark this notification's toast as seen via AJAX
+                        const ok = await markToastAsSeen(notification.id);
+                        if (ok) {
+                            console.log('Successfully marked as seen:', notification.id);
+                            // refresh unread count badge from server
+                            try {
+                                const resp = await fetch('/Notifications/GetUnreadCount');
+                                if (resp.ok) {
+                                    const data = await resp.json();
+                                    updateBadge(data.unreadCount);
+                                }
+                            } catch (e) {
+                                console.warn('Failed to refresh unread count:', e);
+                            }
+                        } else {
+                            console.warn('Failed to mark as seen:', notification.id);
+                        }
+
+                        toastr.clear($toast);
+                        showingToastIds.delete(notification.id);
+                    }
+                });
             });
-        });
+        } catch (error) {
+            console.error('Error in showPendingToasts:', error);
+        }
     }
 
     /**
@@ -118,10 +140,7 @@
     connection.on('NotificationCountUpdated', function (unreadCount) {
         console.log('NotificationCountUpdated:', unreadCount);
         updateBadge(unreadCount);
-
-        if (unreadCount > 0 && !window.location.pathname.includes('/Notifications')) {
-            showPendingToasts();
-        }
+        // Don't show toasts on every count update - only on initial load via initializeNotifications()
     });
 
     /**

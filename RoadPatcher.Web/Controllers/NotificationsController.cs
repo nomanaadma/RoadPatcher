@@ -28,6 +28,12 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
         if (string.IsNullOrEmpty(userId))
             return RedirectToAction("Login", "Account", new { area = "Identity" });
 
+        await db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead && !n.ToastStatus)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(n => n.ToastStatus, true)
+                .SetProperty(n => n.UpdatedAt, DateTime.UtcNow));
+
         // Base query: notifications for current user
         var query = db.Notifications
             .Where(n => n.UserId == userId)
@@ -106,6 +112,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             return Unauthorized();
 
         var notification = await db.Notifications
+            .AsTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
 
         if (notification == null)
