@@ -1,12 +1,15 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
+using RoadPatcher.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using X.PagedList;
 using X.PagedList.EF;
 using X.PagedList.Extensions;
@@ -18,7 +21,9 @@ namespace RoadPatcher.Controllers;
 public partial class PostsController(
 	ApplicationDbContext context,
 	IWebHostEnvironment webHostEnvironment,
-	IConfiguration configuration
+	IConfiguration configuration,
+	UserManager<ApplicationUser> userManager,
+	IHubContext<NotificationHub> notificationHub
 	) : Controller
 {
 	
@@ -197,8 +202,9 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 		
 		await AttachMedia(model, post.Id);
+		await NotifyAdminsOnNewPostAsync(post);
 
-		TempData["Success"] = "Post Created successfully!";
+		TempData["Success"] = "Post submitted for review successfully. You will be notified once it has been reviewed.";
 		return RedirectToAction("Edit", new { id = post.Id } );
 		
 	}
@@ -379,6 +385,42 @@ public partial class PostsController(
 			.ToListAsync()).ForEach(m => m.PostId = id);
 		
 		await context.SaveChangesAsync();
+	}
+
+	private async Task NotifyAdminsOnNewPostAsync(Post post)
+	{
+		var adminUsers = (await userManager.GetUsersInRoleAsync("Admin"))
+			.Concat(await userManager.GetUsersInRoleAsync("SuperAdmin"))
+			.GroupBy(user => user.Id)
+			.Select(group => group.First())
+			.ToList();
+
+		if (adminUsers.Count == 0)
+			return;
+
+		var reviewUrl = $"/Admin/Posts/Review/{post.Id}";
+		var notificationContent = $"New post is awaiting approval: <a href='{reviewUrl}'>Review post</a>";
+
+		foreach (var admin in adminUsers)
+		{
+			context.Notifications.Add(new Notification
+			{
+				UserId = admin.Id,
+				Content = notificationContent,
+				Label = "Approval"
+			});
+		}
+
+		await context.SaveChangesAsync();
+
+		foreach (var admin in adminUsers)
+		{
+			var unreadCount = await context.Notifications
+				.CountAsync(notification => notification.UserId == admin.Id && !notification.IsRead);
+
+			await notificationHub.Clients.Group($"user_{admin.Id}")
+				.SendAsync("NotificationCountUpdated", unreadCount);
+		}
 	}
 	
 	

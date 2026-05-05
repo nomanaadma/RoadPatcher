@@ -482,11 +482,6 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("AllowEdit")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
                     b.Property<decimal>("Cost")
                         .HasColumnType("numeric");
 
@@ -540,6 +535,15 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Property<decimal>("Raised")
                         .HasColumnType("numeric");
 
+                    b.Property<int>("ReviewStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ReviewerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<int>("Shares")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -570,6 +574,8 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.HasIndex("Location");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
+
+                    b.HasIndex("ReviewerId");
 
                     b.HasIndex("UserId");
 
@@ -812,6 +818,11 @@ namespace RoadPatcher.Application.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -825,6 +836,8 @@ namespace RoadPatcher.Application.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Image");
+
+                    b.Navigation("Reviewer");
 
                     b.Navigation("User");
 

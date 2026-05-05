@@ -32,6 +32,12 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 			.HasDefaultValue(PostStatus.Pending)
 			.IsRequired();
 
+		// Review/Approval status
+		builder.Property(p => p.ReviewStatus)
+			.HasConversion<int>()
+			.HasDefaultValue(ApprovalStatus.InReview)
+			.IsRequired();
+
 		// Image (Required)
 		builder.Property(p => p.ImageId)
 			.IsRequired();
@@ -62,9 +68,6 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 		builder.Property(p => p.Discussions).HasDefaultValue(0);
 		builder.Property(p => p.Shares).HasDefaultValue(0);
 		builder.Property(p => p.Favourites).HasDefaultValue(0);
-		
-		builder.Property(p => p.AllowEdit)
-			.HasDefaultValue(true);
 
 		// Post → MediaFiles (optional on Media side)
 		builder.HasMany(p => p.MediaFiles)
@@ -77,5 +80,16 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 
 		builder.Property(p => p.UpdatedAt)
 			.HasDefaultValueSql("NOW()");
+
+		// Reviewer (nullable) - the admin who claimed/reviewing the post
+		builder.Property(p => p.ReviewerId)
+			.HasMaxLength(64)
+			.IsRequired(false);
+
+		builder.HasOne(p => p.Reviewer)
+			.WithMany()
+			.HasForeignKey(p => p.ReviewerId)
+			.OnDelete(DeleteBehavior.Restrict);
+
 	}
 }

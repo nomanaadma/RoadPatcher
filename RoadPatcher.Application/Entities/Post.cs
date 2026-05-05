@@ -38,6 +38,13 @@ public class Post
 
 	public PostStatus? Status { get; set; } = PostStatus.Pending;
 
+	// Review/Approval status
+	public ApprovalStatus ReviewStatus { get; set; } = ApprovalStatus.InReview;
+
+	// Admin who claimed/reviewing the post (nullable until claimed)
+	public string? ReviewerId { get; set; }
+
+	public ApplicationUser? Reviewer { get; init; }
 	public int ImageId { get; set; }
 	public Media Image { get; init; } = null!;
 
@@ -45,8 +52,6 @@ public class Post
 	public Media Video { get; init; } = null!;
 	
 	public List<Media> MediaFiles { get; init; } = [];
-
-	public bool AllowEdit { get; init; } = true;
 	
 	public DateTime CreatedAt { get; init; }
 	public DateTime UpdatedAt { get; set; }

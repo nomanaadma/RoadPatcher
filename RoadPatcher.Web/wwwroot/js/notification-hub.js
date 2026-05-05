@@ -105,6 +105,12 @@
                     tapToDismiss: true,
                     positionClass: 'toastr-bottom-right',
                     onclick: async function () {
+
+                        if (window.location.pathname.includes('/Notifications')) {
+                            window.location.href = '/Notifications';
+                            return;
+                        }
+
                         console.log('Toast clicked, marking as seen:', notification.id);
                         // mark this notification's toast as seen via AJAX
                         const ok = await markToastAsSeen(notification.id);
@@ -127,10 +133,11 @@
     /**
      * Handle incoming notification count updates from hub
      */
-    connection.on('NotificationCountUpdated', function (unreadCount) {
+    connection.on('NotificationCountUpdated', async function (unreadCount) {
         console.log('NotificationCountUpdated:', unreadCount);
         updateBadge(unreadCount);
-        // Don't show toasts on every count update - only on initial load via initializeNotifications()
+
+        await showPendingToasts();
     });
 
     /**
@@ -164,9 +171,8 @@
                 updateBadge(data.unread_count);
             }
 
-            if (!window.location.pathname.includes('/Notifications')) {
-                await showPendingToasts();
-            }
+            await showPendingToasts();
+
         } catch (error) {
             console.error('Failed to connect to SignalR:', error);
             // Fallback: Try polling-based updates every 30 seconds
