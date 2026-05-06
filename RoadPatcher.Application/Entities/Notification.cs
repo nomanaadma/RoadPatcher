@@ -24,13 +24,13 @@ public class Notification
     /// <summary>
     /// Read/Unread status. False = unread, True = read.
     /// </summary>
-    public bool IsRead { get; set; }
+    public bool IsRead { get; set; } = false;
 
     /// <summary>
     /// Controls whether the toast has already been shown/acknowledged.
     /// False = toast still eligible to show, True = toast already handled.
     /// </summary>
-    public bool ToastStatus { get; set; }
+    public bool ToastStatus { get; set; } = false;
 
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

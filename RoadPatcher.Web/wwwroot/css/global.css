@@ -1139,3 +1139,17 @@ gmp-place-autocomplete {
     display: inline;
     text-decoration: underline;
 }
+
+.review-panel {
+    padding: 1.5rem;
+}
+.review-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.post-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}

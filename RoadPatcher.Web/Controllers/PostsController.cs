@@ -8,8 +8,7 @@ using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
-using RoadPatcher.Hubs;
-using Microsoft.AspNetCore.SignalR;
+using RoadPatcher.Services;
 using X.PagedList;
 using X.PagedList.EF;
 using X.PagedList.Extensions;
@@ -23,7 +22,7 @@ public partial class PostsController(
 	IWebHostEnvironment webHostEnvironment,
 	IConfiguration configuration,
 	UserManager<ApplicationUser> userManager,
-	IHubContext<NotificationHub> notificationHub
+	INotificationService notificationService
 	) : Controller
 {
 	
@@ -216,13 +215,16 @@ public partial class PostsController(
 		await NotifyAdminsOnNewPostAsync(post);
 
 		TempData["Success"] = "Post submitted for review successfully. You will be notified once it has been reviewed.";
-		return RedirectToAction("Edit", new { id = post.Id } );
+		return RedirectToAction("SinglePost", new { id = post.Id } );
 		
 	}
 
 	[HttpGet]
 	public async Task<IActionResult> Edit(int id)
 	{
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
 		var post = await context.Posts
 			.AsNoTracking()
 			.Include(p => p.MediaFiles)
@@ -231,22 +233,19 @@ public partial class PostsController(
 		if (post == null)
 			return NotFound();
 
-		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-		
-		// Restrict edit access: only allow if user is post owner AND status is ChangesRequested, OR user is reviewer/superadmin
-		var userRoles = User.FindAll(ClaimTypes.Role);
-		var isSuperAdmin = userRoles.Any(r => r.Value == "SuperAdmin");
-		var isReviewer = post.ReviewerId == userId;
-		
-		if (post.UserId == userId && post.ReviewStatus != ApprovalStatus.ChangesRequested)
-		{
-			TempData["Error"] = "You can only edit this post if the status is 'Changes Requested'";
-			return RedirectToAction("SinglePost", new { id = post.Id });
+		var forbidden = true;
+
+		if(
+			User.IsSuperAdmin()	|| 
+			(userId == post.UserId && post.ReviewStatus == ApprovalStatus.ChangesRequested) ||
+			(userId == post.ReviewerId && post.ReviewStatus == ApprovalStatus.InReview)
+		) {
+			forbidden = false;
 		}
-		
-		if (post.UserId != userId && !isReviewer && !isSuperAdmin)
+
+		if(forbidden)
 		{
-			return Forbid();
+			return NotFound();
 		}
 
 		var model = new PostViewModel
@@ -275,26 +274,6 @@ public partial class PostsController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Edit(int id, PostViewModel model)
 	{
-		var post = await context.Posts
-			.AsTracking()
-			.FirstOrDefaultAsync(p => p.Id == id);
-
-		if (post == null)
-			return NotFound();
-		
-		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-		
-		// Ownership validation: only allow post owner to edit, AND only if status is ChangesRequested
-		if (post.UserId != userId)
-		{
-			return Forbid();
-		}
-		
-		if (post.ReviewStatus != ApprovalStatus.ChangesRequested)
-		{
-			TempData["Error"] = "You can only edit this post if the status is 'Changes Requested'";
-			return RedirectToAction("SinglePost", new { id = post.Id });
-		}
 		
 		if (!ModelState.IsValid)
 		{
@@ -305,6 +284,13 @@ public partial class PostsController(
 
 			return View(model);
 		}
+
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+			return NotFound();
 		
 		// Update MediaFiles
 		var existingMedia = await context.Media
@@ -326,13 +312,35 @@ public partial class PostsController(
 		post.ImageId = model.ImageId;
 		post.VideoId = model.VideoId;
 		post.UpdatedAt = DateTime.UtcNow;
-		
+		var previousReviewStatus = post.ReviewStatus;
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+		var postViewAnchor = $"<a href='/Posts/{post.Id}'>View Post</a>";
+		var postAnchor = $"<a href='/Posts/Edit/{post.Id}'>Edit Post</a>";
+
+		if(userId == post.UserId)
+		{
+			post.ReviewStatus = ApprovalStatus.InReview;
+
+			var notificationMessage = $"Post #{post.Id} has been updated and requires review. {postViewAnchor}";
+			await notificationService.CreateAsync(post.ReviewerId, notificationMessage, "Review");
+			await notificationService.CreateAsync(null, notificationMessage, "Review");
+		}
+		else if (userId == post.ReviewerId || User.IsSuperAdmin())
+		{
+			post.ReviewStatus = ApprovalStatus.Approved;
+
+			var notificationMessage = $"Post #{post.Id} has been approved! {postViewAnchor}";
+			await notificationService.CreateAsync(post.UserId, notificationMessage, "Approved");
+		}
+
 		await context.SaveChangesAsync();
 
 		await AttachMedia(model, post.Id);
 		
 		TempData["Success"] = "Post updated successfully!";
-		return RedirectToAction("Edit", new { id = post.Id });
+		return RedirectToAction("SinglePost", new { id = post.Id });
 	}
 
 	[HttpPost]
@@ -348,8 +356,7 @@ public partial class PostsController(
 			return NotFound(new { message = "Post not found" });
 
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-		var userRoles = User.FindAll(ClaimTypes.Role);
-		var isSuperAdmin = userRoles.Any(r => r.Value == "SuperAdmin");
+		var isSuperAdmin = User.IsSuperAdmin();
 
 		// Only reviewer or superadmin can submit review
 		if (post.ReviewerId != userId && !isSuperAdmin)
@@ -359,108 +366,57 @@ public partial class PostsController(
 		if (post.ReviewStatus != ApprovalStatus.InReview)
 			return BadRequest(new { message = "Post is not in review status" });
 
+		var postAnchor = $"<a href='/Posts/Edit/{post.Id}'>Edit Post</a>";
+		var postViewAnchor = $"<a href='/Posts/{post.Id}'>View Post</a>";
+
 		try
 		{
+			// 1. Set up variables to hold state specific to each action
+			ApprovalStatus newStatus;
+			string notificationMessage;
+			string notificationLabel;
+			string responseMessage;
+
 			switch (request.Action)
 			{
 				case "RequestChanges":
-					post.ReviewStatus = ApprovalStatus.ChangesRequested;
-					await context.SaveChangesAsync();
-					
-					// Send notification to post owner with comment
-					var reviewerName = UserHelper.GetDisplayName(post.User!);
-					var notificationMessage = string.IsNullOrEmpty(request.Comment)
-						? $"Admin has requested changes on your post #{post.Id}"
-						: $"Your post #{post.Id} has a review comment from admin {reviewerName}: {request.Comment}";
-
-					var notif = new Notification
-					{
-						UserId = post.UserId,
-						Content = notificationMessage,
-						Label = "Approval",
-						IsRead = false,
-						ToastStatus = true,
-						CreatedAt = DateTime.UtcNow,
-						UpdatedAt = DateTime.UtcNow
-					};
-
-					context.Notifications.Add(notif);
-					await context.SaveChangesAsync();
-
-					// Notify via SignalR
-					var unreadCount = await context.Notifications
-						.Where(n => n.UserId == post.UserId && !n.IsRead)
-						.CountAsync();
-
-					await notificationHub.Clients
-						.User(post.UserId)
-						.SendAsync("NotificationCountUpdated", unreadCount);
-
-					return Ok(new { message = "Changes requested notification sent" });
+					newStatus = ApprovalStatus.ChangesRequested;
+					notificationMessage = $"Admin requested changes on post #{post.Id}. \"{request.Comment}\" {postViewAnchor}";
+					notificationLabel = "Change Requested";
+					responseMessage = "Changes requested notification sent";
+					break;
 
 				case "Approve":
-					post.ReviewStatus = ApprovalStatus.Approved;
-					await context.SaveChangesAsync();
-					
-					// Optional: Send approval notification
-					var approvalNotif = new Notification
-					{
-						UserId = post.UserId,
-						Content = $"Your post #{post.Id} has been approved!",
-						Label = "Approval",
-						IsRead = false,
-						ToastStatus = true,
-						CreatedAt = DateTime.UtcNow,
-						UpdatedAt = DateTime.UtcNow
-					};
-
-					context.Notifications.Add(approvalNotif);
-					await context.SaveChangesAsync();
-
-					var approvalUnread = await context.Notifications
-						.Where(n => n.UserId == post.UserId && !n.IsRead)
-						.CountAsync();
-
-					await notificationHub.Clients
-						.User(post.UserId)
-						.SendAsync("NotificationCountUpdated", approvalUnread);
-
-					return Ok(new { message = "Post approved" });
+					newStatus = ApprovalStatus.Approved;
+					notificationMessage = $"Post #{post.Id} has been approved! {postViewAnchor}";
+					notificationLabel = "Approved";
+					responseMessage = "Post approved";
+					break;
 
 				case "Reject":
-					post.ReviewStatus = ApprovalStatus.Rejected;
-					await context.SaveChangesAsync();
-					
-					// Optional: Send rejection notification
-					var rejectNotif = new Notification
-					{
-						UserId = post.UserId,
-						Content = string.IsNullOrEmpty(request.Comment)
-							? $"Your post #{post.Id} has been rejected"
-							: $"Your post #{post.Id} has been rejected. Reason: {request.Comment}",
-						Label = "Approval",
-						IsRead = false,
-						ToastStatus = true,
-						CreatedAt = DateTime.UtcNow,
-						UpdatedAt = DateTime.UtcNow
-					};
-
-					context.Notifications.Add(rejectNotif);
-					await context.SaveChangesAsync();
-
-					var rejectUnread = await context.Notifications
-						.Where(n => n.UserId == post.UserId && !n.IsRead)
-						.CountAsync();
-
-					await notificationHub.Clients
-						.User(post.UserId)
-						.SendAsync("NotificationCountUpdated", rejectUnread);
-
-					return Ok(new { message = "Post rejected" });
+					newStatus = ApprovalStatus.Rejected;
+					notificationMessage = string.IsNullOrEmpty(request.Comment)
+						? $"Post #{post.Id} has been rejected {postViewAnchor}"
+						: $"Post #{post.Id} has been rejected. {postViewAnchor} Reason: {request.Comment}";
+					notificationLabel = "Rejected";
+					responseMessage = "Post rejected";
+					break;
 
 				default:
 					return BadRequest(new { message = "Invalid action" });
 			}
+
+			// 2. Apply the updates to the Post
+			post.ReviewStatus = newStatus;
+
+			// Persist post changes first
+			await context.SaveChangesAsync();
+
+			// 3. Create and dispatch notifications (owner + superadmin)
+			await notificationService.CreateAsync(post.UserId, notificationMessage, notificationLabel);
+			await notificationService.CreateAsync(null, notificationMessage, notificationLabel);
+
+			return Ok(new { message = responseMessage });
 		}
 		catch (Exception ex)
 		{
@@ -606,14 +562,7 @@ public partial class PostsController(
 	private async Task NotifyAdminsOnNewPostAsync(Post post)
 	{
 
-		var notifiedUserIds = new List<string>();
-
-		var superAdminUser = (await userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault();
-
-		var reviewUrl = $"/Admin/Posts/Review/{post.Id}";
-
-		// Determine assigned admin display name
-		var assignedAdminName = "Unassigned";
+		var reviewUrl = $"/Posts/{post.Id}";
 
 		var assignedAdmin = await context.Users
 				.Include(u => u.UserData)
@@ -622,45 +571,17 @@ public partial class PostsController(
 		if (assignedAdmin != null)
 		{
 
-			assignedAdminName = UserHelper.GetDisplayName(assignedAdmin);
+			var assignedAdminName = UserHelper.GetDisplayName(assignedAdmin);
 
-			context.Notifications.Add(new Notification
-			{
-				UserId = assignedAdmin.Id,
-				Content = $"You have a post <span class='badge bg-light-info'>#{post.Id}</span> to <a href='{reviewUrl}'>Review</a>",
-				Label = "Approval"
-			});
+			await notificationService.CreateAsync(assignedAdmin.Id,
+				$"You have a post <span class='badge bg-light-info'>#{post.Id}</span> to <a href='{reviewUrl}'>Review</a>", "Review");
 
-			notifiedUserIds.Add(assignedAdmin.Id);
+			await notificationService.CreateAsync(null,
+				$"Admin <strong>{assignedAdminName}</strong> has been assigned to review <a href='{reviewUrl}'><span class='badge bg-light-info'>Post #{post.Id}</span></a>", "Review");
 
 		}
 
-		// Notify SuperAdmins that the post has been assigned to a specific admin
-		if (superAdminUser != null)
-		{
-			context.Notifications.Add(new Notification
-			{
-				UserId = superAdminUser.Id,
-				Content = $"Admin <strong>{assignedAdminName}</strong> has been assigned to review <a href='{reviewUrl}'><span class='badge bg-light-info'>Post #{post.Id}</span></a>",
-				Label = "Approval"
-			});
-
-			notifiedUserIds.Add(superAdminUser.Id);
-
-		}
-
-		await context.SaveChangesAsync();
-
-		foreach (var userId in notifiedUserIds)
-		{
-			var unreadCount = await context.Notifications
-				.CountAsync(notification => notification.UserId == userId && !notification.IsRead);
-
-			await notificationHub.Clients.Group($"user_{userId}")
-				.SendAsync("NotificationCountUpdated", unreadCount);
-		}
-	}
-	
+	}	
 	
 	[HttpPost]
 	[Authorize]

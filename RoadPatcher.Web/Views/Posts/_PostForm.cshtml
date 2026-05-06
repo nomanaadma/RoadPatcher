@@ -1,6 +1,28 @@
-﻿@model RoadPatcher.Models.PostViewModel
+﻿@using RoadPatcher.Helpers
+@model RoadPatcher.Models.PostViewModel
+@using System.Security.Claims
+@using RoadPatcher.Application.Entities
+
 @{
 	var isEdit = ViewData["IsEdit"] as bool? ?? false;
+
+	var pageType = isEdit ? "Edit" : "Create";
+
+	var submitTitle = "Create";
+
+	if(isEdit) {
+
+		submitTitle = "Edit";
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+		if(userId == Model.ReviewerId && Model.ReviewStatus != ApprovalStatus.Approved) {
+			submitTitle += " and Approve";
+		}
+		
+	}
+
+	submitTitle += " Post";
 }
 
 <link href="https://releases.transloadit.com/uppy/v3.13.1/uppy.min.css" rel="stylesheet">
@@ -8,11 +30,11 @@
 
 <div class="row g-5 justify-content-center">
 	<div class="col-lg-7 mb-10">
-		<form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+		<form asp-action="@pageType" method="post">
 		    
 			<div class="card create-post">
 				<div class="card-header card-header-secondary">
-					<h1 class="fs-2 m-0">Edit Post</h1>
+					<h1 class="fs-2 m-0">@pageType Post</h1>
 				</div>
 				<div class="card-body">
 
@@ -65,12 +87,13 @@
 
 				</div>
 				<div class="card-footer">
-					<button type="submit" id="submitBtn" class="btn btn-sm btn-primary">@(isEdit ? "Update Post" : "Create Post")</button>
+					<button type="submit" id="submitBtn" class="btn btn-sm btn-primary">@submitTitle</button>
 					<button onclick="history.back()" type="button" class="ms-2 btn btn-sm btn-secondary">Discard</button>
 				</div>
 			</div>
 		</form>
 	</div>
+
 </div>
 
 

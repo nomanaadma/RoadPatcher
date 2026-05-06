@@ -43,6 +43,30 @@
 	var isFavourited = DbContext.Favourites.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isDiscussed = DbContext.Comments.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isShared = DbContext.Shares.Any(l => l.PostId == Model.Id && l.UserId == userId);
+
+
+	var isSingle = ViewData["IsSingle"] as bool? ?? false;
+
+
+	var canEdit = false;
+
+	if(
+		User.IsSuperAdmin()	|| 
+		(userId == Model.UserId && Model.ReviewStatus == ApprovalStatus.ChangesRequested) ||
+		(userId == Model.ReviewerId && Model.ReviewStatus == ApprovalStatus.InReview)
+	) {
+		canEdit = true;
+	}
+
+
+	var canReview = false;
+
+	if(
+		User.IsSuperAdmin()	|| 
+		(userId == Model.ReviewerId && Model.ReviewStatus == ApprovalStatus.InReview)
+	) {
+		canReview = true;
+	}
 	
 }
 <div class="card mx-auto road-post">
@@ -118,7 +142,7 @@
 
 		<div class="col post-details">
 
-			<div class="card-header border-0 d-flex align-items-center bg-white p-4">
+			<div class="card-header border-0 d-flex align-items-center bg-white p-4 flex-nowrap">
 				<img src="@profileImage" class="post_profile_image rounded-circle me-2" alt="@userFullName Avatar">
 				<div class="flex-grow-1 time-location-i">
 					<h6 class="mb-0">@userFullName</h6>
@@ -132,12 +156,15 @@
 				}
 
 				@if(Model.ReviewStatus == ApprovalStatus.ChangesRequested) {
-
-					<a asp-action="Edit" class="btn btn-light-warning rounded-20 ms-2" asp-route-id="@Model.Id" title="Open Post"> Changes Requested <span class="anchor">Edit</span> </a>					
+					<span class="btn btn-light-warning rounded-20 disabled-anchor ms-2">Changes Requested</span>
 				}
 
 				@if(Model.ReviewStatus == ApprovalStatus.Rejected) {
 					<span class="btn btn-light-danger rounded-20 disabled-anchor ms-2">Rejected</span>
+				}
+
+				@if(canEdit) {
+					<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-light ms-2 rounded-20">Edit</a>
 				}
 
 			</div>
@@ -181,7 +208,7 @@
 
 						<div class="post-costing row text-center">
 							
-							@if (remainingAmount == 0)
+							@if (remainingAmount == 0 || Model.ReviewStatus != ApprovalStatus.Approved)
 							{
 								<div class="col-12">
 									<small class="fw-bold text-success">Goal</small>
@@ -202,6 +229,8 @@
 							}
 
 						</div>
+
+						@if(Model.ReviewStatus == ApprovalStatus.Approved) {
 
 						<hr class="text-muted opacity-25">
 
@@ -337,11 +366,15 @@
 								@PostHelper.RenderBtn(PostStatus.InProcess, Model.Id)
 							}
 						}
+						
+						}
 
 					</div>
 				</div>
 
 			</div>
+
+			@if(Model.ReviewStatus == ApprovalStatus.Approved) {
 
 			<div class="card-footer border-0 bg-white pt-2 pb-0 post-footer">
 
@@ -381,9 +414,80 @@
 				</div>
 
 			</div>
+			
+			}
+			
+
+			@if (canReview)
+			{ 
+				<!-- Review Panel (visible only to reviewer when status == InReview) -->
+				<div>
+					<div class="review-panel bg-white">
+						<h5 class="mb-4"><i class="las la-tasks"></i> Post Review</h5>
+						
+						<form id="reviewForm" method="post">
+							<!-- Request Changes Comment -->
+							<div class="mb-3">
+								<label for="reviewComment" class="form-label">Review Comment</label>
+								<textarea id="reviewComment" name="comment" class="form-control review-textarea" placeholder="Add your review comment here..."></textarea>
+							</div>
+							
+							<!-- Review Buttons -->
+							<div class="d-flex gap-2">
+								<button type="submit" name="action" value="RequestChanges" class="btn btn-warning btn-sm">
+									Request Changes
+								</button>
+								<button type="submit" name="action" value="Approve" class="btn btn-success btn-sm">
+									Approve
+								</button>
+								<button type="submit" name="action" value="Reject" class="btn btn-danger btn-sm">
+									Reject
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			}
 
 		</div>
 
 	</div>
 
 </div>
+
+@if (canReview && isSingle)
+{
+<script>
+	document.getElementById('reviewForm')?.addEventListener('submit', async function(e) {
+		e.preventDefault();
+		
+		const action = e.submitter.value;
+		const comment = document.getElementById('reviewComment').value;
+		const postId = @Model.Id;
+		
+		try {
+			const response = await fetch(`/Posts/Review/${postId}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					action: action,
+					comment: comment
+				})
+			});
+			
+			if (response.ok) {
+				toastr.success(`Post ${action.toLowerCase()} successfully!`);
+				setTimeout(() => location.reload(), 1500);
+			} else {
+				const error = await response.json();
+				toastr.error(error.message || 'An error occurred');
+			}
+		} catch (error) {
+			toastr.error('Error submitting review');
+			console.error(error);
+		}
+	});
+</script>	
+}

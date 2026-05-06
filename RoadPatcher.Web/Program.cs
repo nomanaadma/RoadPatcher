@@ -124,6 +124,9 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddSignalR();
 
+// Notification service
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
 
