@@ -7,7 +7,7 @@ public static class PostHelper
 {
 	public static decimal GetRaisedPercentage(decimal cost, decimal raised)
 	{
-		return Math.Round((raised / cost) * 100, 2);
+		return Math.Round(raised / cost * 100, 2);
 	}
 	
 	public static decimal GetRemaining(decimal cost, decimal raised)

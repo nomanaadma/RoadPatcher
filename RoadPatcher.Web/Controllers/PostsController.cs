@@ -182,6 +182,7 @@ public partial class PostsController(
 		}
 		
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+		var reviewerId = await GetLeastLoadedReviewerIdAsync();
 		
 		var post = new Post
 		{
@@ -194,7 +195,9 @@ public partial class PostsController(
 			Cost = model.Cost,
 			Raised = model.Raised,
 			ImageId = model.ImageId,
-			VideoId = model.VideoId
+			VideoId = model.VideoId,
+			ReviewerId = reviewerId,
+			ReviewStatus = ApprovalStatus.InReview
 		};
 		
 		context.Posts.Add(post);
@@ -387,38 +390,91 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 	}
 
-	private async Task NotifyAdminsOnNewPostAsync(Post post)
+	private async Task<string?> GetLeastLoadedReviewerIdAsync()
 	{
-		var adminUsers = (await userManager.GetUsersInRoleAsync("Admin"))
-			.Concat(await userManager.GetUsersInRoleAsync("SuperAdmin"))
-			.GroupBy(user => user.Id)
-			.Select(group => group.First())
-			.ToList();
+		// Only consider Admin role for reviewer assignment; SuperAdmin is never assigned
+		var adminUsers = (await userManager.GetUsersInRoleAsync("Admin")).ToList();
 
 		if (adminUsers.Count == 0)
-			return;
+			return null; // No admins available; post will be created but unassigned
+
+		var adminUserIds = adminUsers.Select(user => user.Id).ToList();
+		var activeReviewLoads = await context.Posts
+			.AsNoTracking()
+			.Where(post => post.ReviewerId != null
+				&& adminUserIds.Contains(post.ReviewerId)
+				&& post.ReviewStatus == ApprovalStatus.InReview)
+			.GroupBy(post => post.ReviewerId)
+			.Select(group => new
+			{
+				ReviewerId = group.Key!,
+				Load = group.Count()
+			})
+			.ToListAsync();
+
+		var loadLookup = activeReviewLoads.ToDictionary(item => item.ReviewerId, item => item.Load);
+		var lowestLoad = adminUsers.Min(user => loadLookup.TryGetValue(user.Id, out var load) ? load : 0);
+		var leastLoadedAdmins = adminUsers
+			.Where(user => (loadLookup.TryGetValue(user.Id, out var load) ? load : 0) == lowestLoad)
+			.ToList();
+
+		return leastLoadedAdmins[Random.Shared.Next(leastLoadedAdmins.Count)].Id;
+	}
+
+	private async Task NotifyAdminsOnNewPostAsync(Post post)
+	{
+
+		var notifiedUserIds = new List<string>();
+
+		var superAdminUser = (await userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault();
 
 		var reviewUrl = $"/Admin/Posts/Review/{post.Id}";
-		var notificationContent = $"New post is awaiting approval: <a href='{reviewUrl}'>Review post</a>";
 
-		foreach (var admin in adminUsers)
+		// Determine assigned admin display name
+		var assignedAdminName = "Unassigned";
+
+		var assignedAdmin = await context.Users
+				.Include(u => u.UserData)
+				.FirstOrDefaultAsync(u => u.Id == post.ReviewerId);
+		
+		if (assignedAdmin != null)
+		{
+
+			assignedAdminName = ProfileHelper.GetDisplayName(assignedAdmin);
+
+			context.Notifications.Add(new Notification
+			{
+				UserId = assignedAdmin.Id,
+				Content = $"You have a post <span class='badge bg-light-info'>#{post.Id}</span> to <a href='{reviewUrl}'>Review</a>",
+				Label = "Approval"
+			});
+
+			notifiedUserIds.Add(assignedAdmin.Id);
+
+		}
+
+		// Notify SuperAdmins that the post has been assigned to a specific admin
+		if (superAdminUser != null)
 		{
 			context.Notifications.Add(new Notification
 			{
-				UserId = admin.Id,
-				Content = notificationContent,
+				UserId = superAdminUser.Id,
+				Content = $"Admin <strong>{assignedAdminName}</strong> has been assigned to review <a href='{reviewUrl}'><span class='badge bg-light-info'>Post #{post.Id}</span></a>",
 				Label = "Approval"
 			});
+
+			notifiedUserIds.Add(superAdminUser.Id);
+
 		}
 
 		await context.SaveChangesAsync();
 
-		foreach (var admin in adminUsers)
+		foreach (var userId in notifiedUserIds)
 		{
 			var unreadCount = await context.Notifications
-				.CountAsync(notification => notification.UserId == admin.Id && !notification.IsRead);
+				.CountAsync(notification => notification.UserId == userId && !notification.IsRead);
 
-			await notificationHub.Clients.Group($"user_{admin.Id}")
+			await notificationHub.Clients.Group($"user_{userId}")
 				.SendAsync("NotificationCountUpdated", unreadCount);
 		}
 	}

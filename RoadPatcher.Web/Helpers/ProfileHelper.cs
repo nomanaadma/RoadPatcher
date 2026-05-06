@@ -13,5 +13,15 @@ public static class ProfileHelper
 	{
 		return userData.FirstName + ' ' + userData.LastName;
 	}
+
+	public static string GetDisplayName(ApplicationUser user)
+	{
+		if (user?.UserData != null)
+		{
+			return $"{user.UserData.FirstName} {user.UserData.LastName}";
+		}
+
+		return user?.Email ?? "Unknown User";
+	}
 	
 }
