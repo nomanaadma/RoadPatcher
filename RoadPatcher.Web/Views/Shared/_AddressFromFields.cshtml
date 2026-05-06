@@ -1,21 +1,27 @@
 ﻿@model RoadPatcher.Models.AddressViewModel
 
-<hr class="my-10">
+<hr class="mb-5 mt-10">
 					
 <div class="address_guideline">
 	<h2>Address Guideline</h2>
-	<p class="text-gray-700 fs-7 mt-3">
-		To get the most accurate location please follow the guideline below to choose best option.
-	</p>
-	<ul class="mb-10 text-gray-700 lh-22">
-		<li> The quickest method is <strong>Fetch Auto</strong>, which uses your device’s location to automatically fill both your <strong>Full Address</strong> and the <strong>Google Address</strong> below the map.</li>
-		<li>If you prefer entering your details manually, type your address in the <strong>Full Address</strong> field and click <strong>Fetch by Filled Address Above</strong> — this will try to locate it on the map and update the Google Address and coordinates.</li>
-		<li>If <strong>Fetch by Filled Address Above</strong> fails to find the address, use the <strong>map’s autocomplete search bar</strong> to locate the correct place on the map, then click <strong>Copy to Full Address</strong> to update the Full Address field.</li>
-		<li>You can also use <strong>Fetch by Device Location</strong> inside the map area; this works like Fetch Auto but does <i>not</i> change your Full Address.</li>
-		<li>After the map loads your location, feel free to fine-tune it by <strong>dragging the marker</strong> or searching through the <strong>map’s search bar</strong>.</li>
-		<li>If the Google Address looks more accurate than what you initially entered, simply click <strong>Copy to Full Address</strong> to update it.</li>
-	</ul>
+	<div class="address_guideline_content">
+		<p class="text-gray-700 fs-7 mt-3">
+			To get the most accurate location please follow the guideline below to choose best option.
+		</p>
+		<ul class="text-gray-700 lh-22">
+			<li> The quickest method is <strong>Fetch Auto</strong>, which uses your device’s location to automatically fill both your <strong>Full Address</strong> and the <strong>Google Address</strong> below the map.</li>
+			<li>If you prefer entering your details manually, type your address in the <strong>Full Address</strong> field and click <strong>Fetch by Filled Address Above</strong> — this will try to locate it on the map and update the Google Address and coordinates.</li>
+			<li>If <strong>Fetch by Filled Address Above</strong> fails to find the address, use the <strong>map’s autocomplete search bar</strong> to locate the correct place on the map, then click <strong>Copy to Full Address</strong> to update the Full Address field.</li>
+			<li>You can also use <strong>Fetch by Device Location</strong> inside the map area; this works like Fetch Auto but does <i>not</i> change your Full Address.</li>
+			<li>After the map loads your location, feel free to fine-tune it by <strong>dragging the marker</strong> or searching through the <strong>map’s search bar</strong>.</li>
+			<li>If the Google Address looks more accurate than what you initially entered, simply click <strong>Copy to Full Address</strong> to update it.</li>
+		</ul>
+	</div>
+	<span class="badge badge-light-primary address_guideline_toggle">Show</span>
 </div>
+
+<hr class="mb-10 mt-5">
+
 
 <!--begin::Input group-->
 <div class="d-flex flex-column mb-5 fv-row">

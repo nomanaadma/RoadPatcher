@@ -1118,5 +1118,15 @@ gmp-place-autocomplete {
     padding: 4px;
 }
 
+.address_guideline_content {
+    display: none;
+}
 
+.address_guideline_toggle {
+    cursor: pointer;
+}
+
+.address_guideline_toggle:hover {
+    text-decoration: underline;
+}
 

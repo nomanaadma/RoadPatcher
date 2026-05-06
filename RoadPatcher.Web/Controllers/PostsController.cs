@@ -158,7 +158,8 @@ public partial class PostsController(
 			.Include(p => p.User)
 			.ThenInclude(u => u!.UserData)
 			.Include(p => p.MediaFiles)
-			.OrderBy(p => p.Location.Distance(userLocation));
+			.OrderBy(p => p.Location.Distance(userLocation))
+			.Where(p => p.ReviewStatus == ApprovalStatus.Approved);
 	}
 
 	[HttpGet]

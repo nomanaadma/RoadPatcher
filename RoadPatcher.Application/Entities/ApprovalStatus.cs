@@ -5,10 +5,8 @@ public enum ApprovalStatus
     InReview = 0,
 
     ChangesRequested = 1,
-
-    Approved = 2,
-
-    Rejected = 3
+    Rejected = 2,
+    Approved = 3
 }
 
 

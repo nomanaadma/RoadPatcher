@@ -166,6 +166,23 @@
 	
 	$(document).ready(function () {
 
+		$(".address_guideline_toggle").on("click", function () {
+
+            const content = $(".address_guideline_content");
+			const button  = $(this);
+
+			// Toggle the visibility with a smooth slide animation (300ms)
+			content.stop().slideToggle(300, function() {
+				// Update the text based on whether the content is now visible or hidden
+				if (content.is(':visible')) {
+					button.text('Hide');
+				} else {
+					button.text('Show');
+				}
+			});
+
+        });
+
 		const saveBtn = $('#save-btn, #submitBtn');
 		const googleAddress = $('#googleAddress');
 		const fullAddress = $('#Address');
