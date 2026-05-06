@@ -1,8 +1,9 @@
 ﻿using RoadPatcher.Application.Entities;
+using System.Security.Claims;
 
 namespace RoadPatcher.Helpers;
 
-public static class ProfileHelper
+public static class UserHelper
 {
 	public static string GetProfileImage(string? imageFileName)
 	{
@@ -23,5 +24,20 @@ public static class ProfileHelper
 
 		return user?.Email ?? "Unknown User";
 	}
+
+	public static bool IsAdminOrSuperAdmin(this ClaimsPrincipal user)
+    {
+        return user.IsInRole("Admin") || user.IsInRole("SuperAdmin");
+    }
+
+	public static bool IsAdmin(this ClaimsPrincipal user)
+    {
+        return user.IsInRole("Admin");
+    }
+
+	public static bool IsSuperAdmin(this ClaimsPrincipal user)
+    {
+        return user.IsInRole("SuperAdmin");
+    }
 	
 }

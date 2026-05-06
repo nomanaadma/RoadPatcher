@@ -34,7 +34,7 @@
 	
 	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == user!.Id);
 
-	var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
+	var profileImage = UserHelper.GetProfileImage(userData?.Image);
 
 }
 

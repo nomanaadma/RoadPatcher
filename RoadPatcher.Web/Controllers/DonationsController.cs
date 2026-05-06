@@ -65,7 +65,7 @@ public class DonationsController(
             {
 	            { "Url", url },
                 { "Post", '#'+request.PostId.ToString() },
-                { "User", ProfileHelper.GetFullName(userData!) + " - " + userData!.User!.Email},
+                { "User", UserHelper.GetFullName(userData!) + " - " + userData!.User!.Email},
                 { "UserId", userId}
             }
         };

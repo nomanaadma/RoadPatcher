@@ -23,7 +23,7 @@ public class UsersController(
 	[HttpGet]
 	public async Task<IActionResult> Index(string? search, string? role, int page = 1)
 	{
-		var canManageRoles = User.IsInRole("SuperAdmin");
+		var canManageRoles = User.IsSuperAdmin();
 
 		var allUsers = await userManager.Users
 			.Include(u => u.UserData)
@@ -39,7 +39,7 @@ public class UsersController(
 				continue;
 
 			var isDisabled = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
-			var profileImage = ProfileHelper.GetProfileImage(user.UserData?.Image);
+			var profileImage = UserHelper.GetProfileImage(user.UserData?.Image);
 
 			users.Add(new AdminUserListItemDto
 			{
@@ -112,7 +112,7 @@ public class UsersController(
 			return View("CreateEdit", model);
 		}
 
-		var canManageRoles = User.IsInRole("SuperAdmin");
+		var canManageRoles = User.IsSuperAdmin();
 		var roleToAssign = canManageRoles ? (string.IsNullOrWhiteSpace(model.Role) ? "User" : model.Role) : "User";
 
 		if (canManageRoles && !await roleManager.RoleExistsAsync(roleToAssign))
@@ -163,7 +163,7 @@ public class UsersController(
 			return NotFound();
 
 		var userRoles = await userManager.GetRolesAsync(user);
-		var canManageRoles = User.IsInRole("SuperAdmin");
+		var canManageRoles = User.IsSuperAdmin();
 		var currentRole = userRoles.FirstOrDefault() ?? "User";
 		await PrepareFormDataAsync(currentRole);
 
@@ -190,12 +190,12 @@ public class UsersController(
 
 		var targetRoles = await userManager.GetRolesAsync(user);
 		var targetIsAdminOrAbove = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
-		var requesterIsSuperAdmin = User.IsInRole("SuperAdmin");
+		var requesterIsSuperAdmin = User.IsSuperAdmin();
 
 		if (targetIsAdminOrAbove && !requesterIsSuperAdmin)
 			return Forbid();
 
-		var canManageRoles = User.IsInRole("SuperAdmin");
+		var canManageRoles = User.IsSuperAdmin();
 		await PrepareFormDataAsync(model.Role);
 
 		if (!ModelState.IsValid)
@@ -291,7 +291,7 @@ public class UsersController(
 
 		var targetRoles = await userManager.GetRolesAsync(user);
 		var targetIsAdminOrAbove = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
-		var requesterIsSuperAdmin = User.IsInRole("SuperAdmin");
+		var requesterIsSuperAdmin = User.IsSuperAdmin();
 
 		if (targetIsAdminOrAbove && !requesterIsSuperAdmin)
 			return Json(new { success = false, message = "SuperAdmin only action." });
@@ -324,7 +324,7 @@ public class UsersController(
 
 	private async Task PrepareFormDataAsync(string? selectedRole = null)
 	{
-		var canManageRoles = User.IsInRole("SuperAdmin");
+		var canManageRoles = User.IsSuperAdmin();
 		ViewBag.CanManageRoles = canManageRoles;
 
 		if (canManageRoles)

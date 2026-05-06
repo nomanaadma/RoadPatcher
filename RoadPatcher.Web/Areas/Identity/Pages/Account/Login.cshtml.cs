@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using RoadPatcher.Application.Entities;
+using RoadPatcher.Helpers;
 
 namespace RoadPatcher.Areas.Identity.Pages.Account
 {
@@ -114,7 +115,7 @@ namespace RoadPatcher.Areas.Identity.Pages.Account
 
             var AfterLoginUrl = "~/";
 
-            if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+            if (User.IsAdminOrSuperAdmin())
             {
                 AfterLoginUrl += "Admin";
             }
@@ -138,16 +139,6 @@ namespace RoadPatcher.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
-
-                    if (string.IsNullOrWhiteSpace(returnUrl) || Url.IsLocalUrl(returnUrl) && returnUrl == Url.Content("~/"))
-                    {
-                        var signedInUser = await _userManager.FindByEmailAsync(Input.Email);
-                        if (signedInUser != null && (await _userManager.IsInRoleAsync(signedInUser, "Admin") || await _userManager.IsInRoleAsync(signedInUser, "SuperAdmin")))
-                        {
-                            return LocalRedirect("/Admin");
-                        }
-                    }
-
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

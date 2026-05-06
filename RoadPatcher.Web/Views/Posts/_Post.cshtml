@@ -10,7 +10,7 @@
 	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 	var uploadFolderUrl = Url.Content("~/uploads/posts/");
 	var userData = Model.User!.UserData;
-	var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
+	var profileImage = UserHelper.GetProfileImage(userData?.Image);
 			
 	var mainImage = Model.MediaFiles
 		.FirstOrDefault(m => m.Id == Model.ImageId)!;
@@ -29,7 +29,7 @@
 		..otherMedia
 	];
 			
-	var userFullName = ProfileHelper.GetFullName(userData!);
+	var userFullName = UserHelper.GetFullName(userData!);
 			
 	var raisedPercentage = PostHelper.GetRaisedPercentage(Model.Cost, Model.Raised);
 	var remainingAmount = PostHelper.GetRemaining(Model.Cost, Model.Raised);

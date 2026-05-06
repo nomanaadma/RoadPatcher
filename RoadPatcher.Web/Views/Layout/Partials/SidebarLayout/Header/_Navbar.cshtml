@@ -11,7 +11,7 @@
 	
 	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == user!.Id);
 
-	var profileImage = ProfileHelper.GetProfileImage(userData?.Image);
+	var profileImage = UserHelper.GetProfileImage(userData?.Image);
 	
 }
 <!--begin::Navbar-->
@@ -21,7 +21,7 @@
 		
 		<div class="d-flex align-items-stretch flex-shrink-0 gap-0">
 
-			@if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
+			@if (User.IsAdminOrSuperAdmin())
 			{
 				<div class="d-flex align-items-stretch ms-1 ms-lg-2">
 					<div class="d-flex align-items-center">

@@ -12,7 +12,7 @@
 	// Check if current route is in Admin area
 	var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? string.Empty;
 	var isAdminRoute = currentArea.Equals("Admin", StringComparison.OrdinalIgnoreCase);
-	var isAdminRole = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+	var isAdminRole = User.IsAdminOrSuperAdmin();
 
 	var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var path = Context.Request.Path.Value ?? "";
@@ -62,7 +62,7 @@
 		.Where(u => u.UserData != null)   // only users with UserData
 		.Select(u => new {
 			u.Id,
-			fullName = ProfileHelper.GetFullName(u.UserData!)
+			fullName = UserHelper.GetFullName(u.UserData!)
 		})
 		.ToListAsync();
 

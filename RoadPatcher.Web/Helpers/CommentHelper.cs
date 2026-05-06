@@ -12,8 +12,8 @@ public static class CommentHelper
 			Id = c.Id,
 			PostId = c.PostId,
 			Parent = c.ParentId,
-			Fullname = ProfileHelper.GetFullName(c.User!.UserData!),
-			ProfilePictureUrl = ProfileHelper.GetProfileImage(c.User.UserData!.Image),
+			Fullname = UserHelper.GetFullName(c.User!.UserData!),
+			ProfilePictureUrl = UserHelper.GetProfileImage(c.User.UserData!.Image),
 			Content = c.Content,
 			Created = c.CreatedAt
 		};
