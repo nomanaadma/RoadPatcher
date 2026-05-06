@@ -136,13 +136,21 @@ public partial class PostsController(
 		var query = await BasePostQuery();
 		var post = await query
 			.FirstOrDefaultAsync(p => p.Id == id);
-	
-		if (post == null)
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		var isUnauthorized =
+			post != null &&
+			post.ReviewStatus != ApprovalStatus.Approved &&
+			post.UserId != userId &&
+			post.ReviewerId != userId;
+
+		if (post == null || isUnauthorized)
 		{
 			return NotFound();
 		}
-	
-		ViewData["Title"] = $"Post #{post.Id} Details";
+
+		ViewData["Title"] = $"Post #{post?.Id} Details";
 	
 		return View(post);
 	}
@@ -158,8 +166,7 @@ public partial class PostsController(
 			.Include(p => p.User)
 			.ThenInclude(u => u!.UserData)
 			.Include(p => p.MediaFiles)
-			.OrderBy(p => p.Location.Distance(userLocation))
-			.Where(p => p.ReviewStatus == ApprovalStatus.Approved);
+			.OrderBy(p => p.Location.Distance(userLocation));
 	}
 
 	[HttpGet]
@@ -217,14 +224,37 @@ public partial class PostsController(
 	public async Task<IActionResult> Edit(int id)
 	{
 		var post = await context.Posts
+			.AsNoTracking()
 			.Include(p => p.MediaFiles)
 			.FirstOrDefaultAsync(p => p.Id == id);
 
 		if (post == null)
 			return NotFound();
 
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+		
+		// Restrict edit access: only allow if user is post owner AND status is ChangesRequested, OR user is reviewer/superadmin
+		var userRoles = User.FindAll(ClaimTypes.Role);
+		var isSuperAdmin = userRoles.Any(r => r.Value == "SuperAdmin");
+		var isReviewer = post.ReviewerId == userId;
+		
+		if (post.UserId == userId && post.ReviewStatus != ApprovalStatus.ChangesRequested)
+		{
+			TempData["Error"] = "You can only edit this post if the status is 'Changes Requested'";
+			return RedirectToAction("SinglePost", new { id = post.Id });
+		}
+		
+		if (post.UserId != userId && !isReviewer && !isSuperAdmin)
+		{
+			return Forbid();
+		}
+
 		var model = new PostViewModel
 		{
+			Id = post.Id,
+			UserId = post.UserId,
+			ReviewStatus = post.ReviewStatus,
+			ReviewerId = post.ReviewerId,
 			Address = post.Address,
 			GoogleAddress = post.GoogleAddress,
 			Description = post.Description,
@@ -245,6 +275,26 @@ public partial class PostsController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Edit(int id, PostViewModel model)
 	{
+		var post = await context.Posts
+			.AsTracking()
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+			return NotFound();
+		
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+		
+		// Ownership validation: only allow post owner to edit, AND only if status is ChangesRequested
+		if (post.UserId != userId)
+		{
+			return Forbid();
+		}
+		
+		if (post.ReviewStatus != ApprovalStatus.ChangesRequested)
+		{
+			TempData["Error"] = "You can only edit this post if the status is 'Changes Requested'";
+			return RedirectToAction("SinglePost", new { id = post.Id });
+		}
 		
 		if (!ModelState.IsValid)
 		{
@@ -255,13 +305,6 @@ public partial class PostsController(
 
 			return View(model);
 		}
-		
-		var post = await context.Posts
-			.AsTracking()
-			.FirstOrDefaultAsync(p => p.Id == id);
-
-		if (post == null)
-			return NotFound();
 		
 		// Update MediaFiles
 		var existingMedia = await context.Media
@@ -291,7 +334,145 @@ public partial class PostsController(
 		TempData["Success"] = "Post updated successfully!";
 		return RedirectToAction("Edit", new { id = post.Id });
 	}
-	
+
+	[HttpPost]
+	[Authorize]
+	public async Task<IActionResult> Review(int id, [FromBody] ReviewRequest request)
+	{
+		var post = await context.Posts
+			.AsTracking()
+			.Include(p => p.User)
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (post == null)
+			return NotFound(new { message = "Post not found" });
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+		var userRoles = User.FindAll(ClaimTypes.Role);
+		var isSuperAdmin = userRoles.Any(r => r.Value == "SuperAdmin");
+
+		// Only reviewer or superadmin can submit review
+		if (post.ReviewerId != userId && !isSuperAdmin)
+			return Forbid();
+
+		// Only can review if status is InReview
+		if (post.ReviewStatus != ApprovalStatus.InReview)
+			return BadRequest(new { message = "Post is not in review status" });
+
+		try
+		{
+			switch (request.Action)
+			{
+				case "RequestChanges":
+					post.ReviewStatus = ApprovalStatus.ChangesRequested;
+					await context.SaveChangesAsync();
+					
+					// Send notification to post owner with comment
+					var reviewerName = UserHelper.GetDisplayName(post.User!);
+					var notificationMessage = string.IsNullOrEmpty(request.Comment)
+						? $"Admin has requested changes on your post #{post.Id}"
+						: $"Your post #{post.Id} has a review comment from admin {reviewerName}: {request.Comment}";
+
+					var notif = new Notification
+					{
+						UserId = post.UserId,
+						Content = notificationMessage,
+						Label = "Approval",
+						IsRead = false,
+						ToastStatus = true,
+						CreatedAt = DateTime.UtcNow,
+						UpdatedAt = DateTime.UtcNow
+					};
+
+					context.Notifications.Add(notif);
+					await context.SaveChangesAsync();
+
+					// Notify via SignalR
+					var unreadCount = await context.Notifications
+						.Where(n => n.UserId == post.UserId && !n.IsRead)
+						.CountAsync();
+
+					await notificationHub.Clients
+						.User(post.UserId)
+						.SendAsync("NotificationCountUpdated", unreadCount);
+
+					return Ok(new { message = "Changes requested notification sent" });
+
+				case "Approve":
+					post.ReviewStatus = ApprovalStatus.Approved;
+					await context.SaveChangesAsync();
+					
+					// Optional: Send approval notification
+					var approvalNotif = new Notification
+					{
+						UserId = post.UserId,
+						Content = $"Your post #{post.Id} has been approved!",
+						Label = "Approval",
+						IsRead = false,
+						ToastStatus = true,
+						CreatedAt = DateTime.UtcNow,
+						UpdatedAt = DateTime.UtcNow
+					};
+
+					context.Notifications.Add(approvalNotif);
+					await context.SaveChangesAsync();
+
+					var approvalUnread = await context.Notifications
+						.Where(n => n.UserId == post.UserId && !n.IsRead)
+						.CountAsync();
+
+					await notificationHub.Clients
+						.User(post.UserId)
+						.SendAsync("NotificationCountUpdated", approvalUnread);
+
+					return Ok(new { message = "Post approved" });
+
+				case "Reject":
+					post.ReviewStatus = ApprovalStatus.Rejected;
+					await context.SaveChangesAsync();
+					
+					// Optional: Send rejection notification
+					var rejectNotif = new Notification
+					{
+						UserId = post.UserId,
+						Content = string.IsNullOrEmpty(request.Comment)
+							? $"Your post #{post.Id} has been rejected"
+							: $"Your post #{post.Id} has been rejected. Reason: {request.Comment}",
+						Label = "Approval",
+						IsRead = false,
+						ToastStatus = true,
+						CreatedAt = DateTime.UtcNow,
+						UpdatedAt = DateTime.UtcNow
+					};
+
+					context.Notifications.Add(rejectNotif);
+					await context.SaveChangesAsync();
+
+					var rejectUnread = await context.Notifications
+						.Where(n => n.UserId == post.UserId && !n.IsRead)
+						.CountAsync();
+
+					await notificationHub.Clients
+						.User(post.UserId)
+						.SendAsync("NotificationCountUpdated", rejectUnread);
+
+					return Ok(new { message = "Post rejected" });
+
+				default:
+					return BadRequest(new { message = "Invalid action" });
+			}
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, new { message = "Error processing review: " + ex.Message });
+		}
+	}
+
+	public class ReviewRequest
+	{
+		public required string Action { get; set; }
+		public string? Comment { get; set; }
+	}
 	
 
 	[HttpPost]
@@ -441,7 +622,7 @@ public partial class PostsController(
 		if (assignedAdmin != null)
 		{
 
-			assignedAdminName = ProfileHelper.GetDisplayName(assignedAdmin);
+			assignedAdminName = UserHelper.GetDisplayName(assignedAdmin);
 
 			context.Notifications.Add(new Notification
 			{
@@ -805,7 +986,7 @@ public partial class PostsController(
 				.Where(u => userList.Contains(u.UserId))
 				.Select(u => new
 				{
-					fullName = ProfileHelper.GetFullName(u),
+					fullName = UserHelper.GetFullName(u),
 					lat = u.Latitude,
 					lng = u.Longitude,
 				})
@@ -831,7 +1012,7 @@ public partial class PostsController(
 				totalRaised = p.Raised.ToPkr(),
 				date = p.CreatedAt.ToPrettyFormat(),
 				since = p.CreatedAt.ToAgo(),
-				user = ProfileHelper.GetFullName(p.User!.UserData!)
+				user = UserHelper.GetFullName(p.User!.UserData!)
 			})
 			.ToListAsync();
 

@@ -1130,3 +1130,12 @@ gmp-place-autocomplete {
     text-decoration: underline;
 }
 
+.disabled-anchor {
+    pointer-events: none;
+}
+
+.anchor {
+    color: #4e54ff;
+    display: inline;
+    text-decoration: underline;
+}

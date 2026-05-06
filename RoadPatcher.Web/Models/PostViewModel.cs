@@ -5,6 +5,14 @@ namespace RoadPatcher.Models;
 
 public class PostViewModel : AddressViewModel
 {
+	public int Id { get; set; }
+
+	public string? UserId { get; set; }
+
+	public ApprovalStatus ReviewStatus { get; set; }
+
+	public string? ReviewerId { get; set; }
+
 	public string? Description { get; init; }
 
 	[Range(200, double.MaxValue, ErrorMessage = "Minimum cost must be at least 200.")]

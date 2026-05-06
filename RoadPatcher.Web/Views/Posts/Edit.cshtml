@@ -1,11 +1,69 @@
 ﻿@model RoadPatcher.Models.PostViewModel
+@using RoadPatcher.Application.Entities
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Edit Post";
     var uploadFolderUrl = Url.Content("~/uploads/posts/");
     ViewData["IsEdit"] = true;
 }
 
-<partial name="_PostForm" model="Model" />
+@{
+	var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+	var userRoles = User.FindAll(ClaimTypes.Role);
+	var isReviewer = Model.ReviewStatus == ApprovalStatus.InReview && Model.ReviewerId == userId;
+	var isSuperAdmin = userRoles.Any(r => r.Value == "SuperAdmin");
+	var canReview = (isReviewer || isSuperAdmin) && Model.ReviewStatus == ApprovalStatus.InReview;
+}
+
+<style>
+	.review-panel {
+		background-color: #f8f9fa;
+		border-radius: 0.5rem;
+		padding: 1.5rem;
+	}
+	.review-textarea {
+		resize: vertical;
+		min-height: 120px;
+	}
+</style>
+
+<div class="row g-5 justify-content-center">
+	<div class="col-lg-7 mb-10">
+		<partial name="_PostForm" model="Model" />
+	</div>
+	
+	<!-- Review Panel (visible only to reviewer when status == InReview) -->
+	@if (canReview)
+	{
+		<div class="col-lg-3 mb-10">
+			<div class="review-panel">
+				<h5 class="mb-4"><i class="las la-tasks"></i> Post Review</h5>
+				
+				<form id="reviewForm" method="post">
+					<!-- Request Changes Comment -->
+					<div class="mb-3">
+						<label for="reviewComment" class="form-label">Review Comment</label>
+						<textarea id="reviewComment" name="comment" class="form-control review-textarea" placeholder="Add your review comment here..."></textarea>
+						<small class="text-muted d-block mt-2">This comment will be sent to the post owner as a notification</small>
+					</div>
+					
+					<!-- Review Buttons -->
+					<div class="d-flex flex-column gap-2">
+						<button type="submit" name="action" value="RequestChanges" class="btn btn-warning btn-sm">
+							<i class="las la-comments"></i> Request Changes
+						</button>
+						<button type="submit" name="action" value="Approve" class="btn btn-success btn-sm">
+							<i class="las la-check-circle"></i> Approve
+						</button>
+						<button type="submit" name="action" value="Reject" class="btn btn-danger btn-sm">
+							<i class="las la-times-circle"></i> Reject
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+</div>
 
 @section Scripts {
 	
@@ -77,6 +135,39 @@
 			    
 			}
 			
+		});
+		
+		// Review form submission
+		document.getElementById('reviewForm')?.addEventListener('submit', async function(e) {
+			e.preventDefault();
+			
+			const action = e.submitter.value;
+			const comment = document.getElementById('reviewComment').value;
+			const postId = @Model.Id;
+			
+			try {
+				const response = await fetch(`/Posts/Review/${postId}`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						action: action,
+						comment: comment
+					})
+				});
+				
+				if (response.ok) {
+					toastr.success(`Post ${action.toLowerCase()} successfully!`);
+					setTimeout(() => location.reload(), 1500);
+				} else {
+					const error = await response.json();
+					toastr.error(error.message || 'An error occurred');
+				}
+			} catch (error) {
+				toastr.error('Error submitting review');
+				console.error(error);
+			}
 		});
 	</script>
 	

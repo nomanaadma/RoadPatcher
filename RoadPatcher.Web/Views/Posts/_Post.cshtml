@@ -124,7 +124,22 @@
 					<h6 class="mb-0">@userFullName</h6>
 					<span><i class="las la-clock position-relative"></i> @Model.CreatedAt.ToPrettyFormat() • @Model.CreatedAt.ToAgo() </span>
 				</div>
+				
 				<a asp-action="SinglePost" asp-route-id="@Model.Id" data-bs-toggle="tooltip" title="Open Post" data-bs-placement="bottom" class="btn btn-dark rounded-20 post-link-btn"><i class="las la-link text-white"></i> <span>#@Model.Id</span></a>
+
+				@if(Model.ReviewStatus == ApprovalStatus.InReview) {
+					<span class="btn btn-light-primary rounded-20 disabled-anchor ms-2">In Review</span>
+				}
+
+				@if(Model.ReviewStatus == ApprovalStatus.ChangesRequested) {
+
+					<a asp-action="Edit" class="btn btn-light-warning rounded-20 ms-2" asp-route-id="@Model.Id" title="Open Post"> Changes Requested <span class="anchor">Edit</span> </a>					
+				}
+
+				@if(Model.ReviewStatus == ApprovalStatus.Rejected) {
+					<span class="btn btn-light-danger rounded-20 disabled-anchor ms-2">Rejected</span>
+				}
+
 			</div>
 
 			@if (!string.IsNullOrEmpty(Model.Description))
