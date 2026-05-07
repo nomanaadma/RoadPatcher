@@ -60,7 +60,7 @@ public partial class PostsController(
 			.Select(f => f.PostId)
 			.ToListAsync();
 		
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 
 		var posts = await query
 			.Where(p => favPostIds.Contains(p.Id))
@@ -83,7 +83,7 @@ public partial class PostsController(
 			.Select(d => d.PostId)
 			.ToListAsync();
 		
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 
 		var posts = await query
 			.Where(p => donatedPostIds.Contains(p.Id))
@@ -101,7 +101,7 @@ public partial class PostsController(
 
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
 		
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 		var pattern = $"%{s}%";
 
 		var posts = await query
@@ -122,7 +122,7 @@ public partial class PostsController(
 		
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
 
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 		
 		return await query
 			.Where(p => p.Status == status)
@@ -168,6 +168,12 @@ public partial class PostsController(
 			.OrderBy(p => p.Location.Distance(userLocation));
 	}
 
+	private async Task<IQueryable<Post>> BasePostApproveQuery()
+	{
+		var query = await BasePostQuery();
+		return query.Where(p => p.ReviewStatus == ApprovalStatus.Approved);
+	}
+
 	[HttpGet]
 	public IActionResult Create()
 	{
@@ -189,7 +195,24 @@ public partial class PostsController(
 		}
 		
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-		var reviewerId = await GetLeastLoadedReviewerIdAsync();
+		
+		var superAdminUser = (await userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault()!;
+
+		// Determine reviewer assignment and review status based on creator role
+		var reviewerId = superAdminUser?.Id;
+		var reviewStatus = ApprovalStatus.InReview;
+
+		if (User.IsSuperAdmin())
+		{
+			// SuperAdmin created post -> auto-approve (no review needed)
+			reviewStatus = ApprovalStatus.Approved;
+		}
+		else if (User.IsUser())
+		{
+			// Regular user -> assign to least loaded admin
+			reviewerId = await GetLeastLoadedReviewerIdAsync();
+			reviewStatus = ApprovalStatus.InReview;
+		}
 		
 		var post = new Post
 		{
@@ -204,7 +227,7 @@ public partial class PostsController(
 			ImageId = model.ImageId,
 			VideoId = model.VideoId,
 			ReviewerId = reviewerId,
-			ReviewStatus = ApprovalStatus.InReview
+			ReviewStatus = reviewStatus
 		};
 		
 		context.Posts.Add(post);
@@ -212,7 +235,10 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 		
 		await AttachMedia(model, post.Id);
-		await NotifyAdminsOnNewPostAsync(post);
+
+		if(!User.IsSuperAdmin()) {
+			await NotifyAdminsOnNewPostAsync(post);
+		}
 
 		TempData["Success"] = "Post submitted for review successfully. You will be notified once it has been reviewed.";
 		return RedirectToAction("SinglePost", new { id = post.Id } );
@@ -772,7 +798,7 @@ public partial class PostsController(
 		ViewData["Title"] = ViewData["s"] = "Advanced Search Results";
 	
 		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 	
 		// ---------------------------
 		// TEXT SEARCH
@@ -892,7 +918,7 @@ public partial class PostsController(
 		var viewportGeometry = geometryFactory.ToGeometry(viewportEnvelope);
 
 		// 2. Query
-		var query = await BasePostQuery();
+		var query = await BasePostApproveQuery();
 		
 		query = query.Where(p => viewportGeometry.Intersects(p.Location));
 

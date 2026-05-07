@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
-using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
 using X.PagedList;
@@ -62,8 +61,9 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             query = query.Where(n => n.Label == label);
         }
 
-        // Order by latest first
-        query = query.OrderByDescending(n => n.CreatedAt);
+        // Unread notifications first, then newest first
+        query = query.OrderBy(n => n.IsRead)
+            .ThenByDescending(n => n.Id);
 
         // Map to DTO with formatted date
         var notificationDtos = await query
@@ -147,6 +147,32 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             success = true,
             message = "Toast marked as seen"
         });
+    }
+
+    /// <summary>
+    /// POST: /Notifications/MarkAllAsRead - Mark all notifications for the current user as read.
+    /// </summary>
+    [HttpPost]
+    [Route("Notifications/MarkAllAsRead")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarkAllAsRead(string? returnUrl = null)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await db.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(n => n.IsRead, true)
+                .SetProperty(n => n.ToastStatus, true)
+                .SetProperty(n => n.UpdatedAt, DateTime.UtcNow));
+
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>

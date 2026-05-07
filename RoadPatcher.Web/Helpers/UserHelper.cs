@@ -19,7 +19,7 @@ public static class UserHelper
 	{
 		if (user?.UserData != null)
 		{
-			return $"{user.UserData.FirstName} {user.UserData.LastName}";
+			return GetFullName(user.UserData);
 		}
 
 		return user?.Email ?? "Unknown User";
@@ -39,5 +39,11 @@ public static class UserHelper
     {
         return user.IsInRole("SuperAdmin");
     }
+
+	public static bool IsUser(this ClaimsPrincipal user)
+    {
+        return user.IsInRole("User");
+    }
+	
 	
 }
