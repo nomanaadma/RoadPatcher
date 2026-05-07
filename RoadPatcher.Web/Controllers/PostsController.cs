@@ -245,21 +245,26 @@ public partial class PostsController(
 	
 	private async Task<IQueryable<Post>> BasePostQuery()
 	{
+		return context.Posts
+			.Include(p => p.User)
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.MediaFiles);
+	}
+
+	private async Task<IQueryable<Post>> BasePostLocationQuery()
+	{
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 		var userData = await context.UserData.FirstOrDefaultAsync(x => x.UserId == userId);
 		
 		var userLocation = new Point(userData!.Longitude, userData.Latitude) { SRID = 4326 };
 
-		return context.Posts
-			.Include(p => p.User)
-			.ThenInclude(u => u!.UserData)
-			.Include(p => p.MediaFiles)
-			.OrderBy(p => p.Location.Distance(userLocation));
+		var query = await BasePostQuery();
+		return query.OrderBy(p => p.Location.Distance(userLocation));
 	}
 
 	private async Task<IQueryable<Post>> BasePostApproveQuery()
 	{
-		var query = await BasePostQuery();
+		var query = await BasePostLocationQuery();
 		return query.Where(p => p.ReviewStatus == ApprovalStatus.Approved);
 	}
 

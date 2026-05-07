@@ -1,8 +1,10 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
+using RoadPatcher.Helpers;
 
 namespace RoadPatcher.Middlewares;
 
@@ -41,7 +43,8 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
                 "/Admin",
                 "/Settings",
                 "/Notifications",
-                "/hubs"
+                "/hubs",
+                "/Posts/Manage"
             ];
 
             if (allowedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
@@ -63,6 +66,28 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
             {
                 await next(context);
                 return;
+            }
+
+            // Allow SuperAdmin to access only specific post routes even if profile isn't completed
+            // Use route data (controller/action/id) instead of string parsing
+            if (user.IsSuperAdmin())
+            {
+                var routeData = context.GetRouteData();
+                var controller = routeData?.Values["controller"]?.ToString();
+                var action = routeData?.Values["action"]?.ToString();
+
+                if (string.Equals(controller, "Posts", StringComparison.OrdinalIgnoreCase))
+                {
+                    // /Posts/Edit/{id}
+                    if (
+                        string.Equals(action, "Edit", StringComparison.OrdinalIgnoreCase) || 
+                        string.Equals(action, "SinglePost", StringComparison.OrdinalIgnoreCase)
+                        )
+                    {
+                        await next(context);
+                        return;
+                    }
+                }
             }
 
             var isDisabled = await db.Users

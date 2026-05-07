@@ -24,7 +24,7 @@
 		<form method="get" asp-action="Manage" class="row g-3 align-items-end">
 			<div class="col-lg-3">
 				<label class="form-label fw-semibold">View</label>
-				<select name="scope" class="form-select">
+				<select name="scope" class="form-select form-control">
 					@foreach (var scope in Model.AvailableScopes)
 					{
 						<option value="@scope.Value" selected="@(scope.Value == Model.CurrentScope ? "selected" : null)">@scope.Label</option>
@@ -39,7 +39,7 @@
 
 			<div class="col-lg-2">
 				<label class="form-label fw-semibold">Review Status</label>
-				<select name="reviewStatus" class="form-select">
+				<select name="reviewStatus" class="form-select form-control select2-alt">
 					<option value="">All</option>
 					@foreach (var status in Enum.GetValues<ApprovalStatus>())
 					{
@@ -50,7 +50,7 @@
 
 			<div class="col-lg-2">
 				<label class="form-label fw-semibold">Post Status</label>
-				<select name="postStatus" class="form-select">
+				<select name="postStatus" class="form-select form-control select2-alt"> 
 					<option value="">All</option>
 					@foreach (var status in Enum.GetValues<PostStatus>())
 					{
@@ -62,9 +62,9 @@
 			@if (showCreatorFilter)
 			{
 				<div class="col-lg-3">
-					<label class="form-label fw-semibold">Creator</label>
-					<select name="creatorId" class="form-select">
-						<option value="">All Creators</option>
+					<label class="form-label fw-semibold">User</label>
+					<select name="creatorId" class="form-select form-control users-select">
+						<option value="">All Users</option>
 						@foreach (var creator in Model.AvailableCreators)
 						{
 							<option value="@creator.Id" selected="@(creator.Id == Model.CreatorId ? "selected" : null)">@creator.Name</option>
@@ -73,7 +73,7 @@
 				</div>
 			}
 
-			<div class="col-lg-@(showCreatorFilter ? 2 : 3) d-flex gap-2">
+			<div class="col-lg-2 d-flex gap-2">
 				<button type="submit" class="btn btn-primary w-100">Search</button>
 				<a asp-action="Manage" asp-route-scope="@Model.CurrentScope" class="btn btn-light-secondary w-100">Clear</a>
 			</div>
@@ -95,7 +95,7 @@
 				<table class="table table-row-bordered align-middle gy-4 gs-9">
 					<thead class="border-bottom border-gray-200 fs-6 text-gray-600 fw-bold bg-light bg-opacity-75">
 						<tr>
-							<th>Creator</th>
+							<th>Author</th>
 							<th>Address</th>
 							<th>Review Status</th>
 							<th>Post Status</th>
@@ -110,30 +110,24 @@
 						{
 							var reviewBadge = item.ReviewStatus switch
 							{
-								ApprovalStatus.Approved => "success",
-								ApprovalStatus.ChangesRequested => "warning",
-								ApprovalStatus.Rejected => "danger",
-								_ => "secondary"
+								ApprovalStatus.Approved => "light-success",
+								ApprovalStatus.ChangesRequested => "light-warning",
+								ApprovalStatus.Rejected => "light-danger",
+								_ => "light-primary"
 							};
 
 							var postBadge = item.Status switch
 							{
-								PostStatus.Completed => "success",
-								PostStatus.InProcess => "warning",
-								_ => "primary"
+								PostStatus.Completed => "light-success",
+								PostStatus.InProcess => "light-warning",
+								_ => "light-danger"
 							};
 
 							var raisedPercentage = PostHelper.GetRaisedPercentage(item.Cost, item.Raised);
 							var progressClass = PostHelper.GetProgressClass(raisedPercentage);
 							<tr>
 								<td>
-									<div class="d-flex align-items-center gap-3">
-										<img src="@UserHelper.GetProfileImage(item.CreatorImage)" alt="Creator" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
-										<div>
-											<div class="fw-semibold">@item.CreatorName</div>
-											<small class="text-muted">@item.CreatorId</small>
-										</div>
-									</div>
+									@item.CreatorName
 								</td>
 								<td>
 									<div class="fw-semibold">@item.Address</div>
@@ -144,13 +138,7 @@
 								<td>
 									@if (!string.IsNullOrWhiteSpace(item.ReviewerId))
 									{
-										<div class="d-flex align-items-center gap-3">
-											<img src="@UserHelper.GetProfileImage(item.ReviewerImage)" alt="Reviewer" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-											<div>
-												<div class="fw-semibold">@item.ReviewerName</div>
-												<small class="text-muted">@item.ReviewerId</small>
-											</div>
-										</div>
+										@item.ReviewerName
 									}
 									else
 									{
@@ -169,8 +157,23 @@
 								<td>@item.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</td>
 								<td class="text-end">
 									<div class="btn-group btn-group-sm">
+
+                                        @{
+                                            var canEdit = false;
+
+                                            if(
+                                                User.IsSuperAdmin()	|| 
+                                                (currentUserId == item.CreatorId && item.ReviewStatus == ApprovalStatus.ChangesRequested) ||
+                                                (currentUserId == item.ReviewerId && item.ReviewStatus == ApprovalStatus.InReview)
+                                            ) {
+                                                canEdit = true;
+                                            }
+
+                                        }
+
 										<a asp-action="SinglePost" asp-route-id="@item.Id" class="btn btn-light btn-sm">View</a>
-										@if (currentUserId == item.CreatorId && item.ReviewStatus == ApprovalStatus.ChangesRequested)
+
+										@if (canEdit)
 										{
 											<a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-light-primary btn-sm">Edit</a>
 										}
@@ -217,3 +220,21 @@
 		}
 	</div>
 </div>
+
+@if (showCreatorFilter) {
+
+    @section Scripts {
+        <script>
+
+            const slimSettings = {settings: {
+                allowDeselect: true
+            }};
+            
+            new SlimSelect({
+                select: '.users-select',
+                ...slimSettings
+            })
+        </script>
+    }
+
+}

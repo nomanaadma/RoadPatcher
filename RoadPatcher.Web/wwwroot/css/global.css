@@ -1065,6 +1065,9 @@ gmp-place-autocomplete {
     color: #de802b !important;
 }
 
+.badge.bg-light-danger  {
+    color: #bd0000 !important;
+}
 
 .notification-td a {
     color: #4e54ff;

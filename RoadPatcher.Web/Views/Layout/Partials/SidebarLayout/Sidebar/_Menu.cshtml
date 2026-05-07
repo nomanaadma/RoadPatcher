@@ -29,6 +29,10 @@
         isSettingsController ||
         isIdentity;
 
+    var showPostMenu =
+        action == "Manage" ||
+        action == "Create";
+
 
     var user = await UserManager.GetUserAsync(User);
 	
@@ -99,6 +103,34 @@
 
                         <div class="menu-item">
                             <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="menu-link @(isIdentity ? "active" : "")"><i class="la la-unlock-alt fz-24"></i><span class="menu-title ms-1">2FA</span></a>
+                        </div>
+                        
+
+                    </div>
+                    <!--end:Menu sub-->
+                </div>
+
+                <!-- Non-Admin Menu -->
+                <div data-kt-menu-trigger="click" class="menu-item menu-accordion @(showPostMenu ? "show" : "")">
+                    <span class="menu-link @(showPostMenu ? "active" : "")">
+                        <span class="menu-icon"><i class="las la-list-alt fz-24"></i></span>
+                        <span class="menu-title">Posts</span>
+                        <span class="menu-arrow"></span>
+                    </span><!--end:Menu link--><!--begin:Menu sub-->
+
+                    <div class="menu-sub menu-sub-accordion mt-3">
+                        <!--begin:Menu item-->
+                        
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Manage" asp-area=""class="menu-link @(action == "Manage" ? "active" : "")"><i class="la la-list-alt fz-24"></i><span class="menu-title ms-1">List</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Create" asp-area="" class="menu-link @(action == "Create" ? "active" : "")"><i class="la la-plus-square fz-24"></i><span class="menu-title ms-1">Create</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a href="javascript:void(0)" class="search_posts menu-link"><i class="la la-search fz-24"></i><span class="menu-title ms-1">Search</span></a>
                         </div>
                         
 
