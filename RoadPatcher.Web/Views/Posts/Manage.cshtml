@@ -8,9 +8,12 @@
 	var pageTitle = ViewData["Title"]?.ToString() ?? "My Posts";
 	var currentUserId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 	var showCreatorFilter = Model.CurrentScope != "myPosts";
+	var showReviewerColumn = !User.IsUser();
 	var selectedReviewStatus = Model.ReviewStatus?.ToString();
 	var selectedPostStatus = Model.PostStatus?.ToString();
 }
+
+<a class="btn btn-success mb-3" href="/Posts/Create">Add New</a>
 
 <div class="card mb-6">
 	<div class="card-body">
@@ -99,7 +102,10 @@
 							<th>Address</th>
 							<th>Review Status</th>
 							<th>Post Status</th>
-							<th>Reviewer</th>
+							@if (showReviewerColumn)
+							{
+								<th>Reviewer</th>
+							}
 							<th>Progress</th>
 							<th>Created</th>
 							<th class="text-end">Actions</th>
@@ -135,16 +141,19 @@
 								</td>
 								<td><span class="badge bg-@reviewBadge">@item.ReviewStatus</span></td>
 								<td><span class="badge bg-@postBadge">@(item.Status?.ToString() ?? "Unknown")</span></td>
-								<td>
-									@if (!string.IsNullOrWhiteSpace(item.ReviewerId))
-									{
-										@item.ReviewerName
-									}
-									else
-									{
-										<span class="text-muted">Unassigned</span>
-									}
-								</td>
+								@if (showReviewerColumn)
+								{
+									<td>
+										@if (!string.IsNullOrWhiteSpace(item.ReviewerId))
+										{
+											@item.ReviewerName
+										}
+										else
+										{
+											<span class="text-muted">Unassigned</span>
+										}
+									</td>
+								}
 								<td style="min-width: 180px;">
 									<div class="d-flex justify-content-between small text-muted mb-1">
 										<span>@raisedPercentage.ToString("0.##")%</span>

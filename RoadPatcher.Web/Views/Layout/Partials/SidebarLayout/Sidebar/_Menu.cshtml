@@ -31,7 +31,12 @@
 
     var showPostMenu =
         action == "Manage" ||
-        action == "Create";
+        action == "Create" ||
+        action == "Pending" ||
+        action == "InProcess" ||
+        action == "Completed" ||
+        action == "Favourited" ||
+        action == "Donated";
 
 
     var user = await UserManager.GetUserAsync(User);
@@ -132,6 +137,26 @@
                         <div class="menu-item">
                             <a href="javascript:void(0)" class="search_posts menu-link"><i class="la la-search fz-24"></i><span class="menu-title ms-1">Search</span></a>
                         </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Pending" asp-area="" class="menu-link @(action == "Pending" ? "active" : "")"><i class="la la-road fz-24"></i><span class="menu-title ms-1">Pending</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="InProcess" asp-area="" class="menu-link @(action == "InProcess" ? "active" : "")"><i class="la la-truck-loading fz-24"></i><span class="menu-title ms-1">In Process</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Completed" asp-area="" class="menu-link @(action == "Completed" ? "active" : "")"><i class="la la-check-circle fz-24"></i><span class="menu-title ms-1">Completed</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Favourited" asp-area="" class="menu-link @(action == "Favourited" ? "active" : "")"><i class="la la-bookmark fz-24"></i><span class="menu-title ms-1">Favourited</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Posts" asp-action="Donated" asp-area="" class="menu-link @(action == "Donated" ? "active" : "")"><i class="la la-donate fz-24"></i><span class="menu-title ms-1">Donated</span></a>
+                        </div>
                         
 
                     </div>
@@ -145,15 +170,6 @@
                         <span class="menu-icon"><i class="las la-users fz-24"></i></span>
                         <span class="menu-title">Users</span>
                     </a>
-                </div>
-
-                <div class="menu-item">
-                    <!--begin:Menu link-->
-                    <a class="menu-link" href="/">
-                        <span class="menu-icon"><i class="las la-home fz-24"></i></span>
-                        <span class="menu-title">App</span>
-                    </a>
-                    <!--end:Menu link-->
                 </div>
 
                 <div class="menu-item">
