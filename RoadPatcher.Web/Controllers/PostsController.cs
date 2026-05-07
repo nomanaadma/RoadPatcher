@@ -25,10 +25,99 @@ public partial class PostsController(
 	INotificationService notificationService
 	) : Controller
 {
+	private const string ManageScopeMyPosts = "myPosts";
+	private const string ManageScopeAssigned = "assignedPosts";
+	private const string ManageScopeAll = "allPosts";
 	
 	public IActionResult Index()
 	{
 		return RedirectToAction("Pending");
+	}
+
+	[HttpGet("Posts/Manage")]
+	public async Task<IActionResult> Manage(
+		string? scope = null,
+		string? search = null,
+		ApprovalStatus? reviewStatus = null,
+		PostStatus? postStatus = null,
+		string? creatorId = null,
+		int page = 1)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(userId))
+		{
+			return RedirectToAction("Login", "Account", new { area = "Identity" });
+		}
+
+		var allowedScopes = GetManageScopes(User);
+		var currentScope = allowedScopes.Any(option => option.Value == scope)
+			? scope!
+			: allowedScopes[0].Value;
+
+		var query = BuildManageScopeQuery(currentScope, userId);
+		var creatorOptions = await GetManageCreatorOptionsAsync(query);
+		var pageSize = int.Parse(configuration["Paging:PageSize"]!);
+
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			var pattern = $"%{search}%";
+			query = query.Where(p => EF.Functions.ILike(p.Address, pattern)
+				|| EF.Functions.ILike(p.GoogleAddress, pattern)
+				|| (p.Description != null && EF.Functions.ILike(p.Description, pattern)));
+		}
+
+		if (reviewStatus.HasValue)
+		{
+			query = query.Where(p => p.ReviewStatus == reviewStatus.Value);
+		}
+
+		if (postStatus.HasValue)
+		{
+			query = query.Where(p => p.Status == postStatus.Value);
+		}
+
+		if (currentScope != ManageScopeMyPosts && !string.IsNullOrWhiteSpace(creatorId))
+		{
+			query = query.Where(p => p.UserId == creatorId);
+		}
+
+		query = query
+			.OrderByDescending(p => p.CreatedAt)
+			.ThenByDescending(p => p.Id);
+
+		var pagedPosts = await query.ToPagedListAsync(page, pageSize);
+		var rows = pagedPosts.Select(post => new PostManageListItemViewModel
+		{
+			Id = post.Id,
+			Address = post.Address,
+			GoogleAddress = post.GoogleAddress,
+			CreatedAt = post.CreatedAt,
+			Status = post.Status,
+			ReviewStatus = post.ReviewStatus,
+			Cost = post.Cost,
+			Raised = post.Raised,
+			CreatorId = post.UserId,
+			CreatorName = UserHelper.GetDisplayName(post.User!),
+			CreatorImage = post.User?.UserData?.Image,
+			ReviewerId = post.ReviewerId,
+			ReviewerName = post.Reviewer != null ? UserHelper.GetDisplayName(post.Reviewer) : null,
+			ReviewerImage = post.Reviewer?.UserData?.Image
+		}).ToList();
+
+		ViewData["Title"] = GetManageScopeLabel(currentScope);
+
+		return View(new PostManagePageViewModel
+		{
+			Posts = new StaticPagedList<PostManageListItemViewModel>(rows, pagedPosts.PageNumber, pagedPosts.PageSize, pagedPosts.TotalItemCount),
+			CurrentScope = currentScope,
+			Search = search,
+			ReviewStatus = reviewStatus,
+			PostStatus = postStatus,
+			CreatorId = creatorId,
+			AvailableScopes = allowedScopes,
+			AvailableCreators = creatorOptions
+		});
 	}
 	
 	public async Task<IActionResult> Pending(int page = 1)
@@ -172,6 +261,79 @@ public partial class PostsController(
 	{
 		var query = await BasePostQuery();
 		return query.Where(p => p.ReviewStatus == ApprovalStatus.Approved);
+	}
+
+	private static List<PostScopeOption> GetManageScopes(ClaimsPrincipal user)
+	{
+		var scopes = new List<PostScopeOption>
+		{
+			new() { Value = ManageScopeMyPosts, Label = "My Posts" }
+		};
+
+		if (user.IsAdminOrSuperAdmin())
+		{
+			scopes.Add(new PostScopeOption { Value = ManageScopeAssigned, Label = "For Review" });
+		}
+
+		if (user.IsSuperAdmin())
+		{
+			scopes.Add(new PostScopeOption { Value = ManageScopeAll, Label = "All Posts" });
+		}
+
+		return scopes;
+	}
+
+	private IQueryable<Post> BuildManageScopeQuery(string scope, string userId)
+	{
+		var query = context.Posts
+			.AsNoTracking()
+			.Include(p => p.User)
+			.ThenInclude(u => u!.UserData)
+			.Include(p => p.Reviewer)
+			.ThenInclude(r => r!.UserData)
+			.AsQueryable();
+
+		return scope switch
+		{
+			ManageScopeAssigned => query.Where(p => p.ReviewerId == userId),
+			ManageScopeAll => User.IsSuperAdmin() ? query : query.Where(p => p.UserId == userId),
+			_ => query.Where(p => p.UserId == userId)
+		};
+	}
+
+	private async Task<List<PostCreatorOption>> GetManageCreatorOptionsAsync(IQueryable<Post> query)
+	{
+		var creatorIds = await query
+			.Select(p => p.UserId)
+			.Distinct()
+			.ToListAsync();
+
+		var users = await context.Users
+			.AsNoTracking()
+			.Where(user => creatorIds.Contains(user.Id))
+			.Include(user => user.UserData)
+			.ToListAsync();
+
+		return users
+			.OrderBy(user => user.UserData?.FirstName)
+			.ThenBy(user => user.UserData?.LastName)
+			.Select(user => new PostCreatorOption
+			{
+				Id = user.Id,
+				Name = UserHelper.GetDisplayName(user),
+				Image = UserHelper.GetProfileImage(user.UserData?.Image)
+			})
+			.ToList();
+	}
+
+	private static string GetManageScopeLabel(string scope)
+	{
+		return scope switch
+		{
+			ManageScopeAssigned => "Assigned Reviews",
+			ManageScopeAll => "All Posts",
+			_ => "My Posts"
+		};
 	}
 
 	[HttpGet]

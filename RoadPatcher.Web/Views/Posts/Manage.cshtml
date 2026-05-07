@@ -1,0 +1,219 @@
+@using X.PagedList.Mvc.Core
+@using RoadPatcher.Application.Entities
+@using RoadPatcher.Helpers
+@using System.Security.Claims
+@model RoadPatcher.Models.PostManagePageViewModel
+
+@{
+	var pageTitle = ViewData["Title"]?.ToString() ?? "My Posts";
+	var currentUserId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+	var showCreatorFilter = Model.CurrentScope != "myPosts";
+	var selectedReviewStatus = Model.ReviewStatus?.ToString();
+	var selectedPostStatus = Model.PostStatus?.ToString();
+}
+
+<div class="card mb-6">
+	<div class="card-body">
+		<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4 mb-6">
+			<div>
+				<h1 class="fs-3 fw-bold mb-1">@pageTitle</h1>
+				<div class="text-muted fs-6">Search and filter posts by review status, post status, and creator.</div>
+			</div>
+		</div>
+
+		<form method="get" asp-action="Manage" class="row g-3 align-items-end">
+			<div class="col-lg-3">
+				<label class="form-label fw-semibold">View</label>
+				<select name="scope" class="form-select">
+					@foreach (var scope in Model.AvailableScopes)
+					{
+						<option value="@scope.Value" selected="@(scope.Value == Model.CurrentScope ? "selected" : null)">@scope.Label</option>
+					}
+				</select>
+			</div>
+
+			<div class="col-lg-4">
+				<label class="form-label fw-semibold">Search</label>
+				<input type="text" name="search" class="form-control" placeholder="Search by address, Google address, or description" value="@Model.Search" />
+			</div>
+
+			<div class="col-lg-2">
+				<label class="form-label fw-semibold">Review Status</label>
+				<select name="reviewStatus" class="form-select">
+					<option value="">All</option>
+					@foreach (var status in Enum.GetValues<ApprovalStatus>())
+					{
+						<option value="@status" selected="@(selectedReviewStatus == status.ToString() ? "selected" : null)">@status</option>
+					}
+				</select>
+			</div>
+
+			<div class="col-lg-2">
+				<label class="form-label fw-semibold">Post Status</label>
+				<select name="postStatus" class="form-select">
+					<option value="">All</option>
+					@foreach (var status in Enum.GetValues<PostStatus>())
+					{
+						<option value="@status" selected="@(selectedPostStatus == status.ToString() ? "selected" : null)">@status</option>
+					}
+				</select>
+			</div>
+
+			@if (showCreatorFilter)
+			{
+				<div class="col-lg-3">
+					<label class="form-label fw-semibold">Creator</label>
+					<select name="creatorId" class="form-select">
+						<option value="">All Creators</option>
+						@foreach (var creator in Model.AvailableCreators)
+						{
+							<option value="@creator.Id" selected="@(creator.Id == Model.CreatorId ? "selected" : null)">@creator.Name</option>
+						}
+					</select>
+				</div>
+			}
+
+			<div class="col-lg-@(showCreatorFilter ? 2 : 3) d-flex gap-2">
+				<button type="submit" class="btn btn-primary w-100">Search</button>
+				<a asp-action="Manage" asp-route-scope="@Model.CurrentScope" class="btn btn-light-secondary w-100">Clear</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="card">
+	<div class="card-header border-0 pt-6">
+		<div class="card-title">
+			<h3 class="fw-bold mb-0">Posts</h3>
+		</div>
+	</div>
+
+	<div class="card-body py-4">
+		<div class="table-responsive">
+			@if (Model.Posts.Count > 0)
+			{
+				<table class="table table-row-bordered align-middle gy-4 gs-9">
+					<thead class="border-bottom border-gray-200 fs-6 text-gray-600 fw-bold bg-light bg-opacity-75">
+						<tr>
+							<th>Creator</th>
+							<th>Address</th>
+							<th>Review Status</th>
+							<th>Post Status</th>
+							<th>Reviewer</th>
+							<th>Progress</th>
+							<th>Created</th>
+							<th class="text-end">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var item in Model.Posts)
+						{
+							var reviewBadge = item.ReviewStatus switch
+							{
+								ApprovalStatus.Approved => "success",
+								ApprovalStatus.ChangesRequested => "warning",
+								ApprovalStatus.Rejected => "danger",
+								_ => "secondary"
+							};
+
+							var postBadge = item.Status switch
+							{
+								PostStatus.Completed => "success",
+								PostStatus.InProcess => "warning",
+								_ => "primary"
+							};
+
+							var raisedPercentage = PostHelper.GetRaisedPercentage(item.Cost, item.Raised);
+							var progressClass = PostHelper.GetProgressClass(raisedPercentage);
+							<tr>
+								<td>
+									<div class="d-flex align-items-center gap-3">
+										<img src="@UserHelper.GetProfileImage(item.CreatorImage)" alt="Creator" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" />
+										<div>
+											<div class="fw-semibold">@item.CreatorName</div>
+											<small class="text-muted">@item.CreatorId</small>
+										</div>
+									</div>
+								</td>
+								<td>
+									<div class="fw-semibold">@item.Address</div>
+									<small class="text-muted">@item.GoogleAddress</small>
+								</td>
+								<td><span class="badge bg-@reviewBadge">@item.ReviewStatus</span></td>
+								<td><span class="badge bg-@postBadge">@(item.Status?.ToString() ?? "Unknown")</span></td>
+								<td>
+									@if (!string.IsNullOrWhiteSpace(item.ReviewerId))
+									{
+										<div class="d-flex align-items-center gap-3">
+											<img src="@UserHelper.GetProfileImage(item.ReviewerImage)" alt="Reviewer" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+											<div>
+												<div class="fw-semibold">@item.ReviewerName</div>
+												<small class="text-muted">@item.ReviewerId</small>
+											</div>
+										</div>
+									}
+									else
+									{
+										<span class="text-muted">Unassigned</span>
+									}
+								</td>
+								<td style="min-width: 180px;">
+									<div class="d-flex justify-content-between small text-muted mb-1">
+										<span>@raisedPercentage.ToString("0.##")%</span>
+										<span>@item.Raised.ToString("N0") / @item.Cost.ToString("N0")</span>
+									</div>
+									<div class="progress" style="height: 8px;">
+										<div class="progress-bar bg-@progressClass" role="progressbar" style="width: @raisedPercentage.ToString("0.##")%;"></div>
+									</div>
+								</td>
+								<td>@item.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</td>
+								<td class="text-end">
+									<div class="btn-group btn-group-sm">
+										<a asp-action="SinglePost" asp-route-id="@item.Id" class="btn btn-light btn-sm">View</a>
+										@if (currentUserId == item.CreatorId && item.ReviewStatus == ApprovalStatus.ChangesRequested)
+										{
+											<a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-light-primary btn-sm">Edit</a>
+										}
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+			else
+			{
+				<div class="alert alert-info mb-0">No posts found.</div>
+			}
+		</div>
+
+		@if (Model.Posts.PageCount > 1)
+		{
+			<div class="d-flex justify-content-center mt-8">
+				@Html.PagedListPager(
+					Model.Posts,
+					page => Url.Action("Manage", new
+					{
+						page,
+						scope = Model.CurrentScope,
+						search = Model.Search,
+						reviewStatus = Model.ReviewStatus,
+						postStatus = Model.PostStatus,
+						creatorId = Model.CreatorId
+					}),
+					new PagedListRenderOptions
+					{
+						DisplayLinkToPreviousPage = PagedListDisplayMode.Always,
+						DisplayLinkToNextPage = PagedListDisplayMode.Always,
+						MaximumPageNumbersToDisplay = 5,
+						LinkToPreviousPageFormat = "<i class=\"las la-angle-left\"></i>",
+						LinkToNextPageFormat = "<i class=\"las la-angle-right\"></i>",
+						LiElementClasses = ["page-item"],
+						PageClasses = ["page-link"],
+						UlElementClasses = ["pagination", "justify-content-center", "mb-10"]
+					}
+				)
+			</div>
+		}
+	</div>
+</div>
