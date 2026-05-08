@@ -1,0 +1,8 @@
+path: ./dataset
+
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 4 # Number of classes
+names: ['longitudinal_crack', 'transverse_crack', 'alligator_crack', 'pothole']

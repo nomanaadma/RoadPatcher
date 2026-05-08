@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoadPatcher.Web", "RoadPatc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoadPatcher.Application", "RoadPatcher.Application\RoadPatcher.Application.csproj", "{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoadPatcher.AIML", "RoadPatcher.AIML\RoadPatcher.AIML.csproj", "{0187FFFF-3AEF-43F0-B6BC-0D7A72252457}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3E9BA4B-069F-4AB4-80A4-AC2A1A46429F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0187FFFF-3AEF-43F0-B6BC-0D7A72252457}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0187FFFF-3AEF-43F0-B6BC-0D7A72252457}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0187FFFF-3AEF-43F0-B6BC-0D7A72252457}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0187FFFF-3AEF-43F0-B6BC-0D7A72252457}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

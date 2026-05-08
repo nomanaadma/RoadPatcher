@@ -16,6 +16,7 @@ using RoadPatcher.Application.Entities;
 using RoadPatcher.Services;
 using RoadPatcher.Hubs;
 using Stripe;
+using CSnakes.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -150,7 +151,21 @@ if (!string.IsNullOrWhiteSpace(stripeSecret))
 	StripeConfiguration.ApiKey = stripeSecret;
 }
 
+
+builder.Services
+	.WithPython()
+	.WithHome(Path.Join(Environment.CurrentDirectory, "RoadPatcher.AIML"))
+	.FromRedistributable();
+
 var app = builder.Build();
+
+// var env = app.Services.GetRequiredService<IPythonEnvironment>();
+
+// var module = env.Hello();
+
+// var greeting = module.AddNumbers(5, 7);
+// Console.WriteLine(greeting); // Output: Hello, Alice!
+
 
 using (var scope = app.Services.CreateScope())
 {

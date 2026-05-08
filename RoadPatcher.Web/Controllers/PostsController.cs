@@ -13,6 +13,7 @@ using X.PagedList;
 using X.PagedList.EF;
 using X.PagedList.Extensions;
 using Sysfile = System.IO.File;
+using CSnakes.Runtime;
 
 namespace RoadPatcher.Controllers;
 
@@ -22,7 +23,8 @@ public partial class PostsController(
 	IWebHostEnvironment webHostEnvironment,
 	IConfiguration configuration,
 	UserManager<ApplicationUser> userManager,
-	INotificationService notificationService
+	INotificationService notificationService,
+	IPythonEnvironment pythonEnv
 	) : Controller
 {
 	private const string ManageScopeMyPosts = "myPosts";
@@ -32,6 +34,15 @@ public partial class PostsController(
 	public IActionResult Index()
 	{
 		return RedirectToAction("Pending");
+	}
+
+	public IActionResult Testing()
+	{
+		var file = pythonEnv.MyScript();
+		var sum = file.AddNumbers(3, 4);
+		var user = new { Name = "Alice", Age = sum, Role = "Admin" };
+		
+		return Json(user);
 	}
 
 	[HttpGet("Posts/Manage")]

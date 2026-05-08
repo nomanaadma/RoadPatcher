@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\RoadPatcher.Application\RoadPatcher.Application.csproj" />
+      <ProjectReference Include="..\RoadPatcher.AIML\RoadPatcher.AIML.csproj" />
     </ItemGroup>
 
     <ItemGroup>
