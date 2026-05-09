@@ -1,7 +1,7 @@
 path: ./dataset
 
 train: train/images
-val: valid/images
+val: val/images
 test: test/images
 
 nc: 4 # Number of classes
