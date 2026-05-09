@@ -11,6 +11,6 @@ results = model.train(
     batch   = 16,
     name    = "rdd2022_yolo26s",
     patience= 10,
-    device  = 0,
+    device  = "cpu",
     cos_lr  = True,
 )
