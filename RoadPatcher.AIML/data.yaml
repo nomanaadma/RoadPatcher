@@ -1,8 +1,8 @@
-path: ./dataset
+%%writefile /kaggle/working/dataset_config.yaml
 
-train: train/images
-val: val/images
-test: test/images
+train: /kaggle/input/datasets/nomanaadma/pothole-detection/train/images
+val: /kaggle/input/datasets/nomanaadma/pothole-detection/valid/images
+test: /kaggle/input/datasets/nomanaadma/pothole-detection/test/images
 
-nc: 4 # Number of classes
-names: ['longitudinal_crack', 'transverse_crack', 'alligator_crack', 'pothole']
+nc: 2
+names: ['0', 'pothole-in-road']
