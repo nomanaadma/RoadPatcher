@@ -41,7 +41,6 @@ public partial class PostsController(
 		var file = pythonEnv.MyScript();
 		var sum = file.AddNumbers(3, 4);
 		var user = new { Name = "Alice", Age = sum, Role = "Admin" };
-		
 		return Json(user);
 	}
 

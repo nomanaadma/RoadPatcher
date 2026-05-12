@@ -154,17 +154,30 @@ if (!string.IsNullOrWhiteSpace(stripeSecret))
 
 builder.Services
 	.WithPython()
-	.WithHome(Path.Join(Environment.CurrentDirectory, "RoadPatcher.AIML"))
+	.WithHome(
+		new[]
+		{
+			Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "RoadPatcher.AIML")),
+			Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "RoadPatcher.AIML")),
+			Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "RoadPatcher.AIML"))
+		}.FirstOrDefault(Directory.Exists)
+		?? throw new DirectoryNotFoundException("Python home directory does not exist. Checked the web content root, the build output root, and the current working directory.")
+	)
 	.FromRedistributable();
 
 var app = builder.Build();
 
+
+
+
+
 // var env = app.Services.GetRequiredService<IPythonEnvironment>();
-
-// var module = env.Hello();
-
-// var greeting = module.AddNumbers(5, 7);
-// Console.WriteLine(greeting); // Output: Hello, Alice!
+//
+// var module = env.MyScript();
+//
+//
+// var addition = module.AddNumbers(5, 7);
+// Console.WriteLine(addition); // Output: Hello, Alice!
 
 
 using (var scope = app.Services.CreateScope())
