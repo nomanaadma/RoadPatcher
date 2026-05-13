@@ -12,24 +12,14 @@ public interface INotificationService
     Task CreateAsync(string? userId, string content, string label);
 }
 
-public class NotificationService : INotificationService
+public class NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hub, UserManager<ApplicationUser> userManager) : INotificationService
 {
-    private readonly ApplicationDbContext _db;
-    private readonly IHubContext<NotificationHub> _hub;
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hub, UserManager<ApplicationUser> userManager)
-    {
-        _db = db;
-        _hub = hub;
-        _userManager = userManager;
-    }
 
     public async Task CreateAsync(string? userId, string content, string label)
     {
         if (string.IsNullOrEmpty(userId))
         {
-            var superAdmin = (await _userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault();
+            var superAdmin = (await userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault();
             if (superAdmin == null)
                 return;
 
@@ -43,13 +33,13 @@ public class NotificationService : INotificationService
             Label = label
         };
 
-        _db.Notifications.Add(notification);
-        await _db.SaveChangesAsync();
+        db.Notifications.Add(notification);
+        await db.SaveChangesAsync();
 
-        var unreadCount = await _db.Notifications
+        var unreadCount = await db.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
             .CountAsync();
 
-        await _hub.Clients.User(userId).SendAsync("NotificationCountUpdated", unreadCount);
+        await hub.Clients.User(userId).SendAsync("NotificationCountUpdated", unreadCount);
     }
 }

@@ -23,8 +23,7 @@ public partial class PostsController(
 	IWebHostEnvironment webHostEnvironment,
 	IConfiguration configuration,
 	UserManager<ApplicationUser> userManager,
-	INotificationService notificationService,
-	IPythonEnvironment pythonEnv
+	INotificationService notificationService
 	) : Controller
 {
 	private const string ManageScopeMyPosts = "myPosts";
@@ -38,9 +37,10 @@ public partial class PostsController(
 
 	public IActionResult Testing()
 	{
-		var file = pythonEnv.MyScript();
-		var sum = file.AddNumbers(3, 4);
-		var user = new { Name = "Alice", Age = sum, Role = "Admin" };
+		// pythonEnv.Dispose();
+		// var file = pythonEnv.MyScript();
+		// var sum = file.AddNumbers(3, 4);
+		var user = new { Name = "Alice", Age = 7, Role = "Admin" };
 		return Json(user);
 	}
 
