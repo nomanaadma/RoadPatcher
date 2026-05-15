@@ -135,6 +135,52 @@
         });
     });
 
+    // Handle notify icon clicks embedded inside the post-link-btn.
+    $(document).on("click", ".post-link-btn .notify-icon", function (e) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+
+
+        const $icon = $(this);
+        const postId = $icon.data("post-id");
+
+        // show spinner state
+        const originalClass = $icon.attr('class');
+        $icon.attr("class", "las la-spinner la-spin notify-icon ms-2");
+
+        axios.post('/Posts/TogglePostNotification', null, {
+            params: {
+                postId: postId
+            }
+        })
+        .then(function (response) {
+            const subscribed = response.data.subscribed;
+
+            if (subscribed) {
+                $icon.attr("class", "las la-bell notify-icon ms-2 text-warning");
+                toastr.success(`Post #${postId} notifications enabled`);
+            } else {
+                $icon.attr("class", "las la-bell-slash notify-icon ms-2 text-muted");
+                toastr.info(`Post #${postId} notifications disabled`);
+            }
+        })
+        .catch(function (error) {
+            console.error("Notification toggle failed", error);
+            toastr.error("Failed to update notification preference");
+            // restore original on error
+            $icon.attr('class', originalClass);
+        })
+        .finally(function () {
+            // ensure spinner replaced (in case of success path it already was set)
+            const cls = $icon.attr('class');
+            if (cls.includes('spinner')) {
+                $icon.attr('class', originalClass);
+            }
+        });
+    });
+
     
     $('.share-btn').on('click', function() {
 

@@ -584,6 +584,47 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.ToTable("Posts");
                 });
 
+            modelBuilder.Entity("RoadPatcher.Application.Entities.PostNotificationSubscription", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId")
+                        .HasDatabaseName("IX_PostNotificationSubscription_PostId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_PostNotificationSubscription_UserId");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PostNotificationSubscription_PostId_UserId");
+
+                    b.ToTable("PostNotificationSubscriptions");
+                });
+
             modelBuilder.Entity("RoadPatcher.Application.Entities.Share", b =>
                 {
                     b.Property<int>("Id")
@@ -842,6 +883,25 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("RoadPatcher.Application.Entities.PostNotificationSubscription", b =>
+                {
+                    b.HasOne("RoadPatcher.Application.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.Share", b =>

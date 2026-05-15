@@ -43,6 +43,7 @@
 	var isFavourited = DbContext.Favourites.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isDiscussed = DbContext.Comments.Any(l => l.PostId == Model.Id && l.UserId == userId);
 	var isShared = DbContext.Shares.Any(l => l.PostId == Model.Id && l.UserId == userId);
+	var isSubscribed = DbContext.PostNotificationSubscriptions.Any(s => s.PostId == Model.Id && s.UserId == userId);
 
 
 	var isSingle = ViewData["IsSingle"] as bool? ?? false;
@@ -149,7 +150,16 @@
 					<span><i class="las la-clock position-relative"></i> @Model.CreatedAt.ToPrettyFormat() • @Model.CreatedAt.ToAgo() </span>
 				</div>
 				
-				<a asp-action="SinglePost" asp-route-id="@Model.Id" data-bs-toggle="tooltip" title="Open Post" data-bs-placement="bottom" class="btn btn-dark rounded-20 post-link-btn"><i class="las la-link text-white"></i> <span>#@Model.Id</span></a>
+				<a asp-action="SinglePost" asp-route-id="@Model.Id" data-bs-toggle="tooltip" title="Open Post" data-bs-placement="bottom" class="btn btn-dark rounded-20 post-link-btn">
+					<i class="las la-link text-white"></i> <span>#@Model.Id</span>
+					<i class="las notify-icon ms-2 @(isSubscribed ? "la-bell text-warning" : "la-bell-slash text-muted")" 
+					   data-post-id="@Model.Id"
+					   data-bs-toggle="tooltip"
+					   title="Toggle Notifications"
+					   data-bs-placement="bottom"
+					   style="cursor:pointer;">
+					</i>
+				</a>
 
 				@if(Model.ReviewStatus == ApprovalStatus.InReview) {
 					<span class="btn btn-light-primary rounded-20 disabled-anchor ms-2">In Review</span>

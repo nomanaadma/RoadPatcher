@@ -684,10 +684,6 @@ gmp-place-autocomplete {
     padding: 4px 12px 5px !important;
 }
 
-.post-link-btn:hover span {
-    text-decoration: underline;
-}
-
 .location-table table {
     width: 100%;
 }
@@ -1156,3 +1152,17 @@ gmp-place-autocomplete {
     flex-direction: column;
     justify-content: center;
 }
+
+.text-muted {
+    color: var(--bs-text-muted) !important;
+}
+
+.text-warning {
+    color: var(--bs-text-warning) !important;
+}
+
+.notify-icon {
+    padding-right: 0 !important;
+}
+
+

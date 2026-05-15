@@ -22,6 +22,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 	
 	public DbSet<Notification> Notifications => Set<Notification>();
 
+	public DbSet<PostNotificationSubscription> PostNotificationSubscriptions => Set<PostNotificationSubscription>();
+
 	protected override void OnModelCreating(ModelBuilder builder)
 	{
 

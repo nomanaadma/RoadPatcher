@@ -887,6 +887,52 @@ public partial class PostsController(
 		});
 	}
 
+	[HttpPost]
+	[Authorize]
+	public async Task<IActionResult> TogglePostNotification(int postId)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(userId))
+			return Unauthorized();
+
+		var postExists = await context.Posts
+			.AsNoTracking()
+			.AnyAsync(p => p.Id == postId);
+
+		if (!postExists)
+			return NotFound();
+
+		var existingSubscription = await context.PostNotificationSubscriptions
+			.AsTracking()
+			.FirstOrDefaultAsync(x => x.PostId == postId && x.UserId == userId);
+
+		bool subscribed;
+
+		if (existingSubscription == null)
+		{
+			context.PostNotificationSubscriptions.Add(new PostNotificationSubscription
+			{
+				PostId = postId,
+				UserId = userId
+			});
+
+			subscribed = true;
+		}
+		else
+		{
+			context.PostNotificationSubscriptions.Remove(existingSubscription);
+			subscribed = false;
+		}
+
+		await context.SaveChangesAsync();
+
+		return Json(new
+		{
+			subscribed
+		});
+	}
+
 	
 	[HttpPost]
 	[Authorize]
