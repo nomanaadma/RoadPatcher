@@ -301,7 +301,6 @@ public partial class PostsController(
 	private IQueryable<Post> BuildManageScopeQuery(string scope, string userId)
 	{
 		var query = context.Posts
-			.AsNoTracking()
 			.Include(p => p.User)
 			.ThenInclude(u => u!.UserData)
 			.Include(p => p.Reviewer)
@@ -324,7 +323,6 @@ public partial class PostsController(
 			.ToListAsync();
 
 		var users = await context.Users
-			.AsNoTracking()
 			.Where(user => creatorIds.Contains(user.Id))
 			.Include(user => user.UserData)
 			.ToListAsync();
@@ -429,7 +427,6 @@ public partial class PostsController(
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
 		var post = await context.Posts
-			.AsNoTracking()
 			.Include(p => p.MediaFiles)
 			.FirstOrDefaultAsync(p => p.Id == id);
 
@@ -741,7 +738,6 @@ public partial class PostsController(
 
 		var adminUserIds = adminUsers.Select(user => user.Id).ToList();
 		var activeReviewLoads = await context.Posts
-			.AsNoTracking()
 			.Where(post => post.ReviewerId != null
 				&& adminUserIds.Contains(post.ReviewerId)
 				&& post.ReviewStatus == ApprovalStatus.InReview)
@@ -897,7 +893,6 @@ public partial class PostsController(
 			return Unauthorized();
 
 		var postExists = await context.Posts
-			.AsNoTracking()
 			.AnyAsync(p => p.Id == postId);
 
 		if (!postExists)

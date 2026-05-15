@@ -133,7 +133,7 @@ builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
 
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-builder.Services.AddSingleton<GeometryFactory>(sp => 
+builder.Services.AddSingleton(_ => 
     NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326));
 
 var themeConfiguration = new ConfigurationBuilder()

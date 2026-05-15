@@ -91,7 +91,6 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
             }
 
             var isDisabled = await db.Users
-                .AsNoTracking()
                 .AnyAsync(u => u.Id == userId && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow);
 
             if (isDisabled)

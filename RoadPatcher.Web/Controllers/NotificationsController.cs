@@ -35,8 +35,7 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
 
         // Base query: notifications for current user
         var query = db.Notifications
-            .Where(n => n.UserId == userId)
-            .AsNoTracking();
+            .Where(n => n.UserId == userId);
 
         // Provide available labels for filter dropdown
         var availableLabels = await db.Notifications
@@ -206,7 +205,6 @@ public class NotificationsController(ApplicationDbContext db, IConfiguration con
             return Unauthorized();
 
         var notifications = await db.Notifications
-            .AsNoTracking()
             .Where(n => n.UserId == userId && !n.IsRead && !n.ToastStatus)
             .OrderByDescending(n => n.CreatedAt)
             .Select(n => new NotificationDto
