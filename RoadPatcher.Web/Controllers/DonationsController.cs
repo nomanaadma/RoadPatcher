@@ -8,16 +8,15 @@ using RoadPatcher.Application.Entities;
 using Stripe;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace RoadPatcher.Controllers;
 
 [Route("[controller]")]
 [ApiController]
 public class DonationsController(
-	ApplicationDbContext db)
-	: Controller
+    ApplicationDbContext db,
+    RoadPatcher.Services.INotificationService notificationService
+) : Controller
 {
 	
 	[HttpPost("CreatePaymentIntent")]
@@ -127,6 +126,8 @@ public class DonationsController(
         
         var amountDecimal = intent.AmountReceived / 100m;
 
+        var completed = false;
+
         // Persist donation and update post atomically
         await using var tx = await db.Database.BeginTransactionAsync();
         try
@@ -151,6 +152,7 @@ public class DonationsController(
             if (post.Cost == post.Raised)
             {
 	            post.Status = PostStatus.InProcess;
+                completed = true;
             }
 
             // Increase PeopleDonated only if this user hasn't donated successfully before for this post
@@ -164,6 +166,35 @@ public class DonationsController(
 
             db.Posts.Update(post);
             await db.SaveChangesAsync();
+
+            var donator = await db.Users
+                .Include(u => u.UserData)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            var donatorName = donator == null
+                ? "Someone"
+                : UserHelper.GetDisplayName(donator);
+
+            var postViewUrl = $"/Posts/{post.Id}";
+
+            await notificationService.NotifyPostSubscribersAsync(
+                postId,
+                userId,
+                $"{donatorName} Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>",
+                "Donation",
+                true);
+
+            if(completed) {
+                
+                await notificationService.NotifyPostSubscribersAsync(
+                    postId,
+                    userId,
+                    $"Congratulations! Post #{post.Id} has successfully reached its required donation amount. Thank you to everyone for your support. The company has been notified, and a team will now be assigned to begin the patch work. We will keep you all updated on the <a href='{postViewUrl}'>View Post</a>.",
+                    "Donation",
+                    true);
+            
+            }
+
             await tx.CommitAsync();
             
             var updatedPostValues = UpdatedPostValues(post, amountDecimal);

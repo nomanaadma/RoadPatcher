@@ -287,7 +287,7 @@ public partial class PostsController(
 
 		if (user.IsAdminOrSuperAdmin())
 		{
-			scopes.Add(new PostScopeOption { Value = ManageScopeAssigned, Label = "For Review" });
+			scopes.Add(new PostScopeOption { Value = ManageScopeAssigned, Label = "Review Posts" });
 		}
 
 		if (user.IsSuperAdmin())
@@ -410,6 +410,40 @@ public partial class PostsController(
 		await context.SaveChangesAsync();
 		
 		await AttachMedia(model, post.Id);
+
+		// Auto-subscribe post owner
+		if (!string.IsNullOrWhiteSpace(userId))
+		{
+			var ownerSubscribed = await context.PostNotificationSubscriptions
+				.AnyAsync(s => s.PostId == post.Id && s.UserId == userId);
+
+			if (!ownerSubscribed)
+			{
+				context.PostNotificationSubscriptions.Add(new PostNotificationSubscription
+				{
+					PostId = post.Id,
+					UserId = userId
+				});
+			}
+		}
+
+		// Auto-subscribe assigned reviewer (if any and not the owner)
+		if (!string.IsNullOrWhiteSpace(post.ReviewerId) && post.ReviewerId != userId)
+		{
+			var reviewerSubscribed = await context.PostNotificationSubscriptions
+				.AnyAsync(s => s.PostId == post.Id && s.UserId == post.ReviewerId);
+
+			if (!reviewerSubscribed)
+			{
+				context.PostNotificationSubscriptions.Add(new PostNotificationSubscription
+				{
+					PostId = post.Id,
+					UserId = post.ReviewerId
+				});
+			}
+		}
+
+		await context.SaveChangesAsync();
 
 		if(!User.IsSuperAdmin()) {
 			await NotifyAdminsOnNewPostAsync(post);

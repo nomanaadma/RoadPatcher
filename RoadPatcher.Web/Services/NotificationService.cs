@@ -10,6 +10,7 @@ namespace RoadPatcher.Services;
 public interface INotificationService
 {
     Task CreateAsync(string? userId, string content, string label);
+    Task NotifyPostSubscribersAsync(int postId, string? currentUserId, string content, string label, bool exclude = false);
 }
 
 public class NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hub, UserManager<ApplicationUser> userManager) : INotificationService
@@ -41,5 +42,28 @@ public class NotificationService(ApplicationDbContext db, IHubContext<Notificati
             .CountAsync();
 
         await hub.Clients.User(userId).SendAsync("NotificationCountUpdated", unreadCount);
+    }
+
+    public async Task NotifyPostSubscribersAsync(int postId, string? exceptUserId, string content, string label, bool include = false)
+    {
+        var subscriberIds = await db.PostNotificationSubscriptions
+            .Where(subscription => subscription.PostId == postId)
+            .Select(subscription => subscription.UserId)
+            .ToListAsync();
+
+        var superAdminUser = (await userManager.GetUsersInRoleAsync("SuperAdmin")).FirstOrDefault()!;
+
+        var recipientQuery = subscriberIds.Concat([superAdminUser.Id]);
+
+        if(!include) {
+            recipientQuery = recipientQuery.Where(userId => !string.Equals(userId, exceptUserId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var recipientIds = recipientQuery.ToList();
+
+        foreach (var recipientId in recipientIds)
+        {
+            await CreateAsync(recipientId, content, label);
+        }
     }
 }

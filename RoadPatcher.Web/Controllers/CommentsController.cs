@@ -2,18 +2,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
+using RoadPatcher.Services;
 
 namespace RoadPatcher.Controllers;
 
 [Route("[controller]")]
 [Authorize]
 [ApiController]
-public class CommentsController(ApplicationDbContext db) : ControllerBase
+public class CommentsController(ApplicationDbContext db, INotificationService notificationService) : ControllerBase
 {
 	
 	// GET: comments/post/5
@@ -42,6 +42,16 @@ public class CommentsController(ApplicationDbContext db) : ControllerBase
         var post = await db.Posts.AsTracking().FirstOrDefaultAsync(p => p.Id == req.PostId);
         if (post == null)
 	        return NotFound("Post not found");
+
+        var commenter = await db.Users
+	        .Include(u => u.UserData)
+	        .FirstOrDefaultAsync(u => u.Id == userId);
+
+        var commenterName = commenter == null
+	        ? "Someone"
+	        : UserHelper.GetDisplayName(commenter);
+
+        var postViewUrl = $"/Posts/{post.Id}";
         
 
         var comment = new Comment {
@@ -55,6 +65,12 @@ public class CommentsController(ApplicationDbContext db) : ControllerBase
         db.Comments.Add(comment);
         post.Discussions += 1;
         await db.SaveChangesAsync();
+
+        await notificationService.NotifyPostSubscribersAsync(
+            req.PostId,
+            userId,
+            $"{commenterName} Commented on Post #{post.Id} <a href='{postViewUrl}'>View</a>",
+            "Comment");
         
         var dto = await db.Comments
 	        .Where(c => c.Id == comment.Id)

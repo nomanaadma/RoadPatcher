@@ -340,6 +340,17 @@
                     .then(function(resp) {
                         countBadge.text(resp.data.total_discussion);
                         success(resp.data);
+
+                        // Auto-trigger notify click to subscribe commenter if not already subscribed
+                        try {
+                            const $notifyIcon = $(`.post-link-btn .notify-icon[data-post-id="${postId}"]`);
+                            if ($notifyIcon.length && $notifyIcon.hasClass('la-bell-slash')) {
+                                // Trigger click which uses same toggle handler
+                                $notifyIcon.trigger('click');
+                            }
+                        } catch (err) {
+                            console.error('Auto-subscribe trigger failed', err);
+                        }
                     })
                     .catch(function(err) { console.error(err); error('Failed'); });
             },
@@ -581,7 +592,7 @@
                     
                     let msg = `<p>We appreciate your <strong>${data.donated_amount}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
                     
-                    if(data.remaining_amount === "0") {
+                    if(data.raised_percentage === 100) {
                         
                         $post.find('.donation-btn-button').remove();
                         
@@ -601,11 +612,22 @@
                         
                         msg = `
                         <div style="font-size: 1.1em;">
-                            <p>Incredible! Your <strong>${data.donatedAmount}</strong> donation was the final piece of the puzzle.</p>
+                            <p>Incredible! Your <strong>${data.donated_amount}</strong> donation was the final piece of the puzzle.</p>
                             <p class="mt-2"><strong>This project is now fully funded! and now will be moved to Pending list</strong> 🚧✅</p>
-                            <p style="color: #666; font-size: 0.9em;">Repair work can now begin immediately thanks to you.</p>
+                            <p style="color: #666; font-size: 0.9em;">Repair work can now begin immediately thanks to you. We will keep you updated.</p>
                         </div>
                         `;
+                    }
+
+
+                    try {
+                        const $notifyIcon = $(`.post-link-btn .notify-icon[data-post-id="${postId}"]`);
+                        if ($notifyIcon.length && $notifyIcon.hasClass('la-bell-slash')) {
+                            // Trigger click which uses same toggle handler
+                            $notifyIcon.trigger('click');
+                        }
+                    } catch (err) {
+                        console.error('Auto-subscribe trigger failed', err);
                     }
                     
                     // Close the donation popup and show success
