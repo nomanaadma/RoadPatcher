@@ -51,7 +51,7 @@ public class CommentsController(ApplicationDbContext db, INotificationService no
 	        ? "Someone"
 	        : UserHelper.GetDisplayName(commenter);
 
-        var postViewUrl = $"/Posts/{post.Id}";
+        var postViewUrl = $"/Posts/{post.Id}?open=comments";
         
 
         var comment = new Comment {

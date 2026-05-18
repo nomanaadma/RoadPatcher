@@ -6,11 +6,16 @@
 
 <partial name="_PostStyles" />
 <style>
-	.post-link-btn, .post-link-btn * {
-		pointer-events: none;
+
+	.post-details .btn.post-link-btn:focus,
+	.post-details .btn.post-link-btn:active,
+	.post-details .btn.post-link-btn:hover,
+	.post-link-btn,
+	.post-link-btn i.la-link {
 		background-color: #dcdcdc !important;
 		color: #7c7c7c !important;
 	}
+
 </style>
 
 @{
@@ -33,6 +38,15 @@
 		window.stripePublishableKey = '@Configuration["Stripe:PublishableKey"]';
 	</script>
 	<partial name="_PostScripts" />
+	<script>
+		$(function () {
+			$('.post-link-btn')
+				.attr('href', 'javascript:void(0)')
+				.removeAttr('data-bs-toggle')
+				.removeAttr('data-bs-placement')
+				.removeAttr('data-bs-original-title')
+		});
+	</script>
 	@if (TempData["Success"] != null)
 	{
 		<script>

@@ -181,8 +181,7 @@ public class DonationsController(
                 postId,
                 userId,
                 $"{donatorName} Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>",
-                "Donation",
-                true);
+                "Donation");
 
             if(completed) {
                 

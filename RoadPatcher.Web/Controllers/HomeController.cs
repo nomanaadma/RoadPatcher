@@ -8,7 +8,7 @@ public class HomeController : Controller
 {
 	public IActionResult Index()
 	{
-		return RedirectToAction("Index", "Posts");
+		return RedirectToAction("Index", "Admin");
 	}
 	
 	[HttpGet("{id:int}")]

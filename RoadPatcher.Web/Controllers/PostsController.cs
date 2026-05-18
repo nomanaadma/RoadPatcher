@@ -61,9 +61,27 @@ public partial class PostsController(
 		}
 
 		var allowedScopes = GetManageScopes(User);
-		var currentScope = allowedScopes.Any(option => option.Value == scope)
-			? scope!
-			: allowedScopes[0].Value;
+
+		var currentScope = allowedScopes[0].Value;
+
+		if(allowedScopes.Any(option => option.Value == scope))
+		{
+			currentScope = scope!;
+		}
+		else
+		{
+			if (User.IsSuperAdmin())
+			{
+				currentScope = allowedScopes[2].Value;
+			}
+
+			if(User.IsAdmin())
+			{
+				currentScope = allowedScopes[1].Value;
+			}
+			
+		}
+
 
 		var query = BuildManageScopeQuery(currentScope, userId);
 		var creatorOptions = await GetManageCreatorOptionsAsync(query);

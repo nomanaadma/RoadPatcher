@@ -55,7 +55,7 @@ public class NotificationService(ApplicationDbContext db, IHubContext<Notificati
 
         var recipientQuery = subscriberIds.Concat([superAdminUser.Id]);
 
-        if(!include) {
+        if(include == false) {
             recipientQuery = recipientQuery.Where(userId => !string.Equals(userId, exceptUserId, StringComparison.OrdinalIgnoreCase));
         }
 

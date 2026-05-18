@@ -118,12 +118,24 @@
             if (favourited) {
                 $btn.addClass("bg-light-danger");
                 $favouriteText.text("Favourited");
+
+                try {
+                    const $notifyIcon = $(`.post-link-btn .notify-icon[data-post-id="${postId}"]`);
+                    if ($notifyIcon.length && $notifyIcon.hasClass('la-bell-slash')) {
+                        // Trigger click which uses same toggle handler
+                        $notifyIcon.trigger('click');
+                    }
+                } catch (err) {
+                    console.error('Auto-subscribe trigger failed', err);
+                }
+
             } else {
                 $btn.removeClass("bg-light-danger");
                 $favouriteText.text("Favourite");
             }
 
             $favouriteCount.text(totalFavourites);
+            
         })
         .catch(function (error) {
             console.error("Favourite toggle failed", error);
@@ -293,6 +305,13 @@
 
                 // Initialize widget
                 initJQueryComments(widgetContainer, comments, postId, countBadge);
+
+                setTimeout(function () {
+                    const el = widgetContainer.querySelector('.textarea-wrapper .textarea[contenteditable="true"]');
+                    el.focus();
+                    el.click();
+                }, 100);
+                
             })
             .catch(function (error) {
                 console.error('Failed to load comments', error);
@@ -747,5 +766,12 @@
         });
         
     });
+    
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('open') === 'comment') {
+        $('.discussion-btn').trigger('click');
+    }
+
 
 });

@@ -1,10 +1,8 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
-using RoadPatcher.Helpers;
 
 namespace RoadPatcher.Middlewares;
 
@@ -22,43 +20,6 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
                 return;
             }
 
-            var path = context.Request.Path.Value ?? string.Empty;
-
-            // Allow static assets, identity endpoints and some common public paths
-            string[] allowedPrefixes =
-            [
-	            "/css",
-                "/js",
-                "/lib",
-                "/images",
-                "/img",
-                "/uploads",
-                "/favicon.ico",
-                "/robots.txt",
-                "/_framework",
-                "/_content",
-                "/Identity",
-                "/Home/Error",
-                "/Account",
-                "/Admin",
-                "/Settings",
-                "/Notifications",
-                "/hubs",
-                "/Posts/Manage"
-            ];
-
-            if (allowedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
-            {
-                await next(context);
-                return;
-            }
-
-            // Allow the EditProfile page (GET and POST)
-            if (path.StartsWith("/Settings/EditProfile", StringComparison.OrdinalIgnoreCase))
-            {
-                await next(context);
-                return;
-            }
 
             // Get the user id from claims
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -68,27 +29,6 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
                 return;
             }
 
-            // Allow SuperAdmin to access only specific post routes even if profile isn't completed
-            // Use route data (controller/action/id) instead of string parsing
-            if (user.IsSuperAdmin())
-            {
-                var routeData = context.GetRouteData();
-                var controller = routeData?.Values["controller"]?.ToString();
-                var action = routeData?.Values["action"]?.ToString();
-
-                if (string.Equals(controller, "Posts", StringComparison.OrdinalIgnoreCase))
-                {
-                    // /Posts/Edit/{id}
-                    if (
-                        string.Equals(action, "Edit", StringComparison.OrdinalIgnoreCase) || 
-                        string.Equals(action, "SinglePost", StringComparison.OrdinalIgnoreCase)
-                        )
-                    {
-                        await next(context);
-                        return;
-                    }
-                }
-            }
 
             var isDisabled = await db.Users
                 .AnyAsync(u => u.Id == userId && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow);
@@ -100,20 +40,46 @@ public class ProfileCompletionMiddleware(RequestDelegate next, ILogger<ProfileCo
                 return;
             }
 
+
+
+            var path = context.Request.Path.Value ?? string.Empty;
+
+            // Define the ONLY paths that require a completed profile
+            string[] restrictedPrefixes =
+            [
+                "/Posts/Pending",
+                "/Posts/InProcess",
+                "/Posts/Completed",
+                "/Posts/Favourited",
+                "/Posts/Donated",
+                "/Posts/Search",
+            ];
+
+
+            // If the path DOES NOT match our restricted list, allow it through immediately
+            if (!restrictedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                await next(context);
+                return;
+            }
+
+
+            // --- Restricted Route Logic ---
+            // The user is trying to access one of the restricted /Posts/ endpoints.
             // Check whether user has saved profile data.
-            // Assumption: having a UserData record means profile was completed/saved.
             var hasProfile = await db.UserData.AnyAsync(u => u.UserId == userId);
 
             if (!hasProfile)
             {
                 // Redirect to EditProfile with required flag
                 const string redirectUrl = "/Settings/EditProfile?required=true";
-                
                 context.Response.Redirect(redirectUrl);
                 return;
             }
 
             await next(context);
+
+
         }
         catch (Exception ex)
         {
