@@ -787,6 +787,11 @@ gmp-place-autocomplete {
     text-transform: capitalize;
 }
 
+.jquery-comments ul.main li.comment.by-admin .comment-header .name .admin-badge {
+    font-size: 0.7rem;
+    vertical-align: middle;
+}
+
 .reply-to {
     text-transform: capitalize;
 }
@@ -1163,6 +1168,10 @@ gmp-place-autocomplete {
 
 .notify-icon {
     padding-right: 0 !important;
+}
+
+.navigation-tab i {
+    padding-right: 0 ;
 }
 
 

@@ -18,6 +18,9 @@ public record CommentDto
 	
 	public string Content { get; init; } = null!;
 	public DateTime Created { get; init; }
+
+	[JsonProperty("created_by_admin")]
+	public bool CreatedByAdmin { get; init; }
 	
 	public int TotalDiscussion { get; set; }
 }

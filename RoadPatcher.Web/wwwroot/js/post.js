@@ -346,6 +346,10 @@
             getComments: function(success, error) {
                 // plugin asks for comments - we already have items
                 success(items);
+
+                setTimeout(function () {
+                    prioritizeAdminComments(containerEl);
+                }, 0);
             },
             postComment: function(commentJSON, success, error) {
                 // Called when adding a new root comment
@@ -359,6 +363,10 @@
                     .then(function(resp) {
                         countBadge.text(resp.data.total_discussion);
                         success(resp.data);
+
+                        setTimeout(function () {
+                            prioritizeAdminComments(containerEl);
+                        }, 0);
 
                         // Auto-trigger notify click to subscribe commenter if not already subscribed
                         try {
@@ -389,6 +397,29 @@
             enableSorting: false,
             textareaPlaceholderText: 'Write a comment...',
             sendText: 'Comment',
+        });
+    }
+
+    function prioritizeAdminComments(containerEl) {
+        if (!containerEl) return;
+
+        const $commentList = $(containerEl).find('#comment-list');
+        if (!$commentList.length) return;
+
+        const $topLevelComments = $commentList.children('li.comment').not('.commenting-field');
+        const $adminComments = $topLevelComments.filter('.by-admin');
+
+        if ($adminComments.length) {
+            $adminComments.each(function () {
+                $commentList.prepend(this);
+            });
+        }
+
+        $commentList.find('li.comment.by-admin .comment-header .name').each(function () {
+            const $name = $(this);
+            if ($name.find('.admin-badge').length === 0) {
+                $name.append('<span class="badge bg-light-info text-info ms-2 admin-badge">Admin</span>');
+            }
         });
     }
 

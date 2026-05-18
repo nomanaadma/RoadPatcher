@@ -7,23 +7,44 @@ using RoadPatcher.Application.Entities;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
 using RoadPatcher.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace RoadPatcher.Controllers;
 
 [Route("[controller]")]
 [Authorize]
 [ApiController]
-public class CommentsController(ApplicationDbContext db, INotificationService notificationService) : ControllerBase
+public class CommentsController(ApplicationDbContext db, INotificationService notificationService, UserManager<ApplicationUser> userManager) : ControllerBase
 {
 	
 	// GET: comments/post/5
     [HttpGet("post/{postId:int}")]
     public async Task<IActionResult> GetCommentsForPost(int postId)
     {
+        var adminIds = await userManager.GetUsersInRoleAsync("Admin");
+        var superAdminIds = await userManager.GetUsersInRoleAsync("SuperAdmin");
+        var adminUserIds = adminIds.Select(user => user.Id)
+            .Concat(superAdminIds.Select(user => user.Id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var comments = await db.Comments
+            .Include(c => c.User)
+            .ThenInclude(u => u!.UserData)
             .Where(c => c.PostId == postId)
-            .OrderBy(c => c.CreatedAt)
-            .Select(CommentHelper.ToDto)
+            .OrderByDescending(c => adminUserIds.Contains(c.UserId))
+            .ThenBy(c => c.ParentId)
+            .ThenBy(c => c.CreatedAt)
+            .Select(c => new CommentDto
+            {
+                Id = c.Id,
+                PostId = c.PostId,
+                Parent = c.ParentId,
+                Fullname = UserHelper.GetFullName(c.User!.UserData!),
+                ProfilePictureUrl = UserHelper.GetProfileImage(c.User.UserData!.Image),
+                Content = c.Content,
+                Created = c.CreatedAt,
+                CreatedByAdmin = adminUserIds.Contains(c.UserId)
+            })
             .ToListAsync();
 
         return Ok(comments);
@@ -66,16 +87,34 @@ public class CommentsController(ApplicationDbContext db, INotificationService no
         post.Discussions += 1;
         await db.SaveChangesAsync();
 
+        var isCurrentUserAdmin = User.IsAdminOrSuperAdmin();
+
+        var notificationContent = isCurrentUserAdmin
+            ? $"<strong>[Admin]</strong> {commenterName} Commented on Post #{post.Id} <a href='{postViewUrl}'>View</a>"
+            : $"{commenterName} Commented on Post #{post.Id} <a href='{postViewUrl}'>View</a>";
+
         await notificationService.NotifyPostSubscribersAsync(
             req.PostId,
             userId,
-            $"{commenterName} Commented on Post #{post.Id} <a href='{postViewUrl}'>View</a>",
+            notificationContent,
             "Comment");
-        
-        var dto = await db.Comments
-	        .Where(c => c.Id == comment.Id)
-	        .Select(CommentHelper.ToDto)
-	        .FirstAsync();
+
+        var savedComment = await db.Comments
+            .Include(c => c.User)
+            .ThenInclude(u => u!.UserData)
+            .FirstAsync(c => c.Id == comment.Id);
+
+        var dto = new CommentDto
+        {
+            Id = savedComment.Id,
+            PostId = savedComment.PostId,
+            Parent = savedComment.ParentId,
+            Fullname = UserHelper.GetFullName(savedComment.User!.UserData!),
+            ProfilePictureUrl = UserHelper.GetProfileImage(savedComment.User.UserData!.Image),
+            Content = savedComment.Content,
+            Created = savedComment.CreatedAt,
+            CreatedByAdmin = isCurrentUserAdmin
+        };
         
 		var totalDiscussions = await db.Comments.CountAsync(l => l.PostId == req.PostId);
 		

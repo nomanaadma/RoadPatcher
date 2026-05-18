@@ -15,6 +15,7 @@ public static class CommentHelper
 			Fullname = UserHelper.GetFullName(c.User!.UserData!),
 			ProfilePictureUrl = UserHelper.GetProfileImage(c.User.UserData!.Image),
 			Content = c.Content,
-			Created = c.CreatedAt
+			Created = c.CreatedAt,
+			CreatedByAdmin = false
 		};
 }
