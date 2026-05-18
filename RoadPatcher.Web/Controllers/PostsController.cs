@@ -1045,32 +1045,6 @@ public partial class PostsController(
 		return Json(new { totalShares = post.Shares });
 	}
 	
-	[HttpPost]
-	[Authorize]
-	public async Task<IActionResult> ToggleStatus(int postId)
-	{
-		var post = await context.Posts
-			.AsTracking()
-			.FirstOrDefaultAsync(p => p.Id == postId);
-
-		if (post == null)
-			return NotFound();
-
-		post.Status = post.Status == PostStatus.Completed
-			? PostStatus.InProcess
-			: PostStatus.Completed;
-
-		var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status );
-
-		post.UpdatedAt = DateTime.UtcNow;
-
-		await context.SaveChangesAsync();
-
-		return Ok(new
-		{
-			btn = PostHelper.RenderBtn(currentStatus, post.Id)
-		});
-	}
 
 	public async Task<IActionResult> AdvancedSearch(
 		[FromQuery(Name = "goal_start")] decimal? goalStart,

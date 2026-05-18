@@ -365,18 +365,6 @@
 								</button>	
 							</div>
 						}
-						else
-						{
-							@if (Model.Status == PostStatus.InProcess && Model.UserId == userId)
-							{
-								@PostHelper.RenderBtn(PostStatus.Completed, Model.Id)
-							}
-							
-							@if (Model.Status == PostStatus.Completed && Model.UserId == userId)
-							{
-								@PostHelper.RenderBtn(PostStatus.InProcess, Model.Id)
-							}
-						}
 						
 						}
 

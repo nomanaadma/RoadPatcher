@@ -177,6 +177,11 @@ public class DonationsController(
 
             var postViewUrl = $"/Posts/{post.Id}";
 
+            var notificationMessage = $"You successfully Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
+
+            await notificationService.CreateAsync(userId, notificationMessage, "Donation");
+
+
             await notificationService.NotifyPostSubscribersAsync(
                 postId,
                 userId,
@@ -219,15 +224,6 @@ public class DonationsController(
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
-
-	    IHtmlContent btn = HtmlString.Empty;
-
-	    // ReSharper disable once InvertIf
-	    if (post.Status != PostStatus.Pending)
-	    {
-			var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status! );
-			btn = PostHelper.RenderBtn(currentStatus, post.Id);
-	    }
 	    
 	    return new
 	    {
@@ -237,7 +233,6 @@ public class DonationsController(
 		    remainingAmount,
 		    progressClass,
 		    tooltipBoxPercentage,
-		    btn,
 		    cost,
 		    donatedAmount
 	    };

@@ -653,10 +653,6 @@
 
 
                         $post.find('.post-costing').html(goalHtml);
-
-                        mark_btn.hide();
-                        
-                        $(data.btn.value).insertAfter(mark_btn);
                         
                         mark_btn.remove();
                         
@@ -757,43 +753,6 @@
                     }
                 });
             }
-        });
-        
-    });
-    
-    $(document).on('click', '.mark-status-btn', async function () {
-
-        const $btn = $(this);
-        const mark_btn = $btn.parent('.mark-btn');
-        const postId = $btn.data('post-id');
-        const currentStatus = $btn.data('status');
-
-        const nextStatus = currentStatus === 'Completed' ? 'InProcess' : 'Completed';
-
-        Swal.fire({
-            title: `Marking as ${nextStatus}`,
-            html: 'Please wait...',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        const response = await axios.post('/Posts/ToggleStatus', null, {
-            params: { postId }
-        });
-
-        Swal.close();
-
-        mark_btn.hide();
-
-        $(response.data.btn.value).insertAfter(mark_btn);
-        
-        mark_btn.remove();
-
-        Swal.fire({
-            title: `Marked ${nextStatus}`,
-            text: `The post status was updated to ${nextStatus}! and now will be moved to ${nextStatus} list`,
-            icon: 'success'
         });
         
     });
