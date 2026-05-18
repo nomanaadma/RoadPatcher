@@ -1,9 +1,11 @@
-﻿@model RoadPatcher.Models.PostViewModel
+﻿@using RoadPatcher.Helpers
+@model RoadPatcher.Models.PostViewModel
 
 @{
     ViewData["Title"] = "Edit Post";
     var uploadFolderUrl = Url.Content("~/uploads/posts/");
     ViewData["IsEdit"] = true;
+	var canComplete = User.IsAdmin() || User.IsSuperAdmin();
 }
 
 <partial name="_PostForm" model="Model" />
@@ -67,6 +69,12 @@
 				{
 					<text>
 						preloadMedia(uppyVideo, @media.Id, "@media.Name");
+					</text>
+				}
+				else if (canComplete && Model.CompletionImageId.HasValue && media.Id == Model.CompletionImageId.Value)
+				{
+					<text>
+						preloadMedia(uppyCompletion, @media.Id, "@media.Name");
 					</text>
 				}
 				else

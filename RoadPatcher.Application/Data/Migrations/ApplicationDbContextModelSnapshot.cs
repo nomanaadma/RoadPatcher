@@ -482,6 +482,9 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int?>("CompletionImageId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Cost")
                         .HasColumnType("numeric");
 
@@ -568,6 +571,8 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompletionImageId");
 
                     b.HasIndex("ImageId");
 
@@ -853,6 +858,11 @@ namespace RoadPatcher.Application.Data.Migrations
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>
                 {
+                    b.HasOne("RoadPatcher.Application.Entities.Media", "CompletionImage")
+                        .WithMany()
+                        .HasForeignKey("CompletionImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("RoadPatcher.Application.Entities.Media", "Image")
                         .WithMany()
                         .HasForeignKey("ImageId")
@@ -875,6 +885,8 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("CompletionImage");
 
                     b.Navigation("Image");
 

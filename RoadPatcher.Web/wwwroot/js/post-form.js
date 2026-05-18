@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', function () {
     uppyImage = uppyInstance('#uppy-image', 'Image', ['image/*'], 1, '#ImageId');
 
     uppyVideo = uppyInstance('#uppy-video', 'Video', ['video/*'], 1, '#VideoId');
+
+    const completionTarget = document.querySelector('#uppy-completion');
+    if (completionTarget) {
+        uppyCompletion = uppyInstance('#uppy-completion', 'Completion Image', ['image/*'], 1, '#CompletionImageId');
+    }
     
     uppyImages = uppyInstance('#uppy-images', 'Images', ['image/*'], 10, null);
     

@@ -490,7 +490,8 @@ public partial class PostsController(
 		if(
 			User.IsSuperAdmin()	|| 
 			(userId == post.UserId && post.ReviewStatus == ApprovalStatus.ChangesRequested) ||
-			(userId == post.ReviewerId && post.ReviewStatus == ApprovalStatus.InReview)
+			(userId == post.ReviewerId && post.ReviewStatus == ApprovalStatus.InReview) ||
+			(userId == post.ReviewerId && post.Status == PostStatus.InProcess)
 		) {
 			forbidden = false;
 		}
@@ -515,6 +516,7 @@ public partial class PostsController(
 			Raised = post.Raised,
 			ImageId = post.ImageId,
 			VideoId = post.VideoId,
+			CompletionImageId = post.CompletionImageId,
 			MediaFiles = post.MediaFiles
 		};
 		
@@ -563,13 +565,49 @@ public partial class PostsController(
 		post.Cost = model.Cost;
 		post.ImageId = model.ImageId;
 		post.VideoId = model.VideoId;
+		post.CompletionImageId = model.CompletionImageId;
 		post.UpdatedAt = DateTime.UtcNow;
+		
+		
 		var previousReviewStatus = post.ReviewStatus;
+		var submitAction = Request.Form["submitAction"].ToString();
 
 		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
 		var postViewAnchor = $"<a href='/Posts/{post.Id}'>View Post</a>";
 		var postAnchor = $"<a href='/Posts/Edit/{post.Id}'>Edit Post</a>";
+
+		if (submitAction == "Complete")
+		{
+			if (User.IsUser())
+				return Forbid();
+
+			if (post.Status != PostStatus.InProcess)
+				return BadRequest("Post must be in process before it can be completed.");
+
+			if (!model.CompletionImageId.HasValue)
+			{
+				ModelState.AddModelError(nameof(model.CompletionImageId), "Completion image is required when marking a post as completed.");
+				TempData["FormErrors"] = string.Join("||",
+					ModelState.Values
+						.SelectMany(v => v.Errors)
+						.Select(e => e.ErrorMessage));
+
+				return View(model);
+			}
+
+			post.Status = PostStatus.Completed;
+			post.UpdatedAt = DateTime.UtcNow;
+
+			await context.SaveChangesAsync();
+			await AttachMedia(model, post.Id);
+
+			var completionMessage = $"We have great news! The road repair work for Post #{post.Id} has been successfully completed. <a href='/Posts/{post.Id}'>View Post</a>";
+			await notificationService.NotifyPostSubscribersAsync(post.Id, userId, completionMessage, "Completed");
+
+			TempData["Success"] = "Post marked as completed successfully!";
+			return RedirectToAction("SinglePost", new { id = post.Id });
+		}
 
 		if(userId == post.UserId)
 		{
@@ -769,8 +807,11 @@ public partial class PostsController(
 		[
 			model.ImageId,
 			model.VideoId,
+			model.CompletionImageId ?? 0,
 			..model.MediaFilesIds,   // spread operator: adds items from collection
 		];
+
+		allIds = allIds.Where(id => id > 0).Distinct().ToList();
 		
 		(await context.Media
 			.Where(m => allIds.Contains(m.Id))

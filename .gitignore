@@ -24,3 +24,4 @@ RoadPatcher.AIML/dataset
 RoadPatcher.AIML/output
 RoadPatcher.AIML/data
 RoadPatcher.AIML/local-road-images
+RoadPatcher.AIML/depth_anything_v2_vitb.pth

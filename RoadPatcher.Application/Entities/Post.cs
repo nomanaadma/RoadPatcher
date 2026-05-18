@@ -50,6 +50,9 @@ public class Post
 
 	public int VideoId { get; set; }
 	public Media Video { get; init; } = null!;
+
+	public int? CompletionImageId { get; set; }
+	public Media? CompletionImage { get; init; }
 	
 	public List<Media> MediaFiles { get; init; } = [];
 	

@@ -55,6 +55,14 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 			.WithMany()
 			.HasForeignKey(p => p.VideoId)
 			.OnDelete(DeleteBehavior.Restrict);
+
+		builder.Property(p => p.CompletionImageId)
+			.IsRequired(false);
+
+		builder.HasOne(p => p.CompletionImage)
+			.WithMany()
+			.HasForeignKey(p => p.CompletionImageId)
+			.OnDelete(DeleteBehavior.Restrict);
 		
 		builder.Property(p => p.Location)
 			.HasColumnType("geography (point)");

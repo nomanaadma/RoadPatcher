@@ -30,6 +30,10 @@ public class PostViewModel : AddressViewModel
 	[Display(Name = "Video")]
 	public int VideoId { get; init; }
 	public Media? Video { get; init; }
+
+	[Display(Name = "Completion Image")]
+	public int? CompletionImageId { get; init; }
+	public Media? CompletionImage { get; init; }
 	
 
 	public List<Media> MediaFiles { get; init; } = [];
