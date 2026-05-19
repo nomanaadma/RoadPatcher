@@ -13,7 +13,7 @@
 
 	var image = Model?.ExistingImage ?? user?.ExternalImage;
 
-    var profileImage = ProfileHelper.GetProfileImage(image);
+    var profileImage = UserHelper.GetProfileImage(image);
     
     var isRequired = ViewContext.HttpContext.Request.Query["required"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
 }
@@ -47,6 +47,40 @@
 					<h1 class="fs-2 m-0">Account Details</h1></div>
 
 				<div class="card-body">
+					
+					<!-- Badge Display -->
+					@if (!string.IsNullOrEmpty(Model?.UserBadge))
+					{
+						<div class="mb-5 p-4" style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ffc107;">
+							<div class="d-flex align-items-center gap-3">
+								<i class="las la-star fs-3" style="color: #FFD700;"></i>
+								<div>
+									<p class="mb-1 fw-bold">Your Achievement Badge</p>
+									<partial name="_BadgeDisplay" model="Model.UserBadge" />
+									@if (Model.BadgeAwardedDate.HasValue)
+									{
+										<small class="text-muted d-block mt-2">
+											Awarded on @Model.BadgeAwardedDate.Value.ToString("MMM dd, yyyy")
+										</small>
+									}
+								</div>
+							</div>
+						</div>
+					}
+					else
+					{
+						<div class="mb-5 p-4" style="background: #f8f9fa; border-radius: 8px; border-left: 4px solid #6c757d;">
+							<div class="d-flex align-items-center gap-3">
+								<i class="las la-star-half-alt fs-3" style="color: #999;"></i>
+								<div>
+									<p class="mb-0 text-muted">
+										No badge yet. Donate Rs.500+ to earn the Bronze badge! 
+										<a href="/Posts/Pending" class="text-primary">Explore posts to donate</a>
+									</p>
+								</div>
+							</div>
+						</div>
+					}
 
 					<!--begin::Input group-->
 					<div class="row mb-10">

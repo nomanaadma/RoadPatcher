@@ -128,6 +128,9 @@ builder.Services.AddSignalR();
 // Notification service
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+// Points service for gamification (points, leaderboard, badges)
+builder.Services.AddScoped<IPointsService, PointsService>();
+
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
 
@@ -192,6 +195,25 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
+	// Seed default badges if not present (will run when DB schema exists)
+	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+	try
+	{
+		if (!await db.Set<Badge>().AnyAsync())
+		{
+			db.Set<Badge>().AddRange(
+				new Badge { Name = "Bronze", Description = "Bronze contributor (100 points)", ThresholdPoints = 100 },
+				new Badge { Name = "Silver", Description = "Silver contributor (500 points)", ThresholdPoints = 500 },
+				new Badge { Name = "Gold", Description = "Gold contributor (1000 points)", ThresholdPoints = 1000 }
+			);
+			await db.SaveChangesAsync();
+		}
+	}
+	catch (Exception)
+	{
+		// If migrations haven't been applied yet, DbSet access may fail — ignore here.
+	}
 }
 
 

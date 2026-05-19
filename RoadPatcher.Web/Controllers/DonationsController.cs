@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
+using RoadPatcher.Services;
 using Stripe;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
@@ -15,7 +16,8 @@ namespace RoadPatcher.Controllers;
 [ApiController]
 public class DonationsController(
     ApplicationDbContext db,
-    RoadPatcher.Services.INotificationService notificationService
+    RoadPatcher.Services.INotificationService notificationService,
+    RoadPatcher.Services.IPointsService pointsService
 ) : Controller
 {
 	
@@ -177,15 +179,64 @@ public class DonationsController(
 
             var postViewUrl = $"/Posts/{post.Id}";
 
-            var notificationContent = completed
-                ? $"Congratulations! Post #{post.Id} has been fully funded thanks to everyone. A team will now be arranged to start the patch work. <a href='{postViewUrl}'>View Post</a>"
-                : $"{donatorName} Donated Rs. {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
+            var notificationMessage = $"You successfully Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
+
+            await notificationService.CreateAsync(userId, notificationMessage, "Donation");
+
+            // Award points to the donor: 1 point per Rs.10 donated
+            var points = (int)System.Math.Floor(amountDecimal / 10m);
+            if (points > 0)
+            {
+                await pointsService.AwardPointsAsync(userId, points, "Donation", donation.Id);
+            }
+
+            // Award donation-based badge to the donor
+            var userData = await db.UserData.AsTracking().FirstOrDefaultAsync(ud => ud.UserId == userId);
+            if (userData != null)
+            {
+                // Calculate total completed donations for this user
+                var totalDonated = await db.Donations
+                    .Where(d => d.UserId == userId && d.Status == DonationStatus.Completed)
+                    .SumAsync(d => d.Amount);
+
+                var newBadge = (string?)null;
+                
+                // Badge thresholds: Bronze 500, Silver 1000, Gold 2000
+                if (totalDonated >= 2000m && userData.Badge != "Gold")
+                    newBadge = "Gold";
+                else if (totalDonated >= 1000m && userData.Badge != "Silver" && userData.Badge != "Gold")
+                    newBadge = "Silver";
+                else if (totalDonated >= 500m && userData.Badge != "Bronze" && userData.Badge != "Silver" && userData.Badge != "Gold")
+                    newBadge = "Bronze";
+
+                if (newBadge != null)
+                {
+                    userData.Badge = newBadge;
+                    userData.BadgeAwardedDate = DateTime.UtcNow;
+                    db.UserData.Update(userData);
+                    await db.SaveChangesAsync();
+
+                    // Notify user about badge
+                    await notificationService.CreateAsync(userId, $"Congratulations! You've earned the '{newBadge}' badge for your generous donations!", "Badge");
+                }
+            }
 
             await notificationService.NotifyPostSubscribersAsync(
                 postId,
                 userId,
-                notificationContent,
+                $"{donatorName} Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>",
                 "Donation");
+
+            if(completed) {
+                
+                await notificationService.NotifyPostSubscribersAsync(
+                    postId,
+                    userId,
+                    $"Congratulations! Post #{post.Id} has successfully reached its required donation amount. Thank you to everyone for your support. The company has been notified, and a team will now be assigned to begin the patch work. We will keep you all updated on the <a href='{postViewUrl}'>View Post</a>.",
+                    "Donation",
+                    true);
+            
+            }
 
             await tx.CommitAsync();
             
@@ -212,15 +263,6 @@ public class DonationsController(
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
-
-	    IHtmlContent btn = HtmlString.Empty;
-
-	    // ReSharper disable once InvertIf
-	    if (post.Status != PostStatus.Pending)
-	    {
-			var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status! );
-			btn = PostHelper.RenderBtn(currentStatus, post.Id);
-	    }
 	    
 	    return new
 	    {
@@ -230,7 +272,6 @@ public class DonationsController(
 		    remainingAmount,
 		    progressClass,
 		    tooltipBoxPercentage,
-		    btn,
 		    cost,
 		    donatedAmount
 	    };
