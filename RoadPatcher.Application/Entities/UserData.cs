@@ -16,6 +16,10 @@ public class UserData
 	public required double Longitude { get; set; }
 
 	public string? Image { get; set; }
+
+	public string? Badge { get; set; }
+
+	public DateTime? BadgeAwardedDate { get; set; }
 	
 }
 

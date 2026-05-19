@@ -15,7 +15,8 @@ namespace RoadPatcher.Controllers;
 [ApiController]
 public class DonationsController(
     ApplicationDbContext db,
-    RoadPatcher.Services.INotificationService notificationService
+    RoadPatcher.Services.INotificationService notificationService,
+    RoadPatcher.Services.IContributionService contributionService
 ) : Controller
 {
 	
@@ -123,6 +124,7 @@ public class DonationsController(
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var donationSucceededAt = DateTime.UtcNow;
         
         var amountDecimal = intent.AmountReceived / 100m;
 
@@ -140,8 +142,8 @@ public class DonationsController(
                 PaymentIntentId = intent.Id,
                 PaymentMethodId = intent.PaymentMethodId,
                 Status = DonationStatus.Completed,
-                CreatedAt = DateTime.UtcNow,
-                SucceededAt = DateTime.UtcNow
+                CreatedAt = donationSucceededAt,
+                SucceededAt = donationSucceededAt
             };
 
             db.Donations.Add(donation);
@@ -167,6 +169,8 @@ public class DonationsController(
             db.Posts.Update(post);
             await db.SaveChangesAsync();
 
+            await contributionService.UpdateContributorBadgeAsync(userId, donationSucceededAt);
+
             var donator = await db.Users
                 .Include(u => u.UserData)
                 .FirstOrDefaultAsync(u => u.Id == userId);
@@ -176,6 +180,11 @@ public class DonationsController(
                 : UserHelper.GetDisplayName(donator);
 
             var postViewUrl = $"/Posts/{post.Id}";
+
+            var notificationMessage = $"You successfully Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
+
+            await notificationService.CreateAsync(userId, notificationMessage, "Donation");
+            
 
             var notificationContent = completed
                 ? $"Congratulations! Post #{post.Id} has been fully funded thanks to everyone. A team will now be arranged to start the patch work. <a href='{postViewUrl}'>View Post</a>"
@@ -212,15 +221,6 @@ public class DonationsController(
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
-
-	    IHtmlContent btn = HtmlString.Empty;
-
-	    // ReSharper disable once InvertIf
-	    if (post.Status != PostStatus.Pending)
-	    {
-			var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status! );
-			btn = PostHelper.RenderBtn(currentStatus, post.Id);
-	    }
 	    
 	    return new
 	    {
@@ -230,7 +230,6 @@ public class DonationsController(
 		    remainingAmount,
 		    progressClass,
 		    tooltipBoxPercentage,
-		    btn,
 		    cost,
 		    donatedAmount
 	    };

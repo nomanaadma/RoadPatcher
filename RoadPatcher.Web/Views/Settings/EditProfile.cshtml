@@ -2,7 +2,6 @@
 @model RoadPatcher.Models.UserDataViewModel
 @using Microsoft.AspNetCore.Identity
 @using System.Security.Claims
-@using RoadPatcher.Application.Entities
 @inject UserManager<RoadPatcher.Application.Entities.ApplicationUser> UserManager
 
 @{
@@ -13,7 +12,7 @@
 
 	var image = Model?.ExistingImage ?? user?.ExternalImage;
 
-    var profileImage = ProfileHelper.GetProfileImage(image);
+    var profileImage = UserHelper.GetProfileImage(image);
     
     var isRequired = ViewContext.HttpContext.Request.Query["required"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
 }

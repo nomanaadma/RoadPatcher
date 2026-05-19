@@ -11,6 +11,8 @@
 	var uploadFolderUrl = Url.Content("~/uploads/posts/");
 	var userData = Model.User!.UserData;
 	var profileImage = UserHelper.GetProfileImage(userData?.Image);
+	var creatorBadge = userData?.Badge;
+	var creatorBadgeColor = ContributionHelper.GetBadgeColor(creatorBadge);
 			
 	var mainImage = Model.MediaFiles
 		.FirstOrDefault(m => m.Id == Model.ImageId)!;
@@ -146,7 +148,13 @@
 			<div class="card-header border-0 d-flex align-items-center bg-white p-4 flex-nowrap">
 				<img src="@profileImage" class="post_profile_image rounded-circle me-2" alt="@userFullName Avatar">
 				<div class="flex-grow-1 time-location-i">
-					<h6 class="mb-0">@userFullName</h6>
+					<h6 class="mb-0 d-flex align-items-center gap-2">
+						<span>@userFullName</span>
+						@if (!string.IsNullOrWhiteSpace(creatorBadgeColor))
+						{
+							<i class="las la-star fz-18" style="color:@creatorBadgeColor" title="@creatorBadge contributor"></i>
+						}
+					</h6>
 					<span><i class="las la-clock position-relative"></i> @Model.CreatedAt.ToPrettyFormat() • @Model.CreatedAt.ToAgo() </span>
 				</div>
 				
@@ -363,18 +371,6 @@
 									<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
 								</button>	
 							</div>
-						}
-						else
-						{
-							@if (Model.Status == PostStatus.InProcess && Model.UserId == userId)
-							{
-								@PostHelper.RenderBtn(PostStatus.Completed, Model.Id)
-							}
-							
-							@if (Model.Status == PostStatus.Completed && Model.UserId == userId)
-							{
-								@PostHelper.RenderBtn(PostStatus.InProcess, Model.Id)
-							}
 						}
 						
 						}

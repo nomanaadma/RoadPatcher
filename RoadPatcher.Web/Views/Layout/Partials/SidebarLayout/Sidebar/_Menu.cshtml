@@ -36,7 +36,8 @@
         action == "InProcess" ||
         action == "Completed" ||
         action == "Favourited" ||
-        action == "Donated";
+        action == "Donated" ||
+        controller == "Leaderboard";
 
 
     var user = await UserManager.GetUserAsync(User);
@@ -156,6 +157,10 @@
 
                         <div class="menu-item">
                             <a asp-controller="Posts" asp-action="Donated" asp-area="" class="menu-link @(action == "Donated" ? "active" : "")"><i class="la la-donate fz-24"></i><span class="menu-title ms-1">Donated</span></a>
+                        </div>
+
+                        <div class="menu-item">
+                            <a asp-controller="Leaderboard" asp-action="Index" asp-area="" class="menu-link @(controller == "Leaderboard" ? "active" : "")"><i class="la la-trophy fz-24"></i><span class="menu-title ms-1">Top Contributors</span></a>
                         </div>
                         
 

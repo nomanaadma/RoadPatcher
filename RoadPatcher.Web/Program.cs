@@ -127,6 +127,7 @@ builder.Services.AddSignalR();
 
 // Notification service
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IContributionService, ContributionService>();
 
 builder.Services.AddScoped<IKTTheme, KTTheme>();
 builder.Services.AddSingleton<IKTBootstrapBase, KTBootstrapBase>();
