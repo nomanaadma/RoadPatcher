@@ -509,39 +509,6 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("RoadPatcher.Application.Entities.PointsTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("RelatedEntityId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PointsTransactions", (string)null);
-                });
-
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -756,8 +723,6 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.HasIndex("BadgeId");
 
                     b.HasIndex("UserId");
-
-                    b.ToTable("UserBadges", (string)null);
                 });
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.UserData", b =>
@@ -963,17 +928,6 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RoadPatcher.Application.Entities.PointsTransaction", b =>
-                {
-                    b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "User")
-                        .WithMany("PointsTransactions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("RoadPatcher.Application.Entities.Post", b =>
                 {
                     b.HasOne("RoadPatcher.Application.Entities.Media", "CompletionImage")
@@ -1083,10 +1037,6 @@ namespace RoadPatcher.Application.Data.Migrations
 
             modelBuilder.Entity("RoadPatcher.Application.Entities.ApplicationUser", b =>
                 {
-                    b.Navigation("PointsTransactions");
-
-                    b.Navigation("UserBadges");
-
                     b.Navigation("UserData");
                 });
 
