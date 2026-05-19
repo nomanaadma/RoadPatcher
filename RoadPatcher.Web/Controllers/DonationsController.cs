@@ -177,27 +177,15 @@ public class DonationsController(
 
             var postViewUrl = $"/Posts/{post.Id}";
 
-            var notificationMessage = $"You successfully Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
-
-            await notificationService.CreateAsync(userId, notificationMessage, "Donation");
-
+            var notificationContent = completed
+                ? $"Congratulations! Post #{post.Id} has been fully funded thanks to everyone. A team will now be arranged to start the patch work. <a href='{postViewUrl}'>View Post</a>"
+                : $"{donatorName} Donated Rs. {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
 
             await notificationService.NotifyPostSubscribersAsync(
                 postId,
                 userId,
-                $"{donatorName} Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>",
+                notificationContent,
                 "Donation");
-
-            if(completed) {
-                
-                await notificationService.NotifyPostSubscribersAsync(
-                    postId,
-                    userId,
-                    $"Congratulations! Post #{post.Id} has successfully reached its required donation amount. Thank you to everyone for your support. The company has been notified, and a team will now be assigned to begin the patch work. We will keep you all updated on the <a href='{postViewUrl}'>View Post</a>.",
-                    "Donation",
-                    true);
-            
-            }
 
             await tx.CommitAsync();
             
@@ -224,6 +212,15 @@ public class DonationsController(
 	    
 	    if (raisedPercentage % 1 == 0)
 		    raisedPercentage = (int)raisedPercentage;
+
+	    IHtmlContent btn = HtmlString.Empty;
+
+	    // ReSharper disable once InvertIf
+	    if (post.Status != PostStatus.Pending)
+	    {
+			var currentStatus = PostHelper.InvertStatus( (PostStatus)post.Status! );
+			btn = PostHelper.RenderBtn(currentStatus, post.Id);
+	    }
 	    
 	    return new
 	    {
@@ -233,6 +230,7 @@ public class DonationsController(
 		    remainingAmount,
 		    progressClass,
 		    tooltipBoxPercentage,
+		    btn,
 		    cost,
 		    donatedAmount
 	    };

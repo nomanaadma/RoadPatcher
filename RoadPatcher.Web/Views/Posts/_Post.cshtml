@@ -54,8 +54,7 @@
 	if(
 		User.IsSuperAdmin()	|| 
 		(userId == Model.UserId && Model.ReviewStatus == ApprovalStatus.ChangesRequested) ||
-		(userId == Model.ReviewerId && Model.ReviewStatus == ApprovalStatus.InReview) ||
-		(userId == Model.ReviewerId && Model.Status == PostStatus.InProcess)
+		(userId == Model.ReviewerId && Model.ReviewStatus == ApprovalStatus.InReview)
 	) {
 		canEdit = true;
 	}
@@ -153,7 +152,7 @@
 				
 				<a asp-action="SinglePost" asp-route-id="@Model.Id" data-bs-toggle="tooltip" title="Open Post" data-bs-placement="bottom" class="btn btn-dark rounded-20 post-link-btn">
 					<i class="las la-link text-white"></i> <span>#@Model.Id</span>
-					<i class="las notify-icon ms-2 @(isSubscribed ? "la-bell text-warning" : "la-bell-slash text-muted")" 
+					<i class="las notify-icon ms-2 @(isSubscribed ? "la-bell text-info" : "la-bell-slash text-muted")" 
 					   data-post-id="@Model.Id"
 					   data-bs-toggle="tooltip"
 					   title="Toggle Notifications"
@@ -364,6 +363,18 @@
 									<i class="las la-hand-holding-usd"></i> Donate <i class="las la-heart"></i>
 								</button>	
 							</div>
+						}
+						else
+						{
+							@if (Model.Status == PostStatus.InProcess && Model.UserId == userId)
+							{
+								@PostHelper.RenderBtn(PostStatus.Completed, Model.Id)
+							}
+							
+							@if (Model.Status == PostStatus.Completed && Model.UserId == userId)
+							{
+								@PostHelper.RenderBtn(PostStatus.InProcess, Model.Id)
+							}
 						}
 						
 						}

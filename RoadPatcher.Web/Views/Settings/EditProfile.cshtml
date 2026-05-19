@@ -13,7 +13,7 @@
 
 	var image = Model?.ExistingImage ?? user?.ExternalImage;
 
-    var profileImage = UserHelper.GetProfileImage(image);
+    var profileImage = ProfileHelper.GetProfileImage(image);
     
     var isRequired = ViewContext.HttpContext.Request.Query["required"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
 }
