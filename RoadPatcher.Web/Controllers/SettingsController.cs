@@ -121,6 +121,8 @@ public partial class SettingsController(
 			Latitude = existing.Latitude,
 			Longitude = existing.Longitude,
 			ExistingImage = existing.Image,
+			UserBadge = existing.Badge,
+			BadgeAwardedDate = existing.BadgeAwardedDate
 		};
 		
 		return View(model);

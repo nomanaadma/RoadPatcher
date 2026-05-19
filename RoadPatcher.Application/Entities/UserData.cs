@@ -17,6 +17,12 @@ public class UserData
 
 	public string? Image { get; set; }
 	
+	// Donation-based badge: Bronze, Silver, Gold, or null
+	public string? Badge { get; set; }
+	
+	// Date when badge was awarded
+	public DateTime? BadgeAwardedDate { get; set; }
+	
 }
 
 

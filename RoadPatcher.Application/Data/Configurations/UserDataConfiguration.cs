@@ -39,6 +39,11 @@ public class UserDataConfiguration : IEntityTypeConfiguration<UserData>
 			
 		builder.Property(e => e.Image)
 			.HasMaxLength(200);
+
+		builder.Property(e => e.Badge)
+			.HasMaxLength(50);
+
+		builder.Property(e => e.BadgeAwardedDate);
 	}
 }
 

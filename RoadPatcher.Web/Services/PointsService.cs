@@ -8,7 +8,7 @@ using System;
 
 namespace RoadPatcher.Services;
 
-public record LeaderboardEntry(string UserId, string UserName, int Points);
+public record LeaderboardEntry(string UserId, string UserName, int Points, string? Badge, DateTime? BadgeAwardedDate);
 
 public interface IPointsService
 {
@@ -95,9 +95,16 @@ public class PointsService(ApplicationDbContext db, UserManager<ApplicationUser>
     {
         return await db.Users
             .AsNoTracking()
+            .Include(u => u.UserData)
             .OrderByDescending(u => u.Points)
             .Take(top)
-            .Select(u => new LeaderboardEntry(u.Id, (u.UserName ?? u.Email)!, u.Points))
+            .Select(u => new LeaderboardEntry(
+                u.Id, 
+                (u.UserName ?? u.Email)!, 
+                u.Points,
+                u.UserData != null ? u.UserData.Badge : null,
+                u.UserData != null ? u.UserData.BadgeAwardedDate : null
+            ))
             .ToListAsync();
     }
 }

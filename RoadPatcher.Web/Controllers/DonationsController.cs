@@ -190,6 +190,36 @@ public class DonationsController(
                 await pointsService.AwardPointsAsync(userId, points, "Donation", donation.Id);
             }
 
+            // Award donation-based badge to the donor
+            var userData = await db.UserData.AsTracking().FirstOrDefaultAsync(ud => ud.UserId == userId);
+            if (userData != null)
+            {
+                // Calculate total completed donations for this user
+                var totalDonated = await db.Donations
+                    .Where(d => d.UserId == userId && d.Status == DonationStatus.Completed)
+                    .SumAsync(d => d.Amount);
+
+                var newBadge = (string?)null;
+                
+                // Badge thresholds: Bronze 500, Silver 1000, Gold 2000
+                if (totalDonated >= 2000m && userData.Badge != "Gold")
+                    newBadge = "Gold";
+                else if (totalDonated >= 1000m && userData.Badge != "Silver" && userData.Badge != "Gold")
+                    newBadge = "Silver";
+                else if (totalDonated >= 500m && userData.Badge != "Bronze" && userData.Badge != "Silver" && userData.Badge != "Gold")
+                    newBadge = "Bronze";
+
+                if (newBadge != null)
+                {
+                    userData.Badge = newBadge;
+                    userData.BadgeAwardedDate = DateTime.UtcNow;
+                    db.UserData.Update(userData);
+                    await db.SaveChangesAsync();
+
+                    // Notify user about badge
+                    await notificationService.CreateAsync(userId, $"Congratulations! You've earned the '{newBadge}' badge for your generous donations!", "Badge");
+                }
+            }
 
             await notificationService.NotifyPostSubscribersAsync(
                 postId,
