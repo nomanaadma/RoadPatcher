@@ -18,10 +18,4 @@ public class UserDataViewModel : AddressViewModel
 	
 	// Existing image filename stored on server (e.g. uploads/users/filename.jpg)
 	public string? ExistingImage { get; set; }
-	
-	// Badge awarded to user (Bronze, Silver, Gold)
-	public string? UserBadge { get; set; }
-	
-	// Date when badge was awarded
-	public DateTime? BadgeAwardedDate { get; set; }
 }

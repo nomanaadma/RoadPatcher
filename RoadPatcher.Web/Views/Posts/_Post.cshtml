@@ -148,12 +148,6 @@
 				<img src="@profileImage" class="post_profile_image rounded-circle me-2" alt="@userFullName Avatar">
 				<div class="flex-grow-1 time-location-i">
 					<h6 class="mb-0">@userFullName</h6>
-					@if (!string.IsNullOrEmpty(userData?.Badge))
-					{
-						<div style="margin: 2px 0;">
-							<partial name="_BadgeDisplay" model="userData.Badge" />
-						</div>
-					}
 					<span><i class="las la-clock position-relative"></i> @Model.CreatedAt.ToPrettyFormat() • @Model.CreatedAt.ToAgo() </span>
 				</div>
 				
