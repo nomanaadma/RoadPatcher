@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Application.Entities;
-using RoadPatcher.Services;
 using Stripe;
 using RoadPatcher.Helpers;
 using RoadPatcher.Models;
@@ -16,8 +15,7 @@ namespace RoadPatcher.Controllers;
 [ApiController]
 public class DonationsController(
     ApplicationDbContext db,
-    RoadPatcher.Services.INotificationService notificationService,
-    RoadPatcher.Services.IPointsService pointsService
+    RoadPatcher.Services.INotificationService notificationService
 ) : Controller
 {
 	
@@ -182,13 +180,6 @@ public class DonationsController(
             var notificationMessage = $"You successfully Donated {amountDecimal.ToPkr()} to Post #{post.Id} <a href='{postViewUrl}'>View</a>";
 
             await notificationService.CreateAsync(userId, notificationMessage, "Donation");
-
-            // Award points to the donor: 1 point per Rs.10 donated
-            var points = (int)System.Math.Floor(amountDecimal / 10m);
-            if (points > 0)
-            {
-                await pointsService.AwardPointsAsync(userId, points, "Donation", donation.Id);
-            }
 
 
             await notificationService.NotifyPostSubscribersAsync(
