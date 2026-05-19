@@ -58,6 +58,9 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 
 	public async Task<LeaderboardPageViewModel> GetLeaderboardAsync()
 	{
+		var diamondContributors = await BuildTierRowsAsync(ContributionHelper.DiamondBadge);
+		var emeraldContributors = await BuildTierRowsAsync(ContributionHelper.EmeraldBadge);
+		var platinumContributors = await BuildTierRowsAsync(ContributionHelper.PlatinumBadge);
 		var goldContributors = await BuildTierRowsAsync(ContributionHelper.GoldBadge);
 		var silverContributors = await BuildTierRowsAsync(ContributionHelper.SilverBadge);
 		var bronzeContributors = await BuildTierRowsAsync(ContributionHelper.BronzeBadge);
@@ -74,12 +77,16 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 				d.CreatedAt,
 				d.PostId,
                 d.User!.UserData!.FirstName,
-                d.User.UserData!.LastName
+                d.User.UserData.LastName,
+				d.User.UserData.Badge
 			})
 			.ToListAsync();
 
 		return new LeaderboardPageViewModel
 		{
+			DiamondContributors = diamondContributors,
+			EmeraldContributors = emeraldContributors,
+			PlatinumContributors = platinumContributors,
 			GoldContributors = goldContributors,
 			SilverContributors = silverContributors,
 			BronzeContributors = bronzeContributors,
@@ -89,6 +96,7 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 					Rank = index + 1,
 					UserName = $"{donation.FirstName} {donation.LastName}",
 					Amount = donation.Amount,
+					Badge = donation.Badge!,
 					DonationDate = donation.CreatedAt,
 					PostId = donation.PostId
 				})

@@ -36,8 +36,7 @@
         action == "InProcess" ||
         action == "Completed" ||
         action == "Favourited" ||
-        action == "Donated" ||
-        controller == "Leaderboard";
+        action == "Donated";
 
 
     var user = await UserManager.GetUserAsync(User);
@@ -45,6 +44,9 @@
 	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == user!.Id);
 
 	var profileImage = UserHelper.GetProfileImage(userData?.Image);
+
+	var creatorBadgeSvg = ContributionHelper.GetBadgeSvg(userData?.Badge);
+
 
 }
 
@@ -65,6 +67,7 @@
                   
                     <a asp-controller="Settings" asp-action="Index" asp-area="" title="@user!.Email" class="symbol user-profile-nav" data-img="@profileImage" data-id="@user.Id" data-lat="@userData?.Latitude" data-lng="@userData?.Longitude">
                         <img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
+                        @Html.Raw(creatorBadgeSvg)
                         <span class="ms-4">@user!.Email</span>
                     </a>
                     
@@ -159,15 +162,17 @@
                             <a asp-controller="Posts" asp-action="Donated" asp-area="" class="menu-link @(action == "Donated" ? "active" : "")"><i class="la la-donate fz-24"></i><span class="menu-title ms-1">Donated</span></a>
                         </div>
 
-                        <div class="menu-item">
-                            <a asp-controller="Leaderboard" asp-action="Index" asp-area="" class="menu-link @(controller == "Leaderboard" ? "active" : "")"><i class="la la-trophy fz-24"></i><span class="menu-title ms-1">Leader Board</span></a>
-                        </div>
-                        
-
                     </div>
                     <!--end:Menu sub-->
                 </div>
 
+                <div class="menu-item">
+                    <!--begin:Menu link-->
+                    <a class="menu-link @(controller == "Leaderboard" ? "active" : "")" asp-area="" asp-controller="Leaderboard" asp-action="Index">
+                        <span class="menu-icon"><i class="las la-trophy fz-24"></i></span>
+                        <span class="menu-title">Leader Board</span>
+                    </a>
+                </div>
 
                 <div class="menu-item">
                     <!--begin:Menu link-->

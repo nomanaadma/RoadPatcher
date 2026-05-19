@@ -12,6 +12,9 @@
 	var userData = await DbContext.UserData.FirstOrDefaultAsync(x => x.UserId == user!.Id);
 
 	var profileImage = UserHelper.GetProfileImage(userData?.Image);
+
+	var creatorBadgeSvg = ContributionHelper.GetBadgeSvg(userData?.Badge);
+
 	
 }
 <!--begin::Navbar-->
@@ -59,6 +62,7 @@
 			
 			<a asp-controller="Settings" asp-action="EditProfile" asp-area="" data-bs-toggle="tooltip" title="@user!.Email" class="ms-3 symbol user-profile-nav" data-img="@profileImage" data-id="@user.Id" aria-label="User Profile" data-lat="@userData?.Latitude" data-lng="@userData?.Longitude">
 				<img src="@profileImage" alt="User Profile" class="rounded-circle border border-3" >
+				@Html.Raw(creatorBadgeSvg)
 			</a>
 			
 			<div class="d-flex align-items-stretch ms-1 ms-lg-2">

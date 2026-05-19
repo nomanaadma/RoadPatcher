@@ -12,7 +12,7 @@
 	var userData = Model.User!.UserData;
 	var profileImage = UserHelper.GetProfileImage(userData?.Image);
 	var creatorBadge = userData?.Badge;
-	var creatorBadgeColor = ContributionHelper.GetBadgeColor(creatorBadge);
+	var creatorBadgeSvg = ContributionHelper.GetBadgeSvg(creatorBadge);
 			
 	var mainImage = Model.MediaFiles
 		.FirstOrDefault(m => m.Id == Model.ImageId)!;
@@ -150,9 +150,9 @@
 				<div class="flex-grow-1 time-location-i">
 					<h6 class="mb-0 d-flex align-items-center gap-2">
 						<span>@userFullName</span>
-						@if (!string.IsNullOrWhiteSpace(creatorBadgeColor))
+						@if (!string.IsNullOrWhiteSpace(creatorBadgeSvg))
 						{
-							<i class="las la-star fz-18" style="color:@creatorBadgeColor" title="@creatorBadge contributor"></i>
+							<span class="d-inline-flex align-items-center" title="@creatorBadge Contributor">@Html.Raw(creatorBadgeSvg)</span>
 						}
 					</h6>
 					<span><i class="las la-clock position-relative"></i> @Model.CreatedAt.ToPrettyFormat() • @Model.CreatedAt.ToAgo() </span>
