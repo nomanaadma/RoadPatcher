@@ -89,7 +89,7 @@ html, body {
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 100px;
+    /* width: 100px; */
     border-radius: 0 !important;
     border-bottom: 4px solid transparent !important;
     color: var(--bs-btn-active-color) !important;

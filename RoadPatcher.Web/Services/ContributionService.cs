@@ -14,8 +14,6 @@ public interface IContributionService
 
 public class ContributionService(ApplicationDbContext db, INotificationService notificationService) : IContributionService
 {
-	private sealed record DonationTotalRow(string UserId, decimal Amount);
-
 	public async Task UpdateContributorBadgeAsync(string userId, DateTime donatedAt)
 	{
 		var totalDonated = await db.Donations
@@ -60,15 +58,9 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 
 	public async Task<LeaderboardPageViewModel> GetLeaderboardAsync()
 	{
-		var completedDonationTotals = db.Donations
-			.AsNoTracking()
-			.Where(d => d.Status == DonationStatus.Completed)
-			.GroupBy(d => d.UserId)
-			.Select(group => new DonationTotalRow(group.Key, group.Sum(d => d.Amount)));
-
-		var goldContributors = await BuildTierRowsAsync(ContributionHelper.GoldBadge, completedDonationTotals);
-		var silverContributors = await BuildTierRowsAsync(ContributionHelper.SilverBadge, completedDonationTotals);
-		var bronzeContributors = await BuildTierRowsAsync(ContributionHelper.BronzeBadge, completedDonationTotals);
+		var goldContributors = await BuildTierRowsAsync(ContributionHelper.GoldBadge);
+		var silverContributors = await BuildTierRowsAsync(ContributionHelper.SilverBadge);
+		var bronzeContributors = await BuildTierRowsAsync(ContributionHelper.BronzeBadge);
 
 		var recentDonations = await db.Donations
 			.AsNoTracking()
@@ -81,8 +73,8 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 				d.Amount,
 				d.CreatedAt,
 				d.PostId,
-				FirstName = d.User!.UserData!.FirstName,
-				LastName = d.User.UserData!.LastName
+                d.User!.UserData!.FirstName,
+                d.User.UserData!.LastName
 			})
 			.ToListAsync();
 
@@ -104,19 +96,20 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 		};
 	}
 
-	private async Task<IReadOnlyList<LeaderboardContributorRowViewModel>> BuildTierRowsAsync(
-		string badge,
-		IQueryable<DonationTotalRow> completedDonationTotals)
+	private async Task<IReadOnlyList<LeaderboardContributorRowViewModel>> BuildTierRowsAsync(string badge)
 	{
-		var rows = await (from userData in db.UserData.AsNoTracking()
-			join donationTotal in completedDonationTotals on userData.UserId equals donationTotal.UserId
-			where userData.Badge == badge
-			select new
+		var rows = await db.UserData
+			.AsNoTracking()
+			.Where(userData => userData.Badge == badge)
+			.Select(userData => new
 			{
 				userData.FirstName,
 				userData.LastName,
 				userData.BadgeAwardedDate,
-				donationTotal.Amount
+				Amount = db.Donations
+					.Where(d => d.UserId == userData.UserId && d.Status == DonationStatus.Completed)
+					.Select(d => (decimal?)d.Amount)
+					.Sum() ?? 0m
 			})
 			.OrderByDescending(row => row.BadgeAwardedDate)
 			.ThenByDescending(row => row.Amount)

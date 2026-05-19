@@ -1,5 +1,6 @@
 ﻿@{
 	var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+	var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
 }
 
 <!--begin::Navbar-->
@@ -11,9 +12,18 @@
 			
 			<div class="d-flex align-items-stretch">
 				<div class="d-flex align-items-center">
+					<a class="navigation-tab @(controller == "Leaderboard" ? "active" : "btn-active-light-warning") btn" asp-action="Index" asp-controller="Leaderboard" asp-area="">
+						<i class="las la-trophy fz-24"></i>
+						<span>Leader Board</span>
+					</a>
+				</div>
+			</div>
+
+			<div class="d-flex align-items-stretch">
+				<div class="d-flex align-items-center">
 					<a class="navigation-tab @(currentAction == "Pending" ? "active" : "btn-active-light-warning") btn" asp-action="Pending" asp-controller="Posts" asp-area="">
 						<i class="las la-road fz-24"></i>
-						<span>Feed</span>
+						<span>Post Feed</span>
 					</a>
 				</div>
 			</div>

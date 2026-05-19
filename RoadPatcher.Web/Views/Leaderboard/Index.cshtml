@@ -7,7 +7,7 @@
 
 	static IHtmlContent EmptyState(string message, int colspan)
 	{
-		return new HtmlString($"<tr><td colspan=\"{colspan}\" class=\"text-center text-muted py-4\">{message}</td></tr>");
+		return new HtmlString($"<tr><td colspan=\"{colspan}\" class=\"text-center text-muted py-5\">{message}</td></tr>");
 	}
 }
 
@@ -24,7 +24,7 @@
 	</div>
 
 	<div class="row g-6">
-		<div class="col-12">
+		<div class="col-4">
 			<div class="card shadow-sm">
 				<div class="card-header border-0 pt-5">
 					<h3 class="card-title align-items-start flex-column">
@@ -64,7 +64,7 @@
 			</div>
 		</div>
 
-		<div class="col-12">
+		<div class="col-4">
 			<div class="card shadow-sm">
 				<div class="card-header border-0 pt-5">
 					<h3 class="card-title align-items-start flex-column">
@@ -104,7 +104,7 @@
 			</div>
 		</div>
 
-		<div class="col-12">
+		<div class="col-4">
 			<div class="card shadow-sm">
 				<div class="card-header border-0 pt-5">
 					<h3 class="card-title align-items-start flex-column">
@@ -148,7 +148,7 @@
 			<div class="card shadow-sm">
 				<div class="card-header border-0 pt-5">
 					<h3 class="card-title align-items-start flex-column">
-						<span class="card-label fw-bold fs-3 mb-1">Top Recent Donations</span>
+						<span class="card-label fw-bold fs-3 mb-1">Recent Donations</span>
 					</h3>
 				</div>
 				<div class="card-body py-3">
