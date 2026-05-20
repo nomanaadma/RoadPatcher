@@ -602,6 +602,212 @@ $(document).ready(function () {
         markers = [];
     }
 
+    async function initAdminStatisticsMap() {
+        const container = document.getElementById('admin-statistics-map');
+
+        if (!container || typeof google === 'undefined' || !google.maps?.drawing) {
+            return;
+        }
+
+        const { Map } = await google.maps.importLibrary("maps");
+
+        const lat = parseFloat(userProfile.data('lat'));
+        const lng = parseFloat(userProfile.data('lng'));
+
+        const initialPos = {
+            lat: isNaN(lat) ? 30.4188959 : lat,
+            lng: isNaN(lng) ? 69.9951495 : lng
+        };
+
+        const statsMap = new Map(container, {
+            center: initialPos,
+            zoom: 13,
+            mapId: "d51644aa08ca7cea704f06a2",
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControlOptions: {
+                position: google.maps.ControlPosition.LEFT_BOTTOM
+            }
+        });
+
+        const drawingManager = new google.maps.drawing.DrawingManager({
+            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+            drawingControl: true,
+            drawingControlOptions: {
+                position: google.maps.ControlPosition.TOP_LEFT,
+                drawingModes: [google.maps.drawing.OverlayType.POLYGON]
+            },
+            polygonOptions: {
+                editable: true,
+                draggable: false,
+                fillColor: '#0d6efd',
+                fillOpacity: 0.18,
+                strokeColor: '#0d6efd',
+                strokeWeight: 2,
+                zIndex: 2
+            }
+        });
+
+        drawingManager.setMap(statsMap);
+
+        const postCountElement = document.getElementById('boundaryPostCount');
+        const totalRaisedElement = document.getElementById('boundaryTotalRaised');
+        const clearButton = document.getElementById('clearBoundaryShape');
+
+        let activeShape = null;
+        let activeMarkers = [];
+        let fetchController = null;
+
+        function clearMapMarkers() {
+            activeMarkers.forEach(marker => marker.setMap(null));
+            activeMarkers = [];
+        }
+
+        function renderMarker(post) {
+            const marker = new google.maps.Marker({
+                position: { lat: post.lat, lng: post.lng },
+                map: statsMap,
+                icon: getMarkerIcon(post.status),
+                title: `#${post.id}`
+            });
+
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div class="map-info-card">
+                        <div class="map-info-header">
+                            <h6 class="text-center">Post #${post.id}</h6>
+                        </div>
+
+                        <div class="map-info-desc">${post.description ?? ''}</div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">User</span>
+                                <span class="stat-value">${post.user}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Date</span>
+                                <span class="stat-value">${post.date}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Posted</span>
+                                <span class="stat-value">${post.since}</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Goal</span>
+                                <span class="stat-value" style="color: grey;">${post.cost}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Raised</span>
+                                <span class="stat-value" style="color: #4CAF50;">${post.totalRaised} : ${post.raisedPercentage}%</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Remaining</span>
+                                <span class="stat-value" style="color: #e74c3c;">${post.remainingAmount}</span>
+                            </div>
+                        </div>
+
+                        <div class="donors-count text-center">
+                            <i class="fas fa-users"></i> <span><strong>${post.peopleDonated}</strong> people have donated</span>
+                        </div>
+                    </div>
+                `
+            });
+
+            marker.addListener('click', () => infoWindow.open(statsMap, marker));
+            activeMarkers.push(marker);
+        }
+
+        async function fetchBoundaryPosts() {
+            if (!activeShape) {
+                return;
+            }
+
+            const path = activeShape.getPath().getArray().map(point => ({
+                lat: point.lat(),
+                lng: point.lng()
+            }));
+
+            if (path.length < 3) {
+                return;
+            }
+
+            if (fetchController) {
+                fetchController.abort();
+            }
+
+            fetchController = new AbortController();
+
+            try {
+                const response = await axios.post('/Admin/Statistics/MapPostsByBoundary', {
+                    coordinates: path
+                }, {
+                    signal: fetchController.signal
+                });
+
+                clearMapMarkers();
+                (response.data.posts || []).forEach(renderMarker);
+
+                if (postCountElement) {
+                    postCountElement.textContent = response.data.summary?.count ?? 0;
+                }
+
+                if (totalRaisedElement) {
+                    totalRaisedElement.textContent = response.data.summary?.totalRaised ?? 'Rs. 0';
+                }
+            } catch (error) {
+                if (!axios.isCancel(error)) {
+                    console.error(error);
+                }
+            }
+        }
+
+        drawingManager.addListener('overlaycomplete', (event) => {
+            if (event.type !== google.maps.drawing.OverlayType.POLYGON) {
+                event.overlay.setMap(null);
+                return;
+            }
+
+            if (activeShape) {
+                activeShape.setMap(null);
+            }
+
+            activeShape = event.overlay;
+            drawingManager.setDrawingMode(null);
+
+            const path = activeShape.getPath();
+            path.addListener('insert_at', fetchBoundaryPosts);
+            path.addListener('set_at', fetchBoundaryPosts);
+            path.addListener('remove_at', fetchBoundaryPosts);
+
+            fetchBoundaryPosts();
+        });
+
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                if (activeShape) {
+                    activeShape.setMap(null);
+                    activeShape = null;
+                }
+
+                clearMapMarkers();
+
+                if (postCountElement) {
+                    postCountElement.textContent = '0';
+                }
+
+                if (totalRaisedElement) {
+                    totalRaisedElement.textContent = 'Rs. 0';
+                }
+
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+            });
+        }
+    }
+
     $(document).on("change", ".status-filter", function () {
         
         const ethis = $(this);
@@ -627,6 +833,12 @@ $(document).ready(function () {
         // Trigger map refresh
         fetchPosts();
 
+    });
+
+    window.addEventListener('load', function () {
+        if (document.getElementById('admin-statistics-map')) {
+            initAdminStatisticsMap();
+        }
     });
 
     // $(document).on("change", ".status-filter", function () {

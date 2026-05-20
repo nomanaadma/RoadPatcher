@@ -13,8 +13,9 @@
 			</div>
 			<div class="card-body">
 				<div class="mb-5">
-				<p class="fs-5">Hello, <strong>@Model?.UserData?.FirstName @Model?.UserData?.LastName @Model?.Email</strong></p>
+					<p class="fs-5">Hello, <strong>@Model?.UserData?.FirstName @Model?.UserData?.LastName @Model?.Email</strong></p>
 					<p class="text-muted">This is your admin dashboard. More features coming soon...</p>
+					<a asp-area="Admin" asp-controller="Statistics" asp-action="Index" class="btn btn-primary mt-4">Open Statistics</a>
 				</div>
 			</div>
 		</div>
