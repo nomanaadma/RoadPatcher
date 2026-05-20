@@ -120,6 +120,8 @@ $(document).ready(function () {
         userOptions += `<option value="${user.Id}">${user.fullName}</option>`;
     });
 
+    const isUser = $('.user-root').length;
+
     $('.search_posts').on('click', function () {
         
         Swal.fire({
@@ -251,14 +253,13 @@ $(document).ready(function () {
                                       </select>
                                     </div>
                                     
-                                    <!-- User -->
-                                    <div class="mt-4 col-md-3">
-                                      <label for="users" class="form-label">Users</label>
-                                      <select name="users" multiple id="users" class="form-select">
-                                        ${userOptions}
-                                      </select>
+                                    <div class="mt-4 col-md-3 ${isUser ? 'd-none' : ''}">
+                                        <label for="users" class="form-label">Users</label>
+                                        <select name="users" multiple id="users" class="form-select">
+                                            ${userOptions}
+                                        </select>
                                     </div>
-                                
+
                                   </div>
                                 
                                   <!-- Submit Button -->
@@ -291,12 +292,12 @@ $(document).ready(function () {
                                         </label>
                                         
                                         <!-- User -->
-                                          <label for="users2" class="btn form-label map-user-select">
-                                              <span>Users</span>
-                                              <select name="users2" multiple id="users2" class="form-select">
-                                                ${userOptions}
-                                              </select>
-                                          </label>
+                                        <label for="users2" class="btn form-label map-user-select ${isUser ? 'd-none' : ''}">
+                                            <span>Users</span>
+                                            <select name="users2" multiple id="users2" class="form-select">
+                                            ${userOptions}
+                                            </select>
+                                        </label>
                                         
                                     </div>
                                 </div>

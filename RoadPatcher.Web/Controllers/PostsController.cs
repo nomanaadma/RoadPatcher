@@ -1207,12 +1207,24 @@ public partial class PostsController(
 		
 		query = query.Where(p => viewportGeometry.Intersects(p.Location));
 
+		
 		var users = Enumerable.Empty<object>();
+		IEnumerable<string> userList;
 
 		if (!string.IsNullOrEmpty(userids))
 		{
-			IEnumerable<string> userList = userids.Split(',');
-			query = query.Where(p => userList.Contains(p.UserId));
+			userList = userids.Split(',');
+		} 
+		else 
+		{
+
+			userList = await context.Users
+				.Select(u => u.Id)
+				.ToListAsync();
+
+		}
+
+		if(User.IsAdminOrSuperAdmin()) {
 			
 			users = await context.UserData
 				.Where(u => userList.Contains(u.UserId))
@@ -1223,8 +1235,10 @@ public partial class PostsController(
 					lng = u.Longitude,
 				})
 				.ToListAsync();
-			
+
 		}
+
+		query = query.Where(p => userList.Contains(p.UserId));
 		
 		IEnumerable<string> statusList = statuses.Split(',');
 
