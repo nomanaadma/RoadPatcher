@@ -17,7 +17,6 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 	public async Task UpdateContributorBadgeAsync(string userId, DateTime donatedAt)
 	{
 		var totalDonated = await db.Donations
-			.AsNoTracking()
 			.Where(d => d.UserId == userId && d.Status == DonationStatus.Completed)
 			.SumAsync(d => d.Amount);
 
@@ -66,7 +65,6 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 		var bronzeContributors = await BuildTierRowsAsync(ContributionHelper.BronzeBadge);
 
 		var recentDonations = await db.Donations
-			.AsNoTracking()
 			.Where(d => d.Status == DonationStatus.Completed)
 			.OrderByDescending(d => d.CreatedAt)
 			.ThenByDescending(d => d.Id)
@@ -107,7 +105,6 @@ public class ContributionService(ApplicationDbContext db, INotificationService n
 	private async Task<IReadOnlyList<LeaderboardContributorRowViewModel>> BuildTierRowsAsync(string badge)
 	{
 		var rows = await db.UserData
-			.AsNoTracking()
 			.Where(userData => userData.Badge == badge)
 			.Select(userData => new
 			{

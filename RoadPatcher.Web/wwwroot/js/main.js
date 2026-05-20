@@ -610,6 +610,7 @@ $(document).ready(function () {
         }
 
         const { Map } = await google.maps.importLibrary("maps");
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
 
         const lat = parseFloat(userProfile.data('lat'));
         const lng = parseFloat(userProfile.data('lng'));
@@ -621,7 +622,7 @@ $(document).ready(function () {
 
         const statsMap = new Map(container, {
             center: initialPos,
-            zoom: 13,
+            zoom: 6,
             mapId: "d51644aa08ca7cea704f06a2",
             mapTypeControl: true,
             streetViewControl: false,
@@ -629,6 +630,25 @@ $(document).ready(function () {
                 position: google.maps.ControlPosition.LEFT_BOTTOM
             }
         });
+
+        const autocomplete = new PlaceAutocompleteElement();
+        autocomplete.id = 'admin-statistics-place-autocomplete-input';
+        autocomplete.includedRegionCodes = ['pk'];
+
+        autocomplete.addEventListener('gmp-select', async ({ placePrediction }) => {
+            const place = placePrediction.toPlace();
+
+            await place.fetchFields({ fields: ['location', 'viewport'] });
+
+            if (place.viewport) {
+                statsMap.fitBounds(place.viewport);
+            } else if (place.location) {
+                statsMap.setCenter(place.location);
+                statsMap.setZoom(13);
+            }
+        });
+
+        statsMap.controls[google.maps.ControlPosition.TOP_LEFT].push(autocomplete);
 
         const drawingManager = new google.maps.drawing.DrawingManager({
             drawingMode: google.maps.drawing.OverlayType.POLYGON,
@@ -650,8 +670,16 @@ $(document).ready(function () {
 
         drawingManager.setMap(statsMap);
 
-        const postCountElement = document.getElementById('boundaryPostCount');
-        const totalRaisedElement = document.getElementById('boundaryTotalRaised');
+        const totalCountElement = document.getElementById('boundaryTotalCount');
+        const pendingCountElement = document.getElementById('boundaryPendingCount');
+        const inProcessCountElement = document.getElementById('boundaryInProcessCount');
+        const completedCountElement = document.getElementById('boundaryCompletedCount');
+        const goalElement = document.getElementById('boundaryGoal');
+        const receivedElement = document.getElementById('boundaryReceived');
+        const donatorsBody = document.getElementById('boundaryDonatorsBody');
+        const donationsBody = document.getElementById('boundaryDonationsBody');
+        const postStatsSection = document.querySelector('.post_stats');
+        const donateStatsSection = document.querySelector('.donate_stats');
         const clearButton = document.getElementById('clearBoundaryShape');
 
         let activeShape = null;
@@ -661,6 +689,56 @@ $(document).ready(function () {
         function clearMapMarkers() {
             activeMarkers.forEach(marker => marker.setMap(null));
             activeMarkers = [];
+        }
+
+        function renderDonators(rows) {
+            if (!donatorsBody) {
+                return;
+            }
+
+            if (!rows.length) {
+                donatorsBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-8">No donors found inside the selected boundary.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            donatorsBody.innerHTML = rows.map(row => `
+                <tr>
+                    <td class="fw-semibold">${row.rank}</td>
+                    <td>
+                        <div class="fw-semibold">${row.user_name}</div>
+                    </td>
+                    <td class="text-end fw-semibold">${row.amount}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderDonations(rows) {
+            if (!donationsBody) {
+                return;
+            }
+
+            if (!rows.length) {
+                donationsBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-8">No donations found inside the selected boundary.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            donationsBody.innerHTML = rows.map(row => `
+                <tr>
+                    <td class="fw-semibold">${row.rank}</td>
+                    <td class="fw-semibold">${row.user_name}</td>
+                    <td class="text-end notification-td"><a href="/posts/${row.post_id}">#${row.post_id}</a></td>
+                    <td class="text-end fw-semibold">${row.amount}</td>
+                    <td>${row.date}</td>
+                </tr>
+            `).join('');
         }
 
         function renderMarker(post) {
@@ -751,13 +829,44 @@ $(document).ready(function () {
                 clearMapMarkers();
                 (response.data.posts || []).forEach(renderMarker);
 
-                if (postCountElement) {
-                    postCountElement.textContent = response.data.summary?.count ?? 0;
+                const summary = response.data.summary ?? {};
+                const donors = response.data.donors ?? [];
+                const donations = response.data.donations ?? [];
+
+                if (totalCountElement) {
+                    totalCountElement.textContent = summary.count ?? 0;
                 }
 
-                if (totalRaisedElement) {
-                    totalRaisedElement.textContent = response.data.summary?.totalRaised ?? 'Rs. 0';
+                if (pendingCountElement) {
+                    pendingCountElement.textContent = summary.pending ?? 0;
                 }
+
+                if (inProcessCountElement) {
+                    inProcessCountElement.textContent = summary.in_process ?? 0;
+                }
+
+                if (completedCountElement) {
+                    completedCountElement.textContent = summary.completed ?? 0;
+                }
+
+                if (goalElement) {
+                    goalElement.textContent = summary.total_goal ?? 'Rs. 0';
+                }
+
+                if (receivedElement) {
+                    receivedElement.textContent = summary.total_received ?? 'Rs. 0';
+                }
+
+                if (postStatsSection) {
+                    postStatsSection.classList.remove('d-none');
+                }
+
+                if (donateStatsSection) {
+                    donateStatsSection.classList.remove('d-none');
+                }
+
+                renderDonators(donors);
+                renderDonations(donations);
             } catch (error) {
                 if (!axios.isCancel(error)) {
                     console.error(error);
@@ -778,6 +887,10 @@ $(document).ready(function () {
             activeShape = event.overlay;
             drawingManager.setDrawingMode(null);
 
+            if (clearButton) {
+                clearButton.classList.remove('d-none');
+            }
+
             const path = activeShape.getPath();
             path.addListener('insert_at', fetchBoundaryPosts);
             path.addListener('set_at', fetchBoundaryPosts);
@@ -795,15 +908,51 @@ $(document).ready(function () {
 
                 clearMapMarkers();
 
-                if (postCountElement) {
-                    postCountElement.textContent = '0';
+                const summary = {
+                    count: 0,
+                    totalRaised: 'Rs. 0',
+                    pending: 0,
+                    inProcess: 0,
+                    completed: 0,
+                    totalGoal: 'Rs. 0',
+                    totalReceived: 'Rs. 0'
+                };
+
+                if (totalCountElement) totalCountElement.textContent = summary.count;
+                if (pendingCountElement) pendingCountElement.textContent = summary.pending;
+                if (inProcessCountElement) inProcessCountElement.textContent = summary.inProcess;
+                if (completedCountElement) completedCountElement.textContent = summary.completed;
+                if (goalElement) goalElement.textContent = summary.totalGoal;
+                if (receivedElement) receivedElement.textContent = summary.totalReceived;
+                if (donatorsBody) {
+                    donatorsBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-8">Draw a shape to load donor statistics.</td>
+                        </tr>
+                    `;
+                }
+                if (donationsBody) {
+                    donationsBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-8">Draw a shape to load donation history.</td>
+                        </tr>
+                    `;
                 }
 
-                if (totalRaisedElement) {
-                    totalRaisedElement.textContent = 'Rs. 0';
+                if (postStatsSection) {
+                    postStatsSection.classList.add('d-none');
+                }
+
+                if (donateStatsSection) {
+                    donateStatsSection.classList.add('d-none');
+                }
+
+                if (clearButton) {
+                    clearButton.classList.add('d-none');
                 }
 
                 drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+
             });
         }
     }

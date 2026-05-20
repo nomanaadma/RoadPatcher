@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using RoadPatcher.Application.Data;
 using RoadPatcher.Helpers;
+using RoadPatcher.Application.Entities;
 
 namespace RoadPatcher.Web.Areas.Admin.Controllers;
 
@@ -39,7 +40,6 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 		var polygon = geometryFactory.CreatePolygon(coordinates.ToArray());
 
 		var rawPosts = await context.Posts
-			.AsNoTracking()
 			.Include(post => post.User)
 			.ThenInclude(user => user!.UserData)
 			.Where(post => polygon.Intersects(post.Location))
@@ -56,8 +56,8 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 				post.Raised,
 				post.PeopleDonated,
 				post.CreatedAt,
-				FirstName = post.User!.UserData!.FirstName,
-				LastName = post.User.UserData!.LastName
+				post.User!.UserData!.FirstName,
+				post.User.UserData!.LastName
 			})
 			.ToListAsync();
 
@@ -78,14 +78,79 @@ public class StatisticsController(ApplicationDbContext context) : Controller
 			user = $"{post.FirstName} {post.LastName}"
 		}).ToList();
 
+		var pendingCount = rawPosts.Count(p => p.Status == PostStatus.Pending.ToString());
+		var inProcessCount = rawPosts.Count(p => p.Status == PostStatus.InProcess.ToString());
+		var completedCount = rawPosts.Count(p => p.Status == PostStatus.Completed.ToString());
+
+		var totalReceived = rawPosts.Sum(post => post.Raised);
+		var totalGoal = rawPosts.Sum(post => post.Cost);
+		var filteredPostIds = rawPosts.Select(post => post.Id).ToList();
+
+		var donorRows = await context.Donations
+			.Where(donation => donation.Status == DonationStatus.Completed && filteredPostIds.Contains(donation.PostId))
+			.Join(context.UserData, donation => donation.UserId, userData => userData.UserId, (donation, userData) => new
+			{
+				donation.UserId,
+				userData.FirstName,
+				userData.LastName,
+				userData.Badge,
+				donation.Amount
+			})
+			.GroupBy(row => new { row.UserId, row.FirstName, row.LastName, row.Badge })
+			.Select(group => new
+			{
+				group.Key.FirstName,
+				group.Key.LastName,
+				group.Key.Badge,
+				Amount = group.Sum(row => row.Amount)
+			})
+			.OrderByDescending(row => row.Amount)
+			.ThenBy(row => row.FirstName)
+			.ThenBy(row => row.LastName)
+			.ToListAsync();
+
+		var donationRows = await context.Donations
+			.Where(donation => donation.Status == DonationStatus.Completed && filteredPostIds.Contains(donation.PostId))
+			.OrderByDescending(donation => donation.CreatedAt)
+			.ThenByDescending(donation => donation.Id)
+			.Select(donation => new
+			{
+				donation.Id,
+				donation.Amount,
+				donation.CreatedAt,
+				donation.PostId,
+				donation.User!.UserData!.FirstName,
+				donation.User.UserData!.LastName
+			})
+			.ToListAsync();
+
 		return Ok(new
 		{
 			posts,
 			summary = new
 			{
 				count = posts.Count,
-				totalRaised = rawPosts.Sum(post => post.Raised).ToPkr()
-			}
+				totalRaised = totalReceived.ToPkr(),
+				pending = pendingCount,
+				inProcess = inProcessCount,
+				completed = completedCount,
+				totalReceived = totalReceived.ToPkr(),
+				totalGoal = totalGoal.ToPkr()
+			},
+			donors = donorRows.Select((row, index) => new
+			{
+				rank = index + 1,
+				userName = $"{row.FirstName} {row.LastName} {ContributionHelper.GetBadgeSvg(row.Badge)}",
+				amount = row.Amount.ToPkr()
+			}),
+			donations = donationRows.Select((row, index) => new
+			{
+				rank = index + 1,
+				userName = $"{row.FirstName} {row.LastName}",
+				amount = row.Amount.ToPkr(),
+				date = row.CreatedAt.ToPrettyFormat(),
+				postId = row.PostId
+			})
 		});
 	}
 }
