@@ -1184,3 +1184,24 @@ gmp-place-autocomplete {
     background-color: white;
     border-radius: 20px;
 }
+
+.fz-50 {
+    font-size: 50px !important;
+}
+
+.w-70 {
+    max-width: 70%;
+    margin: 0 auto;
+}
+
+.fz-13 {
+    font-size: 13px;
+}
+
+.media_guideline_toggle {
+    cursor: pointer;
+}
+
+.media_guideline_content {
+    display: none;
+}

@@ -5,19 +5,41 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="row g-5 justify-content-center">
-	<div class="col-lg-8 mb-10">
-		<div class="card">
-			<div class="card-header">
-				<h1 class="fs-2 m-0">Welcome to Admin Dashboard</h1>
-			</div>
-			<div class="card-body">
-				<div class="mb-5">
-					<p class="fs-5">Hello, <strong>@Model?.UserData?.FirstName @Model?.UserData?.LastName @Model?.Email</strong></p>
-					<p class="text-muted">This is your admin dashboard. More features coming soon...</p>
-					<a asp-area="Admin" asp-controller="Statistics" asp-action="Index" class="btn btn-primary mt-4">Open Statistics</a>
+
+<div class="text-center mt-10 mb-16">
+	<h1 class="fs-2x fw-bold mb-2">Welcome to Admin Dashboard</h1>
+	<p class="text-muted fs-5 mb-0">Hello, <strong>@Model?.UserData?.FirstName @Model?.UserData?.LastName</strong> @Model?.Email</p>
+</div>
+
+@{
+	var adminTiles = new[]
+	{
+		new { Title = "Notifications", Icon = "la-bell", Color = "bg-danger", Href = Url.Action("Index", "Notifications") ?? "#", Description = "Check activity, alerts, and unread updates." },
+		new { Title = "Posts", Icon = "la-list-alt", Color = "bg-success", Href = Url.Action("Manage", "Posts") ?? "#", Description = "Review, search, and manage all road repair posts." },
+		new { Title = "Users", Icon = "la-users", Color = "bg-primary", Href = Url.Action("Index", "Users", new { area = "Admin" }) ?? "#", Description = "Manage admins, super admins, and normal users." },
+		new { Title = "Settings", Icon = "la-user-cog", Color = "bg-dark", Href = Url.Action("EditProfile", "Settings", new { area = "" }) ?? "#", Description = "Update profile, password, and account details." },
+		new { Title = "Statistics", Icon = "la-chart-area", Color = "bg-info", Href = Url.Action("Index", "Statistics", new { area = "Admin" }) ?? "#", Description = "Draw shapes and inspect posts inside a boundary." },
+		new { Title = "Leaderboard", Icon = "la-trophy", Color = "bg-warning", Href = Url.Action("Index", "Leaderboard", new { area = "" }) ?? "#", Description = "See top contributors and recent donations." },
+	};
+}
+
+<div class="row g-5 w-70">
+	@foreach (var tile in adminTiles)
+	{
+		<div class="col-md-6 col-xl-4">
+			<a href="@tile.Href" class="card shadow-sm h-100 text-decoration-none overflow-hidden border-0 admin-tile-card">
+				<div class="card-body p-0 d-flex @tile.Color">
+					<div class="d-flex align-items-center justify-content-between p-6 text-white ">
+						<div class="d-flex align-items-center gap-4">
+							<i class="las @tile.Icon fs-1x text-white fz-50"></i>
+							<div>
+								<h3 class="fs-3 fw-bold mb-1 text-white">@tile.Title</h3>
+								<p class="mb-0 text-white text-opacity-75 fz-13">@tile.Description</p>
+							</div>
+						</div>
+					</div>
 				</div>
-			</div>
+			</a>
 		</div>
-	</div>
+	}
 </div>

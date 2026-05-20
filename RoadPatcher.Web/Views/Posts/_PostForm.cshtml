@@ -51,6 +51,39 @@
 						<span asp-validation-for="Description" class="text-danger"></span>
 					</div>
 
+					<hr class="mb-5 mt-10">
+					
+					<div class="media_guideline">
+						<h2>Media Guideline</h2>
+						<div class="media_guideline_content">
+							<p class="text-gray-700 fs-7 mt-3">
+								Please follow these guidelines when uploading media. Clear images and videos help reviewers assess damage quickly and approve repairs.
+							</p>
+							<ul class="text-gray-700 lh-22">
+								<li>Images must be clear, in-focus, and well-lit showing the damaged area close-up.</li>
+								<li>Videos should be steady, clearly show the issue, and be short — focus on the problem area.</li>
+								<li>Avoid obstructions; include context so location and extent of damage are visible.</li>
+								<li>If privacy is a concern, blur faces or personal information before uploading.</li>
+							</ul>
+
+							<hr />
+							<h5 class="mt-3">Demo Media</h5>
+							<div class="row demo-media">
+								<div class="col-md-6 mb-3">
+									<img src="/img/image_instruction.jpg" alt="Demo image" class="img-fluid rounded demo-image" />
+								</div>
+								<div class="col-md-6 mb-3 d-flex flex-column align-items-stretch">
+									<video class="demo-instruction-video mb-2" controls src="/img/video_instruction.mp4" poster="/img/image_instruction.jpg" style="width:100%;height:auto;">Your browser does not support the video tag.</video>
+								</div>
+							</div>
+						</div>
+						<span class="badge badge-light-primary media_guideline_toggle">Show</span>
+					</div>
+
+					<hr class="mb-10 mt-5">
+
+
+
 					<div class="row">
 						<div class="col">
 							<label asp-for="ImageId" class="fs-6-5 fw-semibold mb-2">Image</label>

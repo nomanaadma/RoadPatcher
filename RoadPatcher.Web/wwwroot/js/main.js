@@ -88,6 +88,25 @@ $(document).ready(function () {
         }
     });
 
+
+    const $toggle = $('.media_guideline_toggle');
+    const $content = $('.media_guideline_content');
+
+    // Click handler
+    $toggle.on('click', function () {
+        
+
+        $content.stop(true, true).slideToggle(300, function () {
+            if ($content.is(':visible')) {
+                $toggle.text('Hide');
+            } else {
+                $toggle.text('Show');
+            }
+        });
+
+    });
+
+
     // Get current URL params
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -988,11 +1007,6 @@ $(document).ready(function () {
         if (document.getElementById('admin-statistics-map')) {
             initAdminStatisticsMap();
         }
-    });
-
-    // $(document).on("change", ".status-filter", function () {
-
-    // users2
-    
+    });    
 
 });

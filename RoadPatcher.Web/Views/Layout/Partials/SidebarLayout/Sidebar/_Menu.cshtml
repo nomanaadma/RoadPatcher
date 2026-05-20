@@ -81,14 +81,6 @@
                     </a>
                 </div>
 
-                <div class="menu-item">
-                    <!--begin:Menu link-->
-                    <a class="menu-link @(controller == "Statistics" ? "active" : "")" asp-area="Admin" asp-controller="Statistics" asp-action="Index">
-                        <span class="menu-icon"><i class="las la-chart-area fz-24"></i></span>
-                        <span class="menu-title">Statistics</span>
-                    </a>
-                </div>
-
                 <div class="menu-item position-relative">
                     <!--begin:Menu link-->
                     <a class="menu-link @(controller == "Notifications" ? "active" : "")" href="/Notifications">
@@ -172,6 +164,14 @@
 
                     </div>
                     <!--end:Menu sub-->
+                </div>
+
+                <div class="menu-item">
+                    <!--begin:Menu link-->
+                    <a class="menu-link @(controller == "Statistics" ? "active" : "")" asp-area="Admin" asp-controller="Statistics" asp-action="Index">
+                        <span class="menu-icon"><i class="las la-chart-area fz-24"></i></span>
+                        <span class="menu-title">Statistics</span>
+                    </a>
                 </div>
 
                 <div class="menu-item">
