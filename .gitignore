@@ -24,6 +24,7 @@ RoadPatcher.AIML/dataset
 RoadPatcher.AIML/output
 RoadPatcher.AIML/data
 RoadPatcher.AIML/local-road-images
-RoadPatcher.AIML/depth_anything_v2_vitb.pth
+RoadPatcher.AIML/depth_anything_v2_vits.pth
 RoadPatcher.Web/wwwroot/img/video_instruction.mp4
 RoadPatcher.Web/wwwroot/img/image_instruction.jpg
+*__pycache__
