@@ -1,150 +1,140 @@
+import os
 import cv2
-import torch
 import numpy as np
 from ultralytics import YOLO
-from depth_anything_v2.dpt import DepthAnythingV2
 
-# ==========================================
-# 1. LOAD MODELS (Configured for vitb)
-# ==========================================
-print("Loading YOLO Segmentation Model...")
-model_yolo = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
-
-print("Loading Native Depth Anything V2 (Base Model)...")
-# Full configurations mapping
-model_configs = {
-    'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
-    'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
-    'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]}
-}
-
-encoder = 'vits' # Explicitly setting to base model
-model_depth = DepthAnythingV2(**model_configs[encoder])
-
-# Looks for 'depth_anything_v2_vitb.pth' in your root directory
-model_depth.load_state_dict(torch.load(f"depth_anything_v2_{encoder}.pth", map_location="cpu", weights_only=True))
-model_depth.eval() 
-
-# ==========================================
-# 2. RUN INFERENCE
-# ==========================================
-image_path = "data/19.jpg"
-img_cv2 = cv2.imread(image_path)
-img_height, img_width = img_cv2.shape[:2]
-
-print("Running Depth Estimation...")
-with torch.no_grad():
-    depth_map = model_depth.infer_image(img_cv2) # Returns HxW float array
-
-print("Running YOLO Segmentation...")
-results = model_yolo(image_path)
-result = results[0]
-
-# ==========================================
-# 3. BASE CONFIGURATION
-# ==========================================
-camera_height_m = 1.5
-anchor_distance_m = 1.5
-horizon_y = img_height * 0.35 
-cost_per_m2 = 120.0 
-
-if result.masks is not None and result.boxes is not None:
-    masks = result.masks.xy        
-    boxes = result.boxes.xyxy.cpu().numpy()
-    
-    # --- A. 2D Camera Calibration ---
-    anchor_idx = np.argmax(boxes[:, 3]) 
-    anchor_y_pixel = boxes[anchor_idx, 3]
-    calibration_constant = anchor_distance_m * (anchor_y_pixel - horizon_y)
-    focal_length_px = calibration_constant / camera_height_m
-    
-    # --- B. AI Depth Map Calibration (Solving for A and B) ---
-    y_close = int(anchor_y_pixel) 
-    y_far = int(horizon_y + (anchor_y_pixel - horizon_y) * 0.2) 
-    
-    Z_close = calibration_constant / (y_close - horizon_y)
-    Z_far = calibration_constant / (y_far - horizon_y)
-    
-    x_start, x_end = int(img_width * 0.3), int(img_width * 0.7)
-    d_close = np.median(depth_map[y_close, x_start:x_end])
-    d_far = np.median(depth_map[y_far, x_start:x_end])
-    
-    inv_Z_close = 1.0 / Z_close
-    inv_Z_far = 1.0 / Z_far
-    
-    A_constant = 0
-    B_constant = 0
-    if abs(inv_Z_close - inv_Z_far) > 1e-5:
-        A_constant = (d_close - d_far) / (inv_Z_close - inv_Z_far)
-        B_constant = d_close - A_constant * inv_Z_close
-
-    print(f"\n--- Global Calibration Complete ---")
-    print(f"2D Camera Constant: {calibration_constant:.2f}")
-    print(f"3D Depth Scale (A): {A_constant:.2f} | Shift (B): {B_constant:.2f}\n")
-
-    # ==========================================
-    # 4. MEASURE POTHOLES
-    # ==========================================
-    for i, (mask, box) in enumerate(zip(masks, boxes)):
+def process_road_damage(image_path, model_path, output_path):
+    # 1. Verify and Load Image
+    if not os.path.exists(image_path):
+        print(f"Error: Image not found at {image_path}")
+        return
         
-        # 1. 2D Area & Distance Math
-        polygon_pts = np.array(mask, dtype=np.int32)
-        pixel_area = cv2.contourArea(polygon_pts)
+    img = cv2.imread(image_path)
+    img_h, img_w, _ = img.shape
+
+    # 2. Load YOLO Segmentation Model
+    print("Loading YOLO Segmentation Model...")
+    model = YOLO(model_path)
+    results = model(image_path)
+
+    # 3. Camera Geometry & Calibration Parameters
+    camera_height = 1.2         # Vertical height from ground to lens (Meters)
+    camera_tilt_deg = 30.0      # Downward pitch angle of phone relative to horizon (Degrees)
+    fov_v_deg = 90.0            # Vertical Field of View of your camera lens (Degrees)
+    fov_h_deg = 50.0            # Horizontal Field of View of your camera lens (Degrees)
+
+    # Convert degrees to radians for mathematical calculations
+    tilt_rad = np.radians(camera_tilt_deg)
+    fov_v_rad = np.radians(fov_v_deg)
+    fov_h_rad = np.radians(fov_h_deg)
+
+    # 4. Generate Base Background for Annotations
+    annotated_img = results[0].plot()
+
+    print(f"\nProcessing frame: {image_path} ({img_w}x{img_h})")
+    
+    # Check if any segmentation masks were detected
+    if results[0].masks is not None:
+        print(f"Detected {len(results[0].masks)} potential road defects.\n")
         
-        bottom_y = box[3]
-        if bottom_y <= horizon_y: continue 
+        # Loop through each mask independently
+        for idx, mask in enumerate(results[0].masks):
+            # Extract precise contour pixel arrays [X, Y]
+            polygon_pixels = mask.xy[0] 
             
-        distance_m = calibration_constant / (bottom_y - horizon_y)
-        scale_cm_per_px = (distance_m / focal_length_px) * 100
-        true_area_cm2 = pixel_area * (scale_cm_per_px ** 2)
-        
-        physical_width_cm = (box[2] - box[0]) * scale_cm_per_px
-        physical_length_cm = (box[3] - box[1]) * scale_cm_per_px
-        
-        # 2. Extract AI Disparity Values
-        blank_mask = np.zeros_like(depth_map, dtype=np.uint8)
-        cv2.fillPoly(blank_mask, [polygon_pts], 1)
-        z_hole_disp = np.median(depth_map[blank_mask == 1])
-        
-        kernel = np.ones((20, 20), np.uint8)
-        road_mask = cv2.dilate(blank_mask, kernel, iterations=1) - blank_mask 
-        z_road_disp = np.median(depth_map[road_mask == 1])
-        
-        # 3. Calculate True Depth using A & B Constants
-        final_depth_cm = 5.0 # Fallback default if map translation errors out
-        
-        if A_constant > 0:
-            try:
-                Z_hole_m = A_constant / (z_hole_disp - B_constant)
-                Z_road_m = A_constant / (z_road_disp - B_constant)
-                calculated_depth_cm = (Z_hole_m - Z_road_m) * 100
+            # Find the lowest point of the pothole structure in the image plane (Max Y coordinate)
+            lowest_y_pixel = np.max(polygon_pixels[:, 1])
+            
+            # Find the center pixel of the pothole to position our onscreen text overlay cleanly
+            center_x = int(np.mean(polygon_pixels[:, 0]))
+            center_y = int(np.mean(polygon_pixels[:, 1]))
+            
+            # --- Dynamic Distance Logic ---
+            norm_y = (lowest_y_pixel / img_h) - 0.5
+            pixel_angle_from_center = norm_y * fov_v_rad
+            total_drop_angle = tilt_rad + pixel_angle_from_center
+            
+            if total_drop_angle <= 0:
+                print(f"Pothole #{idx+1}: Outside physical ground grid boundary. Skipping calculation.")
+                continue
                 
-                # Sanity filter to handle depth map anomalies smoothly
-                if 1.0 <= calculated_depth_cm <= 25.0:
-                    final_depth_cm = calculated_depth_cm
-                elif calculated_depth_cm > 25.0:
-                    final_depth_cm = 25.0
-            except:
-                pass 
+            calculated_distance = camera_height / np.tan(total_drop_angle)
+            
+            # --- Real-World Area Logic ---
+            scene_width_meters = 2 * calculated_distance * np.tan(fov_h_rad / 2)
+            pixel_to_meter_ratio = scene_width_meters / img_w
+            
+            polygon_meters = polygon_pixels * pixel_to_meter_ratio
+            area_sq_meters = cv2.contourArea(polygon_meters.astype(np.float32))
+            area_sq_cm = area_sq_meters * 10000  # Convert to square centimeters for readability
+            
+            # --- Structural Estimations & Financial Engine ---
+            # Fallback average depth constant (approx 7.5 cm thickness)
+            # If you hook up Depth Anything V2 later, change this static value to your dynamic reading
+            estimated_depth_meters = 0.075 
+            estimated_depth_cm = estimated_depth_meters * 100
+            
+            volume_cubic_meters = area_sq_meters * estimated_depth_meters
+            
+            COST_PER_CUBIC_METER = 150.0  
+            base_material_fee = volume_cubic_meters * COST_PER_CUBIC_METER
+            logistics_mobilization_fee = 45.0
+            
+            total_suggested_cost = base_material_fee + logistics_mobilization_fee
+            
+            # 5. Log Analysis Data to Terminal Console
+            print(f"--- Pothole #{idx + 1} ---")
+            print(f"  Calculated Distance : {calculated_distance:.2f} meters away")
+            print(f"  Estimated Area      : {area_sq_cm:.1f} sq cm")
+            print(f"  Estimated Depth     : {estimated_depth_cm:.1f} cm")
+            print(f"  Suggested Patch Cost: ${total_suggested_cost:.2f}\n")
+            
+            # 6. Burn Metrics Data Explicitly onto the Image Canvas
+            # We construct a 4-line data stack to render right over the pothole center
+            metrics = [
+                f"#{idx+1} Dist: {calculated_distance:.1f}m",
+                f"Area: {area_sq_cm:.0f}cm2",
+                f"Depth: {estimated_depth_cm:.1f}cm",
+                f"Cost: ${total_suggested_cost:.2f}"
+            ]
+            
+            # Loop through the list to draw each metric on a separate vertical line
+            for line_idx, text in enumerate(metrics):
+                y_offset = center_y - 20 + (line_idx * 60) # 18 pixels spacing between text rows
                 
-        # 4. Volume and Cost Calculation
-        volume_cm3 = true_area_cm2 * final_depth_cm
-        area_m2 = true_area_cm2 / 10000.0
-        estimated_cost = area_m2 * cost_per_m2
-        
-        print(f"Pothole {i+1}:")
-        print(f"  - Distance: {distance_m:.2f} m")
-        print(f"  - Dimensions: {physical_width_cm:.1f}cm W x {physical_length_cm:.1f}cm L")
-        print(f"  - Calculated Depth: {final_depth_cm:.1f} cm")
-        print(f"  - Volume: {volume_cm3:.0f} cm³")
-        print(f"  - Est. Repair Cost: ${estimated_cost:.2f}\n")
-        
-        # 5. Draw Results to Screen Array
-        cv2.polylines(img_cv2, [polygon_pts], isClosed=True, color=(0, 255, 0), thickness=3)
-        label_line1 = f"W:{physical_width_cm:.0f}cm L:{physical_length_cm:.0f}cm"
-        label_line2 = f"D:{final_depth_cm:.1f}cm | Vol:{volume_cm3:.0f}cm3"
-        cv2.putText(img_cv2, label_line1, (int(box[0]), int(box[1]) - 35), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        cv2.putText(img_cv2, label_line2, (int(box[0]), int(box[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # Determine colors to separate data blocks visually
+                if "Cost" in text:
+                    text_color = (3, 95, 171)   # Green for financial suggestion
+                elif "Dist" in text:
+                    text_color = (0, 0, 204)   # Red for spatial tracking
+                elif "Depth" in text:
+                    text_color = (121, 1, 100)   # Red for spatial tracking
+                else:
+                    text_color = (0, 0, 0) # Cyan/Yellow for structural attributes
+                
+                cv2.putText(
+                    annotated_img, 
+                    text, 
+                    (center_x - 50, y_offset), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 
+                    1.6,             # Slightly scaled down font size to fit neatly
+                    text_color, 
+                    5
+                )
+            
+        # 7. Write Complete Final Output Image File back to System Storage
+        success = cv2.imwrite(output_path, annotated_img)
+        if success:
+            print(f"Processing successful! Output saved at: {output_path}")
+        else:
+            print("Processing Error: Unable to write to target disk path.")
+    else:
+        print("No structural road damage detected in target image frame.")
 
-cv2.imwrite("final_3d_pothole_metrics.jpg", img_cv2)
-print("Saved complete pipeline to final_3d_pothole_metrics.jpg")
+# Execute Main Run Execution Structure
+if __name__ == "__main__":
+    INPUT_IMAGE = "data/19.jpg"
+    YOLO_MODEL  = "output/d40_yolo26_seg_model/weights/best.pt"
+    OUTPUT_IMAGE = "19_detected.jpg"
+    
+    process_road_damage(INPUT_IMAGE, YOLO_MODEL, OUTPUT_IMAGE)
