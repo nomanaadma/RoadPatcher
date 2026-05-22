@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 
 model = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
-image_path = "local-road-images/4.jpeg"
+image_path = "data/_3.jpeg"
 results = model(image_path)
 
 camera_height = 1.5
