@@ -1,5 +1,13 @@
+import cv2
 import math
-from PIL import Image, ExifTags
+import numpy as np
+from ultralytics import YOLO
+
+# 1. Initialize configurations
+USER_HEIGHT_M = 1.3           # e.g., 1.5 meters
+USER_DISTANCE_M = 1.65         # e.g., 3 meters away
+COST_PER_CUBIC_METER = 150000 # Cost in PKR
+STRUCTURAL_DEPTH_M = 0.05     # 5 cm standard patching depth
 
 def get_camera_fov(image_path):
     # Hardcoded fallback: 26mm is standard for modern smartphone wide-angle lenses
@@ -70,9 +78,116 @@ def get_camera_fov(image_path):
 
     return fov_h_deg, fov_v_deg
 
-# --- Example Usage ---
-image_path = "data/_3.jpeg" 
-horizontal_fov, vertical_fov = get_camera_fov(image_path)
 
-print(f"\nFinal Horizontal FOV: {horizontal_fov:.2f}°")
-print(f"Final Vertical FOV: {vertical_fov:.2f}°")
+
+def process_road_damage(image_path):
+    # Step 1: Extract FOV using the function we built earlier
+    fov_h_deg, fov_v_deg = get_camera_fov(image_path)
+    
+    # Step 2: Calculate Camera Tilt Angle (in radians)
+    tilt_rad = math.atan(USER_HEIGHT_M / USER_DISTANCE_M)
+    
+    # Step 3: Run YOLO Inference
+    model = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
+    results = model(image_path)
+    img = cv2.imread(image_path)
+    img_h, img_w, _ = img.shape
+    
+    if results[0].masks is not None:
+        for mask in results[0].masks:
+            # Step 4: Get mask pixel coordinates
+            polygon_pixels = mask.xy[0] 
+            
+            # Find extreme points (Top, Bottom, Left, Right)
+            min_y_pixel = np.min(polygon_pixels[:, 1])
+            max_y_pixel = np.max(polygon_pixels[:, 1])
+            min_x_pixel = np.min(polygon_pixels[:, 0])
+            max_x_pixel = np.max(polygon_pixels[:, 0])
+
+
+
+
+            # Step 5: Apply Pinhole Math to extremes
+
+
+            # 1. Convert FOVs to radians for trigonometric functions
+            fov_v_rad = math.radians(fov_v_deg)
+            fov_h_rad = math.radians(fov_h_deg)
+
+            # 2. Calculate camera focal length in pixels
+            # This bridges the gap between digital pixels and physical angles
+            focal_length_y_px = (img_h / 2) / math.tan(fov_v_rad / 2)
+            focal_length_x_px = (img_w / 2) / math.tan(fov_h_rad / 2)
+
+
+            # Helper function: Calculate ground distance (Z) for any given Y-axis pixel
+            def get_ground_distance(y_pixel):
+                # How far off the vertical center is this pixel? 
+                # (Standard OpenCV: 0 is top of image, img_h is bottom)
+                dy = y_pixel - (img_h / 2)
+                
+                # Calculate the angular offset of this specific pixel
+                alpha = math.atan(dy / focal_length_y_px)
+                
+                # Add camera's physical downward tilt to find the true ray angle
+                gamma = tilt_rad + alpha
+                
+                # Prevent math errors if a pixel is strictly on or above the horizon
+                if gamma <= 0: 
+                    return float('inf') 
+                    
+                # Calculate exact distance along the ground
+                return USER_HEIGHT_M / math.tan(gamma)
+
+
+            # --- Calculate True Length (Y-Axis) ---
+            # min_y_pixel is visually the "top" of the pothole (furthest away from you)
+            # max_y_pixel is visually the "bottom" of the pothole (closest to you)
+            distance_far_m = get_ground_distance(min_y_pixel)
+            distance_near_m = get_ground_distance(max_y_pixel)
+            
+            calculated_length_m = distance_far_m - distance_near_m
+
+            # --- Calculate True Width (X-Axis) ---
+            # Find the ground distance to the exact center of the pothole to establish our scale
+            center_y = (min_y_pixel + max_y_pixel) / 2
+            distance_center_m = get_ground_distance(center_y)
+            
+            # Count how many pixels wide the hole is
+            pixel_width = max_x_pixel - min_x_pixel
+            
+            # Scale the pixel width into real-world meters based on its distance from the camera
+            calculated_width_m = distance_center_m * (pixel_width / focal_length_x_px)
+
+
+            # Provide fail-safes in case of horizon anomalies
+            if calculated_length_m < 0 or calculated_length_m == float('inf'):
+                calculated_length_m = 0
+                print("Warning: Pothole extends beyond calculated horizon.")
+
+
+            
+            # Step 6: Calculate Area, Volume, and Financials
+            area_sq_m = calculated_length_m * calculated_width_m
+            volume_m3 = area_sq_m * STRUCTURAL_DEPTH_M
+            total_cost = volume_m3 * COST_PER_CUBIC_METER
+
+            print(area_sq_m * 10000)
+
+
+            
+            # Step 7: Burn Metrics onto the Image Canvas
+            center_x = int(np.mean(polygon_pixels[:, 0]))
+            center_y = int(np.mean(polygon_pixels[:, 1]))
+            
+            metrics_text = f"Cost: Rs. {total_cost:.0f} PKR"
+            cv2.putText(img, metrics_text, (center_x - 50, center_y), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)
+
+    # Save or Display final output
+    cv2.imwrite("output_processed.jpg", img)
+    print("Processing Complete.")
+
+process_road_damage("data/_3.jpeg");
+
+
