@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 # 1. Load Model & Run Inference
 model = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
-image_path = "data/19.jpg"
+image_path = "data/_1.jpeg"
 results = model(image_path)  # Run inference with a confidence threshold of 25%
 # results = model(image_path, conf=0.50)  # Run inference with a confidence threshold of 25%
 
