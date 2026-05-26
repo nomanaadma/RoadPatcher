@@ -89,7 +89,7 @@ if __name__ == "__main__":
     depth_model = DepthAnythingPredictor(encoder="vits")
 
     # Inference on image
-    depth, color = depth_model.infer_and_save_image("data/_2-copy.jpeg", save_path="depth_turbo.png")
+    depth, color = depth_model.infer_and_save_image("data/_2.jpeg", save_path="depth_2_original.png")
 
     # Inference on video
     # depth_model.infer_video("fish.mp4", "depth_output.mp4")

@@ -9,7 +9,7 @@ from depth_anything_v2.dpt import DepthAnythingV2
 
 # 1. Initialize configurations
 USER_HEIGHT_M = 1.3           # e.g., 1.5 meters
-USER_DISTANCE_M = 1.7         # e.g., 3 meters away
+USER_DISTANCE_M = 2.0         # e.g., 3 meters away
 COST_PER_CUBIC_METER = 150000 # Cost in PKR
 STRUCTURAL_DEPTH_M = 0.05     # 5 cm standard patching depth
 
@@ -91,25 +91,43 @@ def get_camera_fov(image_path):
     fov_v_deg = math.degrees(2 * math.atan(sensor_height_mm / (2 * focal_length_35mm)))
 
     # --- Orientation Logic ---
-    # EXIF Orientation codes: 
-    # 1: Normal (Landscape)
-    # 6: Rotated 90 CW (Portrait)
-    # 8: Rotated 90 CCW (Portrait)
-    # 5, 7: Mirrored Portraits (Rare, mostly front-facing cameras)
     is_portrait_exif = orientation in [5, 6, 7, 8]
-    
-    # Fallback: If EXIF says landscape (or is missing) but the image pixels are taller than wide
     is_portrait_dimensions = img_height > img_width
 
     # If either the EXIF data or the physical pixels indicate portrait mode, swap the FOV
     if is_portrait_exif or is_portrait_dimensions:
         print("Orientation: Portrait Detected. Swapping Horizontal and Vertical FOVs.")
-        # Swap the variables
         fov_h_deg, fov_v_deg = fov_v_deg, fov_h_deg
     else:
         print("Orientation: Landscape Detected.")
 
     return fov_h_deg, fov_v_deg
+
+# --- NEW CROPPING LOGIC ADDED HERE ---
+def get_cropped_depth_map(img, polygon_pixels, padding=50):
+    img_h, img_w = img.shape[:2]
+
+    # 1. Find the strict bounding box of the YOLO mask
+    min_x = int(np.min(polygon_pixels[:, 0]))
+    max_x = int(np.max(polygon_pixels[:, 0]))
+    min_y = int(np.min(polygon_pixels[:, 1]))
+    max_y = int(np.max(polygon_pixels[:, 1]))
+
+    # 2. Add padding to capture the healthy road baseline
+    crop_x1 = max(0, min_x - padding)
+    crop_y1 = max(0, min_y - padding)
+    crop_x2 = min(img_w, max_x + padding)
+    crop_y2 = min(img_h, max_y + padding)
+
+    # 3. Crop the original image array
+    cropped_img = img[crop_y1:crop_y2, crop_x1:crop_x2]
+
+    # 4. Shift the YOLO polygon coordinates to match the new cropped space
+    shifted_polygon = polygon_pixels.copy()
+    shifted_polygon[:, 0] -= crop_x1
+    shifted_polygon[:, 1] -= crop_y1
+
+    return cropped_img, shifted_polygon
 
 
 def calculate_dynamic_depth(mask_polygon, depth_map, absolute_distance_m):
@@ -129,35 +147,35 @@ def calculate_dynamic_depth(mask_polygon, depth_map, absolute_distance_m):
     if len(surface_pixels) == 0 or len(bottom_pixels) == 0:
         return 0.05 # Safe fallback if sampling fails
         
-    # Average relative values (assuming 0-255 scale where lower = further away)
+    # Average relative values
     avg_surface_relative = np.mean(surface_pixels)
     min_bottom_relative = np.min(bottom_pixels) # Deepest point
     
     # Calculate relative difference
     relative_delta = avg_surface_relative - min_bottom_relative
     
-    # Scale relative difference to absolute meters based on spatial distance.
-    # Objects further away have compressed relative depth resolution.
-    # This scaling factor can be calibrated experimentally.
-    calibration_constant = 0.05
+    # Scale relative difference to absolute meters
+    calibration_constant = 0.01
     absolute_depth_m = relative_delta * calibration_constant * (absolute_distance_m ** 2)
 
-    print( absolute_depth_m, surface_pixels, bottom_pixels )
+    # Printing for debug visualization
+    print(f"DEBUG: Absolute Depth M: {absolute_depth_m:.5f} | Avg Surface: {avg_surface_relative:.2f} | Min Bottom: {min_bottom_relative:.2f}")
 
     return absolute_depth_m
-    # return max(absolute_depth_m, 0.05)
 
 
 
 def process_road_damage(image_path):
-    # Step 1: Extract FOV using the function we built earlier
+    # Step 1: Extract FOV 
     fov_h_deg, fov_v_deg = get_camera_fov(image_path)
     
     # Step 2: Calculate Camera Tilt Angle (in radians)
     tilt_rad = math.atan(USER_HEIGHT_M / USER_DISTANCE_M)
     
-    # Step 3: Run YOLO Inference
+    # Step 3: Initialize Models ONCE before the loop
     model = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
+    depth_model = load_depth_anything_v2(encoder='vits', device='cpu') # Moved outside the loop
+    
     results = model(image_path)
     img = cv2.imread(image_path)
     img_h, img_w, _ = img.shape
@@ -167,88 +185,58 @@ def process_road_damage(image_path):
             # Step 4: Get mask pixel coordinates
             polygon_pixels = mask.xy[0] 
             
-            # Find extreme points (Top, Bottom, Left, Right)
             min_y_pixel = np.min(polygon_pixels[:, 1])
             max_y_pixel = np.max(polygon_pixels[:, 1])
             min_x_pixel = np.min(polygon_pixels[:, 0])
             max_x_pixel = np.max(polygon_pixels[:, 0])
 
-
-
-
             # Step 5: Apply Pinhole Math to extremes
-
-
-            # 1. Convert FOVs to radians for trigonometric functions
             fov_v_rad = math.radians(fov_v_deg)
             fov_h_rad = math.radians(fov_h_deg)
 
-            # 2. Calculate camera focal length in pixels
-            # This bridges the gap between digital pixels and physical angles
             focal_length_y_px = (img_h / 2) / math.tan(fov_v_rad / 2)
             focal_length_x_px = (img_w / 2) / math.tan(fov_h_rad / 2)
 
-
-            # Helper function: Calculate ground distance (Z) for any given Y-axis pixel
             def get_ground_distance(y_pixel):
-                # How far off the vertical center is this pixel? 
-                # (Standard OpenCV: 0 is top of image, img_h is bottom)
                 dy = y_pixel - (img_h / 2)
-                
-                # Calculate the angular offset of this specific pixel
                 alpha = math.atan(dy / focal_length_y_px)
-                
-                # Add camera's physical downward tilt to find the true ray angle
                 gamma = tilt_rad + alpha
                 
-                # Prevent math errors if a pixel is strictly on or above the horizon
                 if gamma <= 0: 
                     return float('inf') 
-                    
-                # Calculate exact distance along the ground
                 return USER_HEIGHT_M / math.tan(gamma)
 
-
-            # --- Calculate True Length (Y-Axis) ---
-            # min_y_pixel is visually the "top" of the pothole (furthest away from you)
-            # max_y_pixel is visually the "bottom" of the pothole (closest to you)
             distance_far_m = get_ground_distance(min_y_pixel)
             distance_near_m = get_ground_distance(max_y_pixel)
             
             calculated_length_m = distance_far_m - distance_near_m
 
-            # --- Calculate True Width (X-Axis) ---
-            # Find the ground distance to the exact center of the pothole to establish our scale
             center_y = (min_y_pixel + max_y_pixel) / 2
             distance_center_m = get_ground_distance(center_y)
             
-            # Count how many pixels wide the hole is
             pixel_width = max_x_pixel - min_x_pixel
-            
-            # Scale the pixel width into real-world meters based on its distance from the camera
             calculated_width_m = distance_center_m * (pixel_width / focal_length_x_px)
 
-
-            # Provide fail-safes in case of horizon anomalies
             if calculated_length_m < 0 or calculated_length_m == float('inf'):
                 calculated_length_m = 0
                 print("Warning: Pothole extends beyond calculated horizon.")
 
+            # --- NEW: Crop and Infer Depth ---
+            # 1. Crop the image to force the depth model to normalize the contrast
+            cropped_img, shifted_polygon = get_cropped_depth_map(img, polygon_pixels, padding=50)
 
-            depth_model = load_depth_anything_v2(encoder='vits', device='cpu')
+            # 2. Pass ONLY the cropped image into Depth Anything
+            relative_depth_map = depth_model.infer_image(cropped_img)
 
-            relative_depth_map = depth_model.infer_image(img)
-
-            DYNAMIC_DEPTH_M = calculate_dynamic_depth(polygon_pixels, relative_depth_map, distance_center_m)
+            # 3. Calculate dynamic depth using the SHIFTED polygon coordinates
+            DYNAMIC_DEPTH_M = calculate_dynamic_depth(shifted_polygon, relative_depth_map, distance_center_m)
 
             # Step 6: Calculate Area, Volume, and Financials
             area_sq_m = calculated_length_m * calculated_width_m
             volume_m3 = area_sq_m * DYNAMIC_DEPTH_M
             total_cost = volume_m3 * COST_PER_CUBIC_METER
 
-            print(area_sq_m * 10000, DYNAMIC_DEPTH_M)
-
-
+            print(f"Area (sq cm): {area_sq_m * 10000:.2f}, Depth (m): {DYNAMIC_DEPTH_M:.5f}")
             
             # Step 7: Burn Metrics onto the Image Canvas
             center_x = int(np.mean(polygon_pixels[:, 0]))
@@ -258,10 +246,7 @@ def process_road_damage(image_path):
             cv2.putText(img, metrics_text, (center_x - 50, center_y), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3)
 
-    # Save or Display final output
     cv2.imwrite("output_processed.jpg", img)
     print("Processing Complete.")
 
-process_road_damage("data/_1.jpeg")
-
-
+process_road_damage("data/_3.jpeg")
