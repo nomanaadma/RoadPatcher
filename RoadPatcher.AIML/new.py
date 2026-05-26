@@ -1,13 +1,46 @@
+import os
 import cv2
 import math
 import numpy as np
+import torch
+from PIL import Image, ExifTags
 from ultralytics import YOLO
+from depth_anything_v2.dpt import DepthAnythingV2
 
 # 1. Initialize configurations
 USER_HEIGHT_M = 1.3           # e.g., 1.5 meters
-USER_DISTANCE_M = 1.65         # e.g., 3 meters away
+USER_DISTANCE_M = 1.7         # e.g., 3 meters away
 COST_PER_CUBIC_METER = 150000 # Cost in PKR
 STRUCTURAL_DEPTH_M = 0.05     # 5 cm standard patching depth
+
+
+def load_depth_anything_v2(encoder='vitb', device='cuda'):
+    """
+    Instantiates Depth Anything V2 correctly using native feature allocations
+    to eliminate 'vitb' KeyError issues.
+    """
+    model_configs = {
+        'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
+        'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
+        'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]}
+    }
+    
+    if encoder not in model_configs:
+        raise KeyError(f"Encoder '{encoder}' not found. Choose from: {list(model_configs.keys())}")
+        
+    print(f"Initializing Depth Anything V2 ({encoder.upper()}) on device: {device}...")
+    depth_model = DepthAnythingV2(**model_configs[encoder])
+    
+    # Path allocation reference
+    weights_path = f"depth_anything_v2_{encoder}.pth"
+    if os.path.exists(weights_path):
+        depth_model.load_state_dict(torch.load(weights_path, map_location=device))
+    else:
+        print(f"Warning: Precise checkpoint weights file not found at {weights_path}. Running with uninitialized structural layers.")
+        
+    depth_model = depth_model.to(device).eval()
+    return depth_model
+
 
 def get_camera_fov(image_path):
     # Hardcoded fallback: 26mm is standard for modern smartphone wide-angle lenses
@@ -77,6 +110,42 @@ def get_camera_fov(image_path):
         print("Orientation: Landscape Detected.")
 
     return fov_h_deg, fov_v_deg
+
+
+def calculate_dynamic_depth(mask_polygon, depth_map, absolute_distance_m):
+    # Create a mask for the pothole interior
+    interior_mask = np.zeros(depth_map.shape, dtype=np.uint8)
+    cv2.fillPoly(interior_mask, [mask_polygon.astype(np.int32)], 255)
+    
+    # Create a dilated mask to sample the healthy road surface right outside the hole
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+    dilated_mask = cv2.dilate(interior_mask, kernel, iterations=1)
+    exterior_mask = cv2.subtract(dilated_mask, interior_mask)
+    
+    # Extract depth map intensities
+    surface_pixels = depth_map[exterior_mask == 255]
+    bottom_pixels = depth_map[interior_mask == 255]
+    
+    if len(surface_pixels) == 0 or len(bottom_pixels) == 0:
+        return 0.05 # Safe fallback if sampling fails
+        
+    # Average relative values (assuming 0-255 scale where lower = further away)
+    avg_surface_relative = np.mean(surface_pixels)
+    min_bottom_relative = np.min(bottom_pixels) # Deepest point
+    
+    # Calculate relative difference
+    relative_delta = avg_surface_relative - min_bottom_relative
+    
+    # Scale relative difference to absolute meters based on spatial distance.
+    # Objects further away have compressed relative depth resolution.
+    # This scaling factor can be calibrated experimentally.
+    calibration_constant = 0.05
+    absolute_depth_m = relative_delta * calibration_constant * (absolute_distance_m ** 2)
+
+    print( absolute_depth_m, surface_pixels, bottom_pixels )
+
+    return absolute_depth_m
+    # return max(absolute_depth_m, 0.05)
 
 
 
@@ -166,13 +235,18 @@ def process_road_damage(image_path):
                 print("Warning: Pothole extends beyond calculated horizon.")
 
 
-            
+            depth_model = load_depth_anything_v2(encoder='vits', device='cpu')
+
+            relative_depth_map = depth_model.infer_image(img)
+
+            DYNAMIC_DEPTH_M = calculate_dynamic_depth(polygon_pixels, relative_depth_map, distance_center_m)
+
             # Step 6: Calculate Area, Volume, and Financials
             area_sq_m = calculated_length_m * calculated_width_m
-            volume_m3 = area_sq_m * STRUCTURAL_DEPTH_M
+            volume_m3 = area_sq_m * DYNAMIC_DEPTH_M
             total_cost = volume_m3 * COST_PER_CUBIC_METER
 
-            print(area_sq_m * 10000)
+            print(area_sq_m * 10000, DYNAMIC_DEPTH_M)
 
 
             
@@ -188,6 +262,6 @@ def process_road_damage(image_path):
     cv2.imwrite("output_processed.jpg", img)
     print("Processing Complete.")
 
-process_road_damage("data/_3.jpeg");
+process_road_damage("data/_1.jpeg")
 
 
