@@ -25,7 +25,7 @@
 		</div>
 
 		<form method="get" asp-action="Manage" class="row g-3 align-items-end">
-			<div class="col-lg-3">
+			<div class="col-lg-3 scope-filter">
 				<label class="form-label fw-semibold">View</label>
 				<select name="scope" class="form-select form-control">
 					@foreach (var scope in Model.AvailableScopes)
@@ -76,7 +76,7 @@
 				</div>
 			}
 
-			<div class="col-lg-2 d-flex gap-2">
+			<div class="col-lg-2 d-flex gap-2 manager-user-btn">
 				<button type="submit" class="btn btn-primary w-100">Search</button>
 				<a asp-action="Manage" asp-route-scope="@Model.CurrentScope" class="btn btn-light-secondary w-100">Clear</a>
 			</div>

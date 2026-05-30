@@ -1202,6 +1202,13 @@ gmp-place-autocomplete {
     cursor: pointer;
 }
 
+.user-root .scope-filter,
 .media_guideline_content {
     display: none;
 }
+
+.manager-user-btn .btn {
+    padding: 11px !important;
+}
+
+

@@ -11,6 +11,8 @@ public class PostViewModel : AddressViewModel
 
 	public ApprovalStatus ReviewStatus { get; set; }
 
+	public PostStatus Status { get; set; }
+
 	public string? ReviewerId { get; set; }
 
 	public string? Description { get; init; }

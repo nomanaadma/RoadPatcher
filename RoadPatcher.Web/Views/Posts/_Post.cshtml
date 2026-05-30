@@ -13,7 +13,10 @@
 	var profileImage = UserHelper.GetProfileImage(userData?.Image);
 	var creatorBadge = userData?.Badge;
 	var creatorBadgeSvg = ContributionHelper.GetBadgeSvg(creatorBadge);
-			
+
+	var completionImage = Model.MediaFiles
+		.FirstOrDefault(m => m.Id == Model.CompletionImageId);
+
 	var mainImage = Model.MediaFiles
 		.FirstOrDefault(m => m.Id == Model.ImageId)!;
 			
@@ -30,6 +33,10 @@
 		mainVideo,
 		..otherMedia
 	];
+
+	if(completionImage != null) {
+		mediaFiles.Insert(0, completionImage);
+	}
 			
 	var userFullName = UserHelper.GetFullName(userData!);
 			

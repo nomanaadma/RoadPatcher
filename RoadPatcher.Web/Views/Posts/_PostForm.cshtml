@@ -1,4 +1,5 @@
-﻿@using RoadPatcher.Helpers
+﻿@using Microsoft.EntityFrameworkCore.Infrastructure
+@using RoadPatcher.Helpers
 @model RoadPatcher.Models.PostViewModel
 @using System.Security.Claims
 @using RoadPatcher.Application.Entities
@@ -61,6 +62,7 @@
 							</p>
 							<ul class="text-gray-700 lh-22">
 								<li>Images must be clear, in-focus, and well-lit showing the damaged area close-up.</li>
+								<li>Ensure lighting conditions are optimal. Avoid heavy shadows, glare, or overexposure from direct sunlight so the pothole or damage is clearly visible and its depth and extent can be accurately assessed.</li>
 								<li>Videos should be steady, clearly show the issue, and be short — focus on the problem area.</li>
 								<li>Avoid obstructions; include context so location and extent of damage are visible.</li>
 								<li>If privacy is a concern, blur faces or personal information before uploading.</li>
@@ -134,7 +136,7 @@
 				</div>
 				<div class="card-footer">
 					<button type="submit" id="submitBtn" class="btn btn-sm btn-primary">@submitTitle</button>
-					@if (isEdit && canComplete)
+					@if (isEdit && canComplete && Model.Status == PostStatus.InProcess)
 					{
 						<button type="submit" name="submitAction" value="Complete" class="ms-2 btn btn-sm btn-success">Complete</button>
 					}
