@@ -87,12 +87,15 @@
 
 
 					<div class="row">
-						<div class="col">
+						<div class="col main-image-col">
 							<label asp-for="ImageId" class="fs-6-5 fw-semibold mb-2">Image</label>
 							<input type="text" class="hidden-physical" asp-for="ImageId"/>
 							<span asp-validation-for="ImageId" class="text-danger"></span>
-							<div id="uppy-image"></div>
+							<div id="uppy-image"></div>							
 						</div>
+
+						
+						
 						<div class="col">
 							<label asp-for="VideoId" class="fs-6-5 fw-semibold mb-2">Video</label>
 							<input type="text" class="hidden-physical" asp-for="VideoId"/>
@@ -100,6 +103,26 @@
 							<div id="uppy-video"></div>
 						</div>
 					</div>
+
+					<div class="row g-5 mb-5 mt-1 distance-fields">
+						<div class="col-md-6 fv-row">
+							<label asp-for="CameraHeightFromGround" class="fs-6-5 fw-semibold mb-2"></label>
+							<div class="text-gray-600 fs-7 mb-2 address-disclaimer">
+								<i class="las la-info-circle"></i> Distance from the ground/user's feet to the camera.
+							</div>
+							<input asp-for="CameraHeightFromGround" type="number" min="0.01" step="0.01" class="form-control form-control-solid" />
+							<span asp-validation-for="CameraHeightFromGround" class="text-danger"></span>
+						</div>
+						<div class="col-md-6 fv-row">
+							<label asp-for="CameraToCenterDistance" class="fs-6-5 fw-semibold mb-2"></label>
+							<div class="text-gray-600 fs-7 mb-2 address-disclaimer">
+								<i class="las la-info-circle"></i> Distance from the camera to the center point of the image.
+							</div>
+							<input asp-for="CameraToCenterDistance" type="number" min="0.01" step="0.01" class="form-control form-control-solid" />
+							<span asp-validation-for="CameraToCenterDistance" class="text-danger"></span>
+						</div>
+					</div>
+					
 
 					<div class="row mt-8 mb-8 mediafiles-row">
 						<label asp-for="MediaFiles" class="fs-6-5 fw-semibold mb-2">Other Images</label>
@@ -130,7 +153,6 @@
 						<input asp-for="Cost" class="form-control form-control-solid number-separator post-cost-field"/>
 						<span asp-validation-for="Cost" class="text-danger"></span>
 					</div>
-					
 					<partial name="_AddressFromFields" model="Model" />
 
 				</div>

@@ -417,6 +417,8 @@ public partial class PostsController(
 			Description = model.Description,
 			Cost = model.Cost,
 			Raised = model.Raised,
+			CameraHeightFromGround = model.CameraHeightFromGround,
+			CameraToCenterDistance = model.CameraToCenterDistance,
 			ImageId = model.ImageId,
 			VideoId = model.VideoId,
 			ReviewerId = reviewerId,
@@ -514,6 +516,8 @@ public partial class PostsController(
 			Longitude = post.Longitude,
 			Cost = post.Cost,
 			Raised = post.Raised,
+			CameraHeightFromGround = post.CameraHeightFromGround,
+			CameraToCenterDistance = post.CameraToCenterDistance,
 			ImageId = post.ImageId,
 			VideoId = post.VideoId,
 			CompletionImageId = post.CompletionImageId,
@@ -563,6 +567,8 @@ public partial class PostsController(
 		post.Latitude = model.Latitude;
 		post.Longitude = model.Longitude;
 		post.Cost = model.Cost;
+		post.CameraHeightFromGround = model.CameraHeightFromGround;
+		post.CameraToCenterDistance = model.CameraToCenterDistance;
 		post.ImageId = model.ImageId;
 		post.VideoId = model.VideoId;
 		post.CompletionImageId = model.CompletionImageId;

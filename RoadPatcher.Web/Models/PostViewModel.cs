@@ -27,11 +27,21 @@ public class PostViewModel : AddressViewModel
 	[Display(Name = "Image")]
 	public int ImageId { get; init; }
 	public Media? Image { get; init; }
+
+	[Required(ErrorMessage = "CAMERA_HEIGHT_FROM_GROUND is required")]
+	[Range(typeof(decimal), "0.01", "79228162514264337593543950335", ErrorMessage = "CAMERA_HEIGHT_FROM_GROUND must be greater than zero")]
+	[Display(Name = "Camera Height from Ground (Main Image)")]
+	public decimal CameraHeightFromGround { get; init; }
 	
 
 	[Display(Name = "Video")]
 	public int VideoId { get; init; }
 	public Media? Video { get; init; }
+
+	[Required(ErrorMessage = "CAMERA_TO_CENTER_DISTANCE is required")]
+	[Range(typeof(decimal), "0.01", "79228162514264337593543950335", ErrorMessage = "CAMERA_TO_CENTER_DISTANCE must be greater than zero")]
+	[Display(Name = "Camera To Center Distance (Main Image)")]
+	public decimal CameraToCenterDistance { get; init; }
 
 	[Display(Name = "Completion Image")]
 	public int? CompletionImageId { get; init; }

@@ -482,6 +482,12 @@ namespace RoadPatcher.Application.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<decimal>("CameraHeightFromGround")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("CameraToCenterDistance")
+                        .HasColumnType("numeric");
+
                     b.Property<int?>("CompletionImageId")
                         .HasColumnType("integer");
 

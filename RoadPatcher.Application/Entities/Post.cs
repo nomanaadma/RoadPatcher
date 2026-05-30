@@ -48,8 +48,12 @@ public class Post
 	public int ImageId { get; set; }
 	public Media Image { get; init; } = null!;
 
+	public decimal CameraHeightFromGround { get; set; }
+
 	public int VideoId { get; set; }
 	public Media Video { get; init; } = null!;
+
+	public decimal CameraToCenterDistance { get; set; }
 
 	public int? CompletionImageId { get; set; }
 	public Media? CompletionImage { get; init; }
