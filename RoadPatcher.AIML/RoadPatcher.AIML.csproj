@@ -12,9 +12,9 @@
     </ItemGroup>
 
     <ItemGroup>
-    <AdditionalFiles Include="my_script.py" SourceItemType="Python">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </AdditionalFiles>
-</ItemGroup>
+        <AdditionalFiles Include="predict.py" SourceItemType="Python">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </AdditionalFiles>
+    </ItemGroup>
 
 </Project>

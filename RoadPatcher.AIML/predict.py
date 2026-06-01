@@ -1,25 +1,30 @@
+import os 
+
+# --- PATCH FOR WINERROR 87 IN CSNAKES + TORCH ---
+# PyTorch blindly tries to add relative DLL paths which crashes embedded Python on Windows.
+# This intercepts the call, makes the path absolute, and ignores it if Windows still rejects it.
+if hasattr(os, 'add_dll_directory'):
+    _original_add_dll_dir = os.add_dll_directory
+    def safe_add_dll_directory(path):
+        try:
+            return _original_add_dll_dir(os.path.abspath(path))
+        except OSError:
+            class DummyHandle:
+                def __enter__(self): pass
+                def __exit__(self, *args): pass
+                def close(self): pass
+            return DummyHandle()
+    os.add_dll_directory = safe_add_dll_directory
+# ------------------------------------------------
+
+
 import math
 import cv2
+import json
 import numpy as np
 from PIL import Image, ExifTags
 from ultralytics import YOLO
-
-# 1. Initialize configurations
-USER_HEIGHT_M = 1.3            
-USER_DISTANCE_M = 1.7          
-COST_PER_CUBIC_METER = 150000  
-
-# --- Method 3: Severity Depth Mapping ---
-SEVERITY_TIERS = {
-    "minor": 0.0254,      # 1 inch
-    "standard": 0.0508,   # 2 inches
-    "moderate": 0.0762,   # 3 inches
-    "severe": 0.1016,     # 4 inches
-    "critical": 0.1270    # 5 inches
-}
-
-# Simulate the user selecting the damage type in your mobile app
-CURRENT_DAMAGE_SEVERITY = "standard" 
+from pathlib import Path
 
 def get_camera_fov(image_path):
     fallback_focal_length_35mm = 26.0 
@@ -55,14 +60,22 @@ def get_camera_fov(image_path):
 
     return fov_h_deg, fov_v_deg
 
-def process_road_damage(image_path):
+def process_road_damage(image_path: str, user_height_m: float, user_distance_m: float) -> str:
     fov_h_deg, fov_v_deg = get_camera_fov(image_path)
-    tilt_rad = math.atan(USER_HEIGHT_M / USER_DISTANCE_M)
+    tilt_rad = math.atan(user_height_m / user_distance_m)
     
+
+    # Get the directory where predict.py actually lives
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(script_dir, "output", "d40_yolo26_seg_model", "weights", "best.pt")
+
     # Initialize YOLO ONCE
-    model = YOLO("output/d40_yolo26_seg_model/weights/best.pt")
+    model = YOLO(model_path)
     
     results = model(image_path)
+
+    # List to store the pothole data for JSON output
+    pothole_data = []
 
     for r in results:
         r.names = {0: '0', 1: ''}
@@ -97,7 +110,7 @@ def process_road_damage(image_path):
                 
                 if gamma <= 0: 
                     return float('inf') 
-                return USER_HEIGHT_M / math.tan(gamma)
+                return user_height_m / math.tan(gamma)
 
             distance_far_m = get_ground_distance(min_y_pixel)
             distance_near_m = get_ground_distance(max_y_pixel)
@@ -112,28 +125,25 @@ def process_road_damage(image_path):
             if calculated_length_m < 0 or calculated_length_m == float('inf'):
                 calculated_length_m = 0
 
-            # Fetch the depth directly from the dictionary
-            DYNAMIC_DEPTH_M = SEVERITY_TIERS[CURRENT_DAMAGE_SEVERITY]
-
             # Calculate Area, Volume, and Financials
             area_sq_m = calculated_length_m * calculated_width_m
-            volume_m3 = area_sq_m * DYNAMIC_DEPTH_M
-            total_cost = volume_m3 * COST_PER_CUBIC_METER
 
             print(f"--- Pothole #{idx + 1} ---")
-            print(f"Severity: {CURRENT_DAMAGE_SEVERITY.upper()} | Depth applied: {DYNAMIC_DEPTH_M}m")
             print(f"Calculated Area: {area_sq_m * 10000:.1f} sq cm")
-            print(f"Suggested Cost: Rs. {total_cost:.0f} PKR\n")
+
+            # Append data to our JSON list
+            pothole_data.append({
+                "pothole_number": idx + 1,
+                "area_cm2": float(round(area_sq_m * 10000, 1))
+            })
             
             # --- BURN METRICS ONTO THE ANNOTATED IMAGE ---
             center_x = int(np.mean(polygon_pixels[:, 0]))
             center_y = int(np.mean(polygon_pixels[:, 1]))
             
             pothole_num_text = f"#{idx + 1}"
-            cost_text = f"Rs. {total_cost:.0f}"
 
-
-           # --- BURN METRICS ONTO THE ANNOTATED IMAGE ---
+            # --- BURN METRICS ONTO THE ANNOTATED IMAGE ---
             
             # 1. Extract the bounding box's exact top-left corner
             x_min, y_min, x_max, y_max = box.xyxy[0]
@@ -155,13 +165,20 @@ def process_road_damage(image_path):
             cv2.putText(annotated_img, display_text, (text_x, text_y), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
+    filename = Path(image_path).stem
 
-            # Draw the Pothole Number in yellow, slightly offset upwards
-            # cv2.putText(annotated_img, pothole_num_text, (center_x - 30, center_y), 
-                        # cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
+    image_save_dir = f"../RoadPatcher.Web/wwwroot/uploads/posts/{filename}_processed.jpg"
 
     # Save the final marked-up image
-    cv2.imwrite("output_processed.jpg", annotated_img)
-    print("Processing Complete. Saved to output_processed.jpg")
+    cv2.imwrite(image_save_dir, annotated_img)
+    print("--------------------------------")
+    print(f"Processing Complete. Saved to {image_save_dir}")
 
-process_road_damage("data/4.jpg")
+    # Return the aggregated data as a JSON string
+    return json.dumps(pothole_data, indent=4)
+
+
+# Execute and print the resulting JSON
+    # result_json = process_road_damage("data/4.jpg", 1.3, 1.7)
+    # print("\nReturned JSON:")
+    # print(result_json)
