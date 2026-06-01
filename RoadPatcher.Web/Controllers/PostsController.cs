@@ -23,7 +23,8 @@ public partial class PostsController(
 	IWebHostEnvironment webHostEnvironment,
 	IConfiguration configuration,
 	UserManager<ApplicationUser> userManager,
-	INotificationService notificationService
+	INotificationService notificationService,
+	IPythonEnvironment pythonEnvironment
 	) : Controller
 {
 	private const string ManageScopeMyPosts = "myPosts";
@@ -787,6 +788,38 @@ public partial class PostsController(
 
 		return Ok(new { name = finalFileName, id = media.Id });
 		
+	}
+
+	[HttpPost]
+	[ValidateAntiForgeryToken]
+	public async Task<IActionResult> RunInference([FromForm] int imageId, [FromForm] decimal cameraHeightFromGround, [FromForm] decimal cameraToCenterDistance, [FromForm] decimal confidenceThreshold)
+	{
+		if (imageId <= 0)
+			return BadRequest(new { error = "Please upload an image first." });
+
+		if (confidenceThreshold < 0.1m || confidenceThreshold > 1.0m)
+			return BadRequest(new { error = "Confidence threshold must be between 0.1 and 1.0." });
+
+		var media = await context.Media
+			.AsNoTracking()
+			.FirstOrDefaultAsync(m => m.Id == imageId);
+
+		if (media == null)
+			return NotFound(new { error = "Image not found." });
+
+		var imagePath = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "posts", media.Name);
+
+		if (!System.IO.File.Exists(imagePath))
+			return NotFound(new { error = "Image file is missing on disk." });
+
+		var detector = pythonEnvironment.Predict();
+		var resultJson = detector.ProcessRoadDamage(
+			imagePath,
+			(double)cameraHeightFromGround,
+			(double)cameraToCenterDistance,
+			(double)confidenceThreshold);
+
+		return Content(resultJson, "application/json");
 	}
 
 	[HttpDelete]

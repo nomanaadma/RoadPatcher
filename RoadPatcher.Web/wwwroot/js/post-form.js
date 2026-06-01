@@ -141,5 +141,70 @@ $(document).ready(function () {
     quill.on('text-change', () => {
         description.val(quill.root.innerHTML);
     });
+
+    $(document).on('input', '#confidenceThreshold', function () {
+        $('.confidence-threshold-value').text(Number($(this).val()).toFixed(2));
+    });
+
+    $(document).on('click', '#runInferenceBtn', function () {
+        const $btn = $(this);
+        const imageId = $('#ImageId').val();
+        const cameraHeightFromGround = $('#CameraHeightFromGround').val();
+        const cameraToCenterDistance = $('#CameraToCenterDistance').val();
+        const confidenceThreshold = $('#confidenceThreshold').val();
+        const $results = $('#inferenceResults');
+
+        if (!imageId) {
+            toastr.error('Please upload an image first.');
+            return;
+        }
+
+        if (!cameraHeightFromGround || !cameraToCenterDistance) {
+            toastr.error('Please fill the required measurement fields first.');
+            return;
+        }
+
+        const token = $('input[name="__RequestVerificationToken"]').first().val();
+
+        $btn.prop('disabled', true).text('Running...');
+        $results.removeClass('d-none').html('<div class="text-center text-muted">Running inference...</div>');
+
+        $.ajax({
+            url: '/Posts/RunInference',
+            method: 'POST',
+            headers: token ? { 'RequestVerificationToken': token } : {},
+            data: {
+                imageId: imageId,
+                cameraHeightFromGround: cameraHeightFromGround,
+                cameraToCenterDistance: cameraToCenterDistance,
+                confidenceThreshold: confidenceThreshold
+            }
+        })
+        .done(function (response) {
+            const data = typeof response === 'string' ? JSON.parse(response) : response;
+
+            if (!Array.isArray(data) || data.length === 0) {
+                $results.html('<div class="alert alert-info mb-0">No potholes detected.</div>');
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-row-bordered align-middle gy-3 gs-0 mb-0">';
+            html += '<thead><tr><th>Pothole #</th><th>Area (cm²)</th></tr></thead><tbody>';
+
+            data.forEach(function (item) {
+                html += `<tr><td>${item.pothole_number}</td><td>${Number(item.area_cm2).toFixed(1)}</td></tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            $results.html(html);
+        })
+        .fail(function (xhr) {
+            const message = xhr.responseJSON?.error || xhr.responseText || 'Inference failed.';
+            $results.html(`<div class="alert alert-danger mb-0">${message}</div>`);
+        })
+        .always(function () {
+            $btn.prop('disabled', false).text('Run Inference');
+        });
+    });
     
 });

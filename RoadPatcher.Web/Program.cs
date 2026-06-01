@@ -165,15 +165,6 @@ builder.Services
 
 var app = builder.Build();
 
-var env = app.Services.GetRequiredService<IPythonEnvironment>();
-
-var detector = env.Predict();
-
-var inferedImage = detector.ProcessRoadDamage("wwwroot/uploads/posts/4-1766835344.jpg", 1.3, 1.7);
-Console.WriteLine("========================"); 
-
-Console.WriteLine(inferedImage);
-
 
 using (var scope = app.Services.CreateScope())
 {

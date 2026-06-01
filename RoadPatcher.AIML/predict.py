@@ -60,7 +60,7 @@ def get_camera_fov(image_path):
 
     return fov_h_deg, fov_v_deg
 
-def process_road_damage(image_path: str, user_height_m: float, user_distance_m: float) -> str:
+def process_road_damage(image_path: str, user_height_m: float, user_distance_m: float, confidence_threshold: float = 0.5) -> str:
     fov_h_deg, fov_v_deg = get_camera_fov(image_path)
     tilt_rad = math.atan(user_height_m / user_distance_m)
     
@@ -72,7 +72,7 @@ def process_road_damage(image_path: str, user_height_m: float, user_distance_m: 
     # Initialize YOLO ONCE
     model = YOLO(model_path)
     
-    results = model(image_path)
+    results = model(image_path, conf=confidence_threshold)
 
     # List to store the pothole data for JSON output
     pothole_data = []
