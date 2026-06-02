@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -34,15 +35,6 @@ public partial class PostsController(
 	public IActionResult Index()
 	{
 		return RedirectToAction("Pending");
-	}
-
-	public IActionResult Testing()
-	{
-		// pythonEnv.Dispose();
-		// var file = pythonEnv.MyScript();
-		// var sum = file.AddNumbers(3, 4);
-		var user = new { Name = "Alice", Age = 7, Role = "Admin" };
-		return Json(user);
 	}
 
 	[HttpGet("Posts/Manage")]
@@ -819,8 +811,19 @@ public partial class PostsController(
 			(double)cameraToCenterDistance,
 			(double)confidenceThreshold);
 
-		return Content(resultJson, "application/json");
+		var imageName = Path.GetFileNameWithoutExtension(imagePath);
+		var processedImageUrl = $"/uploads/posts/{imageName}_processed.jpg";
+
+		var potholes = JsonSerializer.Deserialize<List<PotholeInferenceResult>>(resultJson) ?? [];
+
+		return Json(new
+		{
+			processed_image_url = processedImageUrl,
+			potholes
+		});
 	}
+
+	private sealed record PotholeInferenceResult(int pothole_number, double area_cm2);
 
 	[HttpDelete]
 	public async Task<IActionResult> DeleteFile(int id)

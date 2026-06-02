@@ -1211,3 +1211,12 @@ gmp-place-autocomplete {
     padding: 11px !important;
 }
 
+.uppy-Dashboard-Item-preview {
+    display: flex;
+    align-items: center;
+}
+
+.severity-table td {
+    border-color: #e0e0e0 !important;
+}
+
