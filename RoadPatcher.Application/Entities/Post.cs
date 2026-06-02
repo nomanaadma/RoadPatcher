@@ -58,6 +58,11 @@ public class Post
 	public int? CompletionImageId { get; set; }
 	public Media? CompletionImage { get; init; }
 	
+	public string? InferenceData { get; set; }
+	
+	public int? InferenceImageId { get; set; }
+	public Media? InferenceImage { get; init; }
+
 	public List<Media> MediaFiles { get; init; } = [];
 	
 	public DateTime CreatedAt { get; init; }

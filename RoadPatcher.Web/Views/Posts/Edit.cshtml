@@ -77,6 +77,10 @@
 						preloadMedia(uppyCompletion, @media.Id, "@media.Name");
 					</text>
 				}
+				else if (Model.InferenceImageName != null && media.Name == Model.InferenceImageName)
+				{
+					continue;
+				}
 				else
 				{
 					<text>

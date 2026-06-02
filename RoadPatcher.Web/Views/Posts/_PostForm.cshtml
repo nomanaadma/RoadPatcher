@@ -138,6 +138,9 @@
 							<button type="button" id="runInferenceBtn" class="btn btn-sm btn-dark">Run Inference</button>
 							<div id="inferenceResults" class="border rounded p-4 bg-light d-none mt-2"></div>
 						</div>
+						
+						<input type="hidden" asp-for="InferenceData" id="InferenceData" />
+						<input type="hidden" asp-for="InferenceImageName" id="InferenceImageName" />
 
 						<label asp-for="Cost" class="fs-6-5 fw-semibold mb-2"></label>
 						<input asp-for="Cost" class="form-control form-control-solid number-separator post-cost-field"/>

@@ -521,6 +521,12 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Property<int>("ImageId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("InferenceData")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("InferenceImageId")
+                        .HasColumnType("integer");
+
                     b.Property<double>("Latitude")
                         .HasColumnType("double precision");
 
@@ -581,6 +587,8 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.HasIndex("CompletionImageId");
 
                     b.HasIndex("ImageId");
+
+                    b.HasIndex("InferenceImageId");
 
                     b.HasIndex("Location");
 
@@ -882,6 +890,11 @@ namespace RoadPatcher.Application.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("RoadPatcher.Application.Entities.Media", "InferenceImage")
+                        .WithMany()
+                        .HasForeignKey("InferenceImageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("RoadPatcher.Application.Entities.ApplicationUser", "Reviewer")
                         .WithMany()
                         .HasForeignKey("ReviewerId")
@@ -902,6 +915,8 @@ namespace RoadPatcher.Application.Data.Migrations
                     b.Navigation("CompletionImage");
 
                     b.Navigation("Image");
+
+                    b.Navigation("InferenceImage");
 
                     b.Navigation("Reviewer");
 

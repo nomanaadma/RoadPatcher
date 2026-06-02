@@ -47,6 +47,8 @@ public class PostViewModel : AddressViewModel
 	public int? CompletionImageId { get; init; }
 	public Media? CompletionImage { get; init; }
 	
+	public string? InferenceData { get; set; }
+	public string? InferenceImageName { get; set; }
 
 	public List<Media> MediaFiles { get; init; } = [];
 	

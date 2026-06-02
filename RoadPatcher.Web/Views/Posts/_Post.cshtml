@@ -24,7 +24,7 @@
 		.FirstOrDefault(m => m.Id == Model.VideoId)!;
 			
 	var otherMedia = Model.MediaFiles
-		.Where(m => m.Id != Model.ImageId && m.Id != Model.VideoId)
+		.Where(m => m.Id != Model.ImageId && m.Id != Model.VideoId && Model.InferenceImageId != m.Id)
 		.ToList();
 			
 	List<Media> mediaFiles =
@@ -33,6 +33,13 @@
 		mainVideo,
 		..otherMedia
 	];
+
+	if(User.IsAdminOrSuperAdmin() && Model.InferenceImageId != null) {
+		var inferenceImage = Model.MediaFiles.FirstOrDefault(m => m.Id == Model.InferenceImageId);
+		if(inferenceImage != null) {
+			mediaFiles.Insert(0, inferenceImage);
+		}
+	}
 
 	if(completionImage != null) {
 		mediaFiles.Insert(0, completionImage);

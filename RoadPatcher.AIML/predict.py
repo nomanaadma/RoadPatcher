@@ -60,7 +60,7 @@ def get_camera_fov(image_path):
 
     return fov_h_deg, fov_v_deg
 
-def process_road_damage(image_path: str, user_height_m: float, user_distance_m: float, confidence_threshold: float = 0.5) -> str:
+def process_road_damage(image_path: str, user_height_m: float, user_distance_m: float, confidence_threshold: float = 0.5, timestamp: int = 0) -> str:
     fov_h_deg, fov_v_deg = get_camera_fov(image_path)
     tilt_rad = math.atan(user_height_m / user_distance_m)
     
@@ -128,8 +128,8 @@ def process_road_damage(image_path: str, user_height_m: float, user_distance_m: 
             # Calculate Area, Volume, and Financials
             area_sq_m = calculated_length_m * calculated_width_m
 
-            print(f"--- Pothole #{idx + 1} ---")
-            print(f"Calculated Area: {area_sq_m * 10000:.1f} sq cm")
+            # print(f"--- Pothole #{idx + 1} ---")
+            # print(f"Calculated Area: {area_sq_m * 10000:.1f} sq cm")
 
             # Append data to our JSON list
             pothole_data.append({
@@ -165,14 +165,38 @@ def process_road_damage(image_path: str, user_height_m: float, user_distance_m: 
             cv2.putText(annotated_img, display_text, (text_x, text_y), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
 
+
+            text = f"Conf={confidence_threshold}"
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1
+            thickness = 2
+
+            (text_width, text_height), baseline = cv2.getTextSize(
+                text, font, font_scale, thickness
+            )
+
+            x = annotated_img.shape[1] - text_width - 10
+            y = text_height + 10
+
+            cv2.putText(
+                annotated_img,
+                text,
+                (x, y),
+                font,
+                font_scale,
+                (0, 0, 0),
+                thickness
+            )
+
+
     filename = Path(image_path).stem
 
-    image_save_dir = f"../RoadPatcher.Web/wwwroot/uploads/posts/{filename}_processed.jpg"
+    image_save_dir = f"../RoadPatcher.Web/wwwroot/uploads/posts/{filename}_{timestamp}_processed.jpg"
 
     # Save the final marked-up image
     cv2.imwrite(image_save_dir, annotated_img)
-    print("--------------------------------")
-    print(f"Processing Complete. Saved to {image_save_dir}")
+    # print("--------------------------------")
+    # print(f"Processing Complete. Saved to {image_save_dir}")
 
     # Return the aggregated data as a JSON string
     return json.dumps(pothole_data, indent=4)

@@ -480,6 +480,14 @@ public partial class PostsController(
 		if (post == null)
 			return NotFound();
 
+		string? InferenceImageName = "";
+
+		if(post.InferenceImageId.HasValue)
+		{
+			var inferenceImage = await context.Media.FirstOrDefaultAsync(m => m.Id == post.InferenceImageId);
+			InferenceImageName = inferenceImage?.Name;
+		}
+
 		var forbidden = true;
 
 		if(
@@ -514,7 +522,9 @@ public partial class PostsController(
 			ImageId = post.ImageId,
 			VideoId = post.VideoId,
 			CompletionImageId = post.CompletionImageId,
-			MediaFiles = post.MediaFiles
+			MediaFiles = post.MediaFiles,
+			InferenceData = post.InferenceData,
+			InferenceImageName = InferenceImageName
 		};
 		
 		return View(model);
@@ -566,6 +576,41 @@ public partial class PostsController(
 		post.VideoId = model.VideoId;
 		post.CompletionImageId = model.CompletionImageId;
 		post.UpdatedAt = DateTime.UtcNow;
+
+		post.InferenceData = model.InferenceData;
+
+		string? InferenceImageName = "";
+
+		if(post.InferenceImageId.HasValue)
+		{
+			var inferenceImage = await context.Media.FirstOrDefaultAsync(m => m.Id == post.InferenceImageId);
+			InferenceImageName = inferenceImage?.Name;
+		}
+
+		if (
+			!string.IsNullOrEmpty(model.InferenceImageName) && model.InferenceImageName != InferenceImageName)
+		{
+
+			if(InferenceImageName != "")
+			{
+				await DeleteFile(post.InferenceImageId!.Value);				
+			}
+
+			// Create the new Media entry
+			var inferenceMedia = new Media
+			{
+				PostId = post.Id,
+				Name = model.InferenceImageName, 
+			};
+
+			context.Media.Add(inferenceMedia);
+			
+			// Save changes to generate the new Media ID in the database
+			await context.SaveChangesAsync();
+
+			// Assign the newly generated Media ID to the post
+			post.InferenceImageId = inferenceMedia.Id;
+		}
 		
 		
 		var previousReviewStatus = post.ReviewStatus;
@@ -784,12 +829,12 @@ public partial class PostsController(
 
 	[HttpPost]
 	[ValidateAntiForgeryToken]
-	public async Task<IActionResult> RunInference([FromForm] int imageId, [FromForm] decimal cameraHeightFromGround, [FromForm] decimal cameraToCenterDistance, [FromForm] decimal confidenceThreshold)
+	public async Task<IActionResult> RunInference([FromForm] int imageId, [FromForm] float cameraHeightFromGround, [FromForm] float cameraToCenterDistance, [FromForm] float confidenceThreshold, long timestamp)
 	{
 		if (imageId <= 0)
 			return BadRequest(new { error = "Please upload an image first." });
 
-		if (confidenceThreshold < 0.1m || confidenceThreshold > 1.0m)
+		if (confidenceThreshold < 0.1f || confidenceThreshold > 1.0f)
 			return BadRequest(new { error = "Confidence threshold must be between 0.1 and 1.0." });
 
 		var media = await context.Media
@@ -801,18 +846,19 @@ public partial class PostsController(
 
 		var imagePath = Path.Combine(webHostEnvironment.WebRootPath, "uploads", "posts", media.Name);
 
-		if (!System.IO.File.Exists(imagePath))
+		if (!Sysfile.Exists(imagePath))
 			return NotFound(new { error = "Image file is missing on disk." });
 
 		var detector = pythonEnvironment.Predict();
 		var resultJson = detector.ProcessRoadDamage(
 			imagePath,
-			(double)cameraHeightFromGround,
-			(double)cameraToCenterDistance,
-			(double)confidenceThreshold);
+			cameraHeightFromGround,
+			cameraToCenterDistance,
+			Math.Round(confidenceThreshold, 2),
+			timestamp);
 
 		var imageName = Path.GetFileNameWithoutExtension(imagePath);
-		var processedImageUrl = $"/uploads/posts/{imageName}_processed.jpg";
+		var processedImageUrl = $"/uploads/posts/{imageName}_{timestamp}_processed.jpg";
 
 		var potholes = JsonSerializer.Deserialize<List<PotholeInferenceResult>>(resultJson) ?? [];
 
