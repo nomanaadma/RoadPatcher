@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -370,6 +370,11 @@ public partial class PostsController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Create(PostViewModel model)
 	{
+		if (User.IsAdminOrSuperAdmin() && model.Cost < 200)
+		{
+			ModelState.AddModelError(nameof(model.Cost), "Minimum cost must be at least 200.");
+		}
+
 		if (!ModelState.IsValid)
 		{
 			TempData["FormErrors"] = string.Join("||", 
@@ -408,7 +413,7 @@ public partial class PostsController(
 			Latitude = model.Latitude,
 			Longitude = model.Longitude,
 			Description = model.Description,
-			Cost = model.Cost,
+			Cost = User.IsAdminOrSuperAdmin() ? model.Cost : 1000,
 			Raised = model.Raised,
 			CameraHeightFromGround = model.CameraHeightFromGround,
 			CameraToCenterDistance = model.CameraToCenterDistance,
@@ -535,6 +540,10 @@ public partial class PostsController(
 	[ValidateAntiForgeryToken]
 	public async Task<IActionResult> Edit(int id, PostViewModel model)
 	{
+		if (User.IsAdminOrSuperAdmin() && model.Cost < 200)
+		{
+			ModelState.AddModelError(nameof(model.Cost), "Minimum cost must be at least 200.");
+		}
 		
 		if (!ModelState.IsValid)
 		{
@@ -569,7 +578,10 @@ public partial class PostsController(
 		post.Description = model.Description;
 		post.Latitude = model.Latitude;
 		post.Longitude = model.Longitude;
-		post.Cost = model.Cost;
+		if (User.IsAdminOrSuperAdmin())
+		{
+			post.Cost = model.Cost;
+		}
 		post.CameraHeightFromGround = model.CameraHeightFromGround;
 		post.CameraToCenterDistance = model.CameraToCenterDistance;
 		post.ImageId = model.ImageId;

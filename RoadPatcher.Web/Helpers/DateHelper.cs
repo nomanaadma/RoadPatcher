@@ -48,10 +48,13 @@ public static class DateHelper
 	{
 		var pakistanNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, PakistanTimeZone);
 		var pakistanDate = ConvertToPakistanTime(date);
-		var ts = pakistanNow - pakistanDate;
+		var ts = pakistanNow - pakistanDate;	
 
 		if (ts.TotalMinutes < 1)
 			return "Just now";
+
+		if (ts.TotalMinutes < 60)
+			return Format(ts.TotalMinutes, "minute");
 
 		if (ts.TotalHours < 24)
 			return Format(ts.TotalHours, "hour");

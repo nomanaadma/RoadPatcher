@@ -1223,3 +1223,25 @@ gmp-place-autocomplete {
 .w-100px {
     width: 100px !important;
 }
+
+.badge-inference {
+    padding: 2px 2px;
+    position: relative;
+    top: -2px;
+    cursor: pointer;
+}
+
+.badge-inference i {
+    color: #007384 !important;
+}
+
+.swal2-container .inference-data textarea,
+.swal2-container .inference-data input {
+    pointer-events: none;
+    border: 0;
+    background-color: #fff;
+}
+
+.swal2-container .inference-data {
+    margin-bottom: 30px;
+}

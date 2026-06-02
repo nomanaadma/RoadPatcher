@@ -1,5 +1,5 @@
-﻿$(document).ready(function() {
-    
+$(document).ready(function () {
+
     new Swiper(".postSlider", {
         // Optional: Loop the slides
         loop: false,
@@ -26,7 +26,7 @@
         }
     });
 
-    $('.zoomBtn').on('click', function() {
+    $('.zoomBtn').on('click', function () {
 
         const swiper = $(this).next()[0].swiper;
         const currentSlide = $(swiper.slides[swiper.activeIndex]);
@@ -65,29 +65,29 @@
                 postId: postId
             }
         })
-        .then(function (response) {
+            .then(function (response) {
 
-            const liked = response.data.liked;
-            const totalLikes = response.data.total_likes;
-    
-            if (liked) {
-                $btn.addClass("bg-light-success");
-                $likeText.text("Liked");
-            } else {
-                $btn.removeClass("bg-light-success");
-                $likeText.text("Like");
-            }
-    
-            $likeCount.text(totalLikes);
-        })
-        .catch(function (error) {
-            console.error("Like toggle failed", error);
-        })
-        .finally(function () {
-            // Restore original icon and enable button
-            $icon.attr("class", originalIconClass);
-            $btn.removeClass("disabled");
-        });
+                const liked = response.data.liked;
+                const totalLikes = response.data.total_likes;
+
+                if (liked) {
+                    $btn.addClass("bg-light-success");
+                    $likeText.text("Liked");
+                } else {
+                    $btn.removeClass("bg-light-success");
+                    $likeText.text("Like");
+                }
+
+                $likeCount.text(totalLikes);
+            })
+            .catch(function (error) {
+                console.error("Like toggle failed", error);
+            })
+            .finally(function () {
+                // Restore original icon and enable button
+                $icon.attr("class", originalIconClass);
+                $btn.removeClass("disabled");
+            });
     });
 
 
@@ -110,41 +110,41 @@
                 postId: postId
             }
         })
-        .then(function (response) {
+            .then(function (response) {
 
-            const favourited = response.data.favourited;
-            const totalFavourites = response.data.total_favourites;
+                const favourited = response.data.favourited;
+                const totalFavourites = response.data.total_favourites;
 
-            if (favourited) {
-                $btn.addClass("bg-light-danger");
-                $favouriteText.text("Favourited");
+                if (favourited) {
+                    $btn.addClass("bg-light-danger");
+                    $favouriteText.text("Favourited");
 
-                try {
-                    const $notifyIcon = $(`.post-link-btn .notify-icon[data-post-id="${postId}"]`);
-                    if ($notifyIcon.length && $notifyIcon.hasClass('la-bell-slash')) {
-                        // Trigger click which uses same toggle handler
-                        $notifyIcon.trigger('click');
+                    try {
+                        const $notifyIcon = $(`.post-link-btn .notify-icon[data-post-id="${postId}"]`);
+                        if ($notifyIcon.length && $notifyIcon.hasClass('la-bell-slash')) {
+                            // Trigger click which uses same toggle handler
+                            $notifyIcon.trigger('click');
+                        }
+                    } catch (err) {
+                        console.error('Auto-subscribe trigger failed', err);
                     }
-                } catch (err) {
-                    console.error('Auto-subscribe trigger failed', err);
+
+                } else {
+                    $btn.removeClass("bg-light-danger");
+                    $favouriteText.text("Favourite");
                 }
 
-            } else {
-                $btn.removeClass("bg-light-danger");
-                $favouriteText.text("Favourite");
-            }
+                $favouriteCount.text(totalFavourites);
 
-            $favouriteCount.text(totalFavourites);
-            
-        })
-        .catch(function (error) {
-            console.error("Favourite toggle failed", error);
-        })
-        .finally(function () {
-            // Restore original icon and enable button
-            $icon.attr("class", originalIconClass);
-            $btn.removeClass("disabled");
-        });
+            })
+            .catch(function (error) {
+                console.error("Favourite toggle failed", error);
+            })
+            .finally(function () {
+                // Restore original icon and enable button
+                $icon.attr("class", originalIconClass);
+                $btn.removeClass("disabled");
+            });
     });
 
     // Handle notify icon clicks embedded inside the post-link-btn.
@@ -167,34 +167,34 @@
                 postId: postId
             }
         })
-        .then(function (response) {
-            const subscribed = response.data.subscribed;
+            .then(function (response) {
+                const subscribed = response.data.subscribed;
 
-            if (subscribed) {
-                $icon.attr("class", "las la-bell notify-icon ms-2 text-warning");
-                toastr.success(`Post #${postId} notifications enabled`);
-            } else {
-                $icon.attr("class", "las la-bell-slash notify-icon ms-2 text-muted");
-                toastr.info(`Post #${postId} notifications disabled`);
-            }
-        })
-        .catch(function (error) {
-            console.error("Notification toggle failed", error);
-            toastr.error("Failed to update notification preference");
-            // restore original on error
-            $icon.attr('class', originalClass);
-        })
-        .finally(function () {
-            // ensure spinner replaced (in case of success path it already was set)
-            const cls = $icon.attr('class');
-            if (cls.includes('spinner')) {
+                if (subscribed) {
+                    $icon.attr("class", "las la-bell notify-icon ms-2 text-warning");
+                    toastr.success(`Post #${postId} notifications enabled`);
+                } else {
+                    $icon.attr("class", "las la-bell-slash notify-icon ms-2 text-muted");
+                    toastr.info(`Post #${postId} notifications disabled`);
+                }
+            })
+            .catch(function (error) {
+                console.error("Notification toggle failed", error);
+                toastr.error("Failed to update notification preference");
+                // restore original on error
                 $icon.attr('class', originalClass);
-            }
-        });
+            })
+            .finally(function () {
+                // ensure spinner replaced (in case of success path it already was set)
+                const cls = $icon.attr('class');
+                if (cls.includes('spinner')) {
+                    $icon.attr('class', originalClass);
+                }
+            });
     });
 
-    
-    $('.share-btn').on('click', function() {
+
+    $('.share-btn').on('click', function () {
 
         // Cache the button elements for later use
         const $btn = $(this);
@@ -250,9 +250,9 @@
                 });
             }
         });
-        
+
     });
-    
+
     const userProfile = $('.user-profile-nav');
 
     $('.discussion-btn').on('click', function () {
@@ -300,7 +300,7 @@
 
         axios.get(`/comments/post/${postId}`)
             .then(function (response) {
-                
+
                 const comments = response.data || [];
 
                 // Initialize widget
@@ -311,7 +311,7 @@
                     el.focus();
                     el.click();
                 }, 100);
-                
+
             })
             .catch(function (error) {
                 console.error('Failed to load comments', error);
@@ -343,7 +343,7 @@
         // Provide required callbacks for createReply and createComment
         $container.comments({
             profilePictureURL: userProfile.data('img'),
-            getComments: function(success, error) {
+            getComments: function (success, error) {
                 // plugin asks for comments - we already have items
                 success(items);
 
@@ -351,16 +351,16 @@
                     prioritizeAdminComments(containerEl);
                 }, 0);
             },
-            postComment: function(commentJSON, success, error) {
+            postComment: function (commentJSON, success, error) {
                 // Called when adding a new root comment
                 const payload = {
                     postId: postId,
                     parentId: commentJSON.parent ? parseInt(commentJSON.parent) : null,
                     content: commentJSON.content
                 };
-                
+
                 axios.post('/comments', payload)
-                    .then(function(resp) {
+                    .then(function (resp) {
                         countBadge.text(resp.data.total_discussion);
                         success(resp.data);
 
@@ -379,9 +379,9 @@
                             console.error('Auto-subscribe trigger failed', err);
                         }
                     })
-                    .catch(function(err) { console.error(err); error('Failed'); });
+                    .catch(function (err) { console.error(err); error('Failed'); });
             },
-            timeFormatter: function(time) {
+            timeFormatter: function (time) {
                 return formatDateWithAgo(time)
             },
             // Disable editing, liking, deleting, attachments and sorting
@@ -459,8 +459,8 @@
         else {
             agoText = `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
         }
-        
-        if(diffMinutes < 1) {
+
+        if (diffMinutes < 1) {
             return "Just Now";
         }
 
@@ -527,16 +527,40 @@
     });
 
 
+// allow-scroll-swal
+    $(document).on('click', '.badge-inference', function () {
+
+        const content = $(this).attr('data-content');
+
+        Swal.fire({
+            title: 'Goal Formation Information',
+            width: '900px',
+            customClass: {
+                popup: 'no-padding-swal '
+            },
+            heightAuto: true,
+            html: `
+        <div class="p-6 text-start" style="position:relative; min-height:300px; max-height:500px; overflow-y:auto;">
+            ${content}
+        </div>
+        `,
+            showCloseButton: true,
+            showConfirmButton: false
+        });
+
+    });
+
+
 
     // Donation flow using Stripe Elements and SweetAlert2
     $(document).on('click', '.donation-btn-button', async function () {
-        
+
         const $btn = $(this);
         const mark_btn = $btn.parent('.mark-btn');
         const $post = $btn.parents('.road-post');
         const postId = $btn.data('post-id');
-        
-        
+
+
         const remaining_amount = $post.find('.remaining_amount');
         const raised_amount = $post.find('.raised_amount');
         const people_donated_count = $post.find('.people_donated_count');
@@ -547,8 +571,8 @@
         const progress_circle = $post.find('.progress-circle');
         const tooltip_arrow = $post.find('.tooltip-arrow');
         const custom_tooltip = $post.find('.custom-tooltip');
-        
-        
+
+
         await Swal.fire({
             title: 'Donate',
             html:
@@ -564,19 +588,19 @@
             allowOutsideClick: false,
             allowEscapeKey: false,
             preConfirm: async () => {
-                
+
                 const amountStr = document.getElementById('swal-amount').value;
                 const amount = parseFloat(amountStr);
-                
+
                 if (!amount || isNaN(amount) || amount <= 0) {
                     toastr.error('Please enter a valid amount');
                     return false;
                 }
-                
+
                 // Create PaymentIntent on server
                 try {
                     const res = await axios.post('/Donations/CreatePaymentIntent', { post_id: postId, amount: amount });
-                    
+
                     // Confirm card payment
                     const popup = Swal.getPopup();
                     const stripe = popup.stripe;
@@ -601,7 +625,7 @@
                         post_id: postId
                     });
                     const data = resp.data;
-                    
+
                     remaining_amount.html(data.remaining_amount);
                     raised_amount.html(data.total_raised);
                     people_donated_count.html(data.people_donated);
@@ -613,7 +637,7 @@
                     custom_tooltip.css('left', data.tooltip_box_percentage + '%');
 
                     // Replace classes only inside this post
-                    $post.find('.people_donated_count, .progress-bar, .progress-circle, .detached-arrow, .custom-tooltip, .tooltip-content').each(function() {
+                    $post.find('.people_donated_count, .progress-bar, .progress-circle, .detached-arrow, .custom-tooltip, .tooltip-content').each(function () {
                         let $el = $(this);
                         let classes = $el.attr('class').split(/\s+/);
 
@@ -637,15 +661,15 @@
                                 $el.removeClass(cls).addClass('text-' + data.progress_class);
                             }
                         });
-                        
+
                     });
-                    
+
                     let msg = `<p>We appreciate your <strong>${data.donated_amount}</strong> donation — your contribution helps patch roads and keep our community safe.</p>`;
-                    
-                    if(data.raised_percentage === 100) {
-                        
+
+                    if (data.raised_percentage === 100) {
+
                         $post.find('.donation-btn-button').remove();
-                        
+
                         const goalHtml = `<div class="col-12">
                             <small class="fw-bold text-success">Goal</small>
                             <h2 class="fw-bolder mb-0 fz-20">${data.cost}</h2>
@@ -653,9 +677,9 @@
 
 
                         $post.find('.post-costing').html(goalHtml);
-                        
+
                         mark_btn.remove();
-                        
+
                         msg = `
                         <div style="font-size: 1.1em;">
                             <p>Incredible! Your <strong>${data.donated_amount}</strong> donation was the final piece of the puzzle.</p>
@@ -675,7 +699,7 @@
                     } catch (err) {
                         console.error('Auto-subscribe trigger failed', err);
                     }
-                    
+
                     // Close the donation popup and show success
                     Swal.close();
                     Swal.fire({
@@ -683,10 +707,10 @@
                         html: msg,
                         icon: 'success'
                     });
-                
+
                 }
                 catch (err) {
-                    
+
                     console.error('create payment intent failed', err);
                     console.log(err)
 
@@ -702,7 +726,7 @@
                     } else if (data?.title) {
                         msg += data.title;
 
-                        if(data.errors) {
+                        if (data.errors) {
                             if (Array.isArray(data.errors)) {
                                 msg += data.errors.join(', ');
                             } else if (typeof data.errors === 'object') {
@@ -719,7 +743,7 @@
                     }
 
                     toastr.error(msg);
-                    
+
                     return false;
                 }
             },
@@ -748,15 +772,15 @@
                 popup.stripe = stripe;
 
                 card.on('change', function (event) {
-                    if(event.error) {
+                    if (event.error) {
                         toastr.error(event.error.message);
                     }
                 });
             }
         });
-        
+
     });
-    
+
     const params = new URLSearchParams(window.location.search);
 
     if (params.get('open') === 'comment') {

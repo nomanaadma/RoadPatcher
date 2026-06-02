@@ -244,19 +244,29 @@
 							{
 								<div class="col-12">
 									<small class="fw-bold text-success">Goal</small>
-									<h2 class="fw-bolder mb-0 fz-20">@Model.Cost.ToPkr()</h2>
+									<h2 class="fw-bolder mb-0 fz-20">@Model.Cost.ToPkr()
+										@if(Model.InferenceImageId != null) 
+										{
+											<span data-content="@Model.InferenceData" data-bs-toggle="tooltip" title="Goal Formation Information" class="badge bg-light-primary badge-inference"><i class="las la-info fz-22 text-black"></i></span>
+										}
+									</h2>
 								</div>
 							}
 							else
 							{
 								<div class="col-6 border-end">
 									<small class="fw-bold">Goal</small>
-									<h2 class="fw-bolder mb-0 fz-20">@Model.Cost.ToPkr()</h2>
+									<h2 class="fw-bolder mb-0 fz-20">@Model.Cost.ToPkr()
+										@if(Model.InferenceImageId != null) 
+										{
+											<span data-content="@Model.InferenceData" data-bs-toggle="tooltip" title="Goal Formation Information" class="badge bg-light-primary badge-inference"><i class="las la-info fz-22 text-black"></i></span>
+										}
+									</h2>
 								</div>
 
 								<div class="col-6">
 									<small class="text-orange fw-bold">Remaining</small>
-									<h2 class="fw-bolder mb-0 fz-20 remaining_amount">@remainingAmount.ToPkr()</h2>
+									<h2 class="fw-bolder mb-0 fz-20 	">@remainingAmount.ToPkr()</h2>
 								</div>	
 							}
 
