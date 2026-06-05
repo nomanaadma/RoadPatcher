@@ -1,9 +1,9 @@
 $(document).ready(function () {
-    
+
     $('.logout-link').click(function () {
         $('#logoutForm').trigger('submit');
     })
-    
+
     function numberSeparator(value, $input) {
         let commaCounter = $input.data('commaCounter') || 0;
 
@@ -49,8 +49,8 @@ $(document).ready(function () {
             }
         }
     });
-    
-    
+
+
     $(document).on('input', '.number-separator', function () {
 
         let raw = this.value.replace(/,/g, '').replace(/[^\d]/g, '');
@@ -61,7 +61,7 @@ $(document).ready(function () {
         // Update hidden input
         $(this).next('.number-hidden').val(raw);
     });
-    
+
 
     $(document).on('input', '.number-separator', function () {
         const $input = $(this);
@@ -76,12 +76,12 @@ $(document).ready(function () {
     });
 
 
-    $('.post-cost-field').on('focusout', function() {
-        
+    $('.post-cost-field').on('focusout', function () {
+
         const $input = $(this);
         const hiddenNumber = $input.next('.number-hidden').val();
         let value = parseFloat(hiddenNumber);
-        
+
         // If empty, NaN, or less than 200, set to 200
         if (isNaN(value) || value < 200) {
             $(this).val(200).trigger('input');
@@ -94,7 +94,7 @@ $(document).ready(function () {
 
     // Click handler
     $toggle.on('click', function () {
-        
+
 
         $content.stop(true, true).slideToggle(300, function () {
             if ($content.is(':visible')) {
@@ -129,9 +129,11 @@ $(document).ready(function () {
         $(this).attr("href", window.location.pathname + "?" + urlParams.toString());
     });
 
-    const slimSettings = {settings: {
-        allowDeselect: true
-    }};
+    const slimSettings = {
+        settings: {
+            allowDeselect: true
+        }
+    };
 
     let userOptions = ``;
 
@@ -142,7 +144,7 @@ $(document).ready(function () {
     const isUser = $('.user-root').length;
 
     $('.search_posts').on('click', function () {
-        
+
         Swal.fire({
             title: 'Search',
             width: '900px',
@@ -349,7 +351,7 @@ $(document).ready(function () {
                         $(this).val(values[0]).trigger('input'); // single input/select
                     }
                 });
-                
+
                 new SlimSelect({
                     select: '#users',
                     ...slimSettings
@@ -369,7 +371,7 @@ $(document).ready(function () {
                         }
                     }
                 })
-                
+
                 const input = document.getElementById("areaInput");
                 const latInput = document.getElementById("areaLat");
                 const lngInput = document.getElementById("areaLng");
@@ -391,7 +393,7 @@ $(document).ready(function () {
                     latInput.value = "";
                     lngInput.value = "";
                 });
-                
+
             }
         });
 
@@ -405,9 +407,9 @@ $(document).ready(function () {
     let map;
     let markers = [];
     let controller = null; // AbortController for canceling previous requests
-    
+
     const userProfile = $('.user-profile-nav');
-    
+
     async function initMap() {
 
         const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
@@ -455,13 +457,13 @@ $(document).ready(function () {
             } else {
                 console.error("No geometry information available for this place.");
             }
-            
+
         });
-        
+
         // Push it inside the map controls
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(autocomplete);
-        
-        
+
+
         // Initial load
         google.maps.event.addListenerOnce(map, 'idle', () => {
             fetchPosts();
@@ -475,16 +477,16 @@ $(document).ready(function () {
 
     function fetchPosts() {
         const bounds = map.getBounds();
-        
+
         if (!bounds) return;
 
         const ne = bounds.getNorthEast();
         const sw = bounds.getSouthWest();
 
         const selectedStatuses = $(".status-filter:checked")
-            .map(function() { return this.value; })
+            .map(function () { return this.value; })
             .get();
-        
+
         const selectedUsers = $('#users2').val();
 
         // Cancel previous request if still running
@@ -517,7 +519,7 @@ $(document).ready(function () {
     }
 
     function getMarkerIcon(status) {
-        switch(status) {
+        switch (status) {
             case "Pending": return "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
             case "InProcess": return "https://maps.google.com/mapfiles/ms/icons/orange-dot.png";
             case "Completed": return "https://maps.google.com/mapfiles/ms/icons/green-dot.png";
@@ -799,16 +801,16 @@ $(document).ready(function () {
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">Raised</span>
-                                <span class="stat-value" style="color: #4CAF50;">${post.totalRaised} : ${post.raisedPercentage}%</span>
+                                <span class="stat-value" style="color: #4CAF50;">${post.total_raised} : ${post.raised_percentage}%</span>
                             </div>
                             <div class="stat-item">
                                 <span class="stat-label">Remaining</span>
-                                <span class="stat-value" style="color: #e74c3c;">${post.remainingAmount}</span>
+                                <span class="stat-value" style="color: #e74c3c;">${post.remaining_amount}</span>
                             </div>
                         </div>
 
                         <div class="donors-count text-center">
-                            <i class="fas fa-users"></i> <span><strong>${post.peopleDonated}</strong> people have donated</span>
+                            <i class="fas fa-users"></i> <span><strong>${post.people_donated}</strong> people have donated</span>
                         </div>
                     </div>
                 `
@@ -977,7 +979,7 @@ $(document).ready(function () {
     }
 
     $(document).on("change", ".status-filter", function () {
-        
+
         const ethis = $(this);
         const activeClass = ethis.data('class');
         const label = ethis.parent('label');
@@ -1007,6 +1009,6 @@ $(document).ready(function () {
         if (document.getElementById('admin-statistics-map')) {
             initAdminStatisticsMap();
         }
-    });    
+    });
 
 });

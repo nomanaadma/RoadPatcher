@@ -18,7 +18,6 @@ packages/
 .nuget/
 to-learn.txt
 RoadPatcher.Web/wwwroot/uploads
-documentation.md
 AGENTS.md
 RoadPatcher.AIML/dataset
 RoadPatcher.AIML/output
