@@ -164,6 +164,9 @@ public class ExternalLoginModel : PageModel
                 var createResult = await _userManager.CreateAsync(user);
                 if (createResult.Succeeded)
                 {
+	                
+	                await _userManager.AddToRoleAsync(user, "User");
+	                
                     var addLoginResult = await _userManager.AddLoginAsync(user, info);
                     if (addLoginResult.Succeeded)
                     {
@@ -234,6 +237,8 @@ public class ExternalLoginModel : PageModel
         var result = await _userManager.CreateAsync(user);
         if (result.Succeeded)
         {
+	        await _userManager.AddToRoleAsync(user, "User");
+	        
             result = await _userManager.AddLoginAsync(user, info);
             if (result.Succeeded)
             {
