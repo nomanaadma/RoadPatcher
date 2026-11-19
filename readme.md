@@ -1,6 +1,6 @@
 # Road Patchers
 
-**Community-driven road repair crowdfunding platform for Pakistan.**
+**Community-driven road repair crowdfunding platform**
 
 Citizens report damaged roads with photo/video evidence and a precise location, administrators review each report (optionally running an AI pothole-detection model on the photo), and the community funds the repair through secure card donations — with real-time progress, notifications, and full transparency from report to completion.
 
@@ -19,6 +19,7 @@ Citizens report damaged roads with photo/video evidence and a precise location, 
 - [Architecture](#architecture)
 - [How It Works](#how-it-works)
 - [Getting Started](#getting-started)
+- [Existing Accounts](#existing-accounts)
 - [Configuration](#configuration)
 - [Roles & Permissions](#roles--permissions)
 - [Project Structure](#project-structure)
@@ -214,6 +215,21 @@ WHERE u."Email" = 'you@example.com' AND r."Name" = 'SuperAdmin';
 Sign out and back in. You can now create Admins from **Users** in the admin portal.
 
 > A SuperAdmin account is required: notifications and review assignment both use it.
+
+---
+
+## Existing Accounts
+
+Use these accounts to sign in to the existing system and try each role:
+
+| Role | Email | Password |
+|---|---|---|
+| SuperAdmin | `superadmin@gmail.com` | `@dmiN0m!` |
+| Admin | `admin@gmail.com` | `@dmiN0m!` |
+| Admin | `admin2@gmail.com` | `@dmiN0m!` |
+| User | `nomanaadma@gmail.com` | `@dmiN0m!` |
+
+> These accounts exist in the project's current database. A fresh install starts with an empty database, so follow [step 6](#6-create-the-first-superadmin) to create your own SuperAdmin.
 
 ---
 
